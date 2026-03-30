@@ -55,7 +55,7 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
        <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', background: 'rgba(16, 185, 129, 0.1)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
           <span style={{ fontSize: '1.5rem' }}>🧠</span>
           <div style={{ flex: 1 }}>
-             <div style={{ fontWeight: 'bold', color: '#34d399', fontSize: '1.1rem' }}>Generative AI Injection</div>
+             <div style={{ fontWeight: 'bold', color: '#34d399', fontSize: '1.1rem' }}>Clinical Gen-AI Injection</div>
              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Authenticate a competitive LLM to dynamically prompt the network. Your keys never leave your browser loop. Note: Browser-side Anthropic requests may hit hard CORS blocks.</div>
           </div>
           
@@ -90,7 +90,7 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
           <div style={{ flexShrink: 0, width: '280px', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(34, 211, 238, 0.3)', boxShadow: '0 0 40px rgba(34, 211, 238, 0.15)', position: 'relative' }}>
             <img src={avatarImg} alt="Digital Twin Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1.5rem 1rem', background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)' }}>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>Generative Volumetric Twin</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>Digital Patient Twin</div>
             </div>
           </div>
           

@@ -29,6 +29,11 @@ function App() {
   const [isEnded, setIsEnded] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'timeline' | 'explanation' | 'ingestion' | 'network' | 'report' | 'custom-trial' | 'training'>('dashboard');
   const [selectedId, setSelectedId] = useState<string>('');
+  
+  // Fast Forward State
+  const [fastForwardYears, setFastForwardYears] = useState<number>(5);
+  const [autoResume, setAutoResume] = useState<boolean>(true);
+  const [isFastForwarding, setIsFastForwarding] = useState<boolean>(false);
 
   useEffect(() => {
     engineRef.current = new SimulationEngine(initialAgents);
@@ -131,6 +136,48 @@ function App() {
     setActiveTab('custom-trial');
   };
 
+  const handleFastForward = () => {
+    if (!engineRef.current) return;
+    
+    setIsRunning(false);
+    setIsCustomRunning(false);
+    setIsFastForwarding(true);
+
+    // Yield to the browser to render the "processing" state slightly
+    setTimeout(() => {
+      const ticksToAdvance = fastForwardYears * 52;
+      
+      for (let i = 0; i < ticksToAdvance; i++) {
+        if (!engineRef.current) break;
+        engineRef.current.tick();
+        
+        if (customEngineRef.current && !isCustomEnded) {
+            customEngineRef.current.tick();
+        }
+      }
+
+      if (engineRef.current) {
+        setAgents([...engineRef.current.getAgents()]);
+        setTicks(engineRef.current.currentTick);
+      }
+
+      if (customEngineRef.current) {
+         setCustomTwins([...customEngineRef.current.getAgents()]);
+         setCustomTicks(customEngineRef.current.currentTick);
+      }
+
+      setIsFastForwarding(false);
+
+      if (autoResume) {
+          if (activeTab === 'custom-trial' && customEngineRef.current && !isCustomEnded) {
+              setIsCustomRunning(true);
+          } else {
+              setIsRunning(true);
+          }
+      }
+    }, 50);
+  };
+
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset the entire Sandbox? All biological data arrays and Network feed protocols will be permanently wiped.")) {
       engineRef.current = new SimulationEngine(initialAgents);
@@ -171,8 +218,8 @@ function App() {
     <div className="dashboard">
       <header className="header">
         <div className="title">
-          <h1>Medical Digital Twins AI</h1>
-          <p>Generative ABM Network & Epidemiological Decay Engine</p>
+          <h1>Digital Patient Simulation</h1>
+          <p>Clinical AI Studio Pillar: Predictive Agent-Based Population Modeling</p>
         </div>
         
         <div className="nav-tabs">
@@ -187,15 +234,50 @@ function App() {
         </div>
 
         <div className="controls">
-          <div className="tick-counter">
-            Global Clock: Week {ticks} {ticks > 0 && `(Year ${(ticks/52).toFixed(1)})`}
+          <div className="tick-counter" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <span>Global Clock: Week {ticks} {ticks > 0 && `(Year ${(ticks/52).toFixed(1)})`}</span>
+            {isFastForwarding && <span style={{ color: '#f59e0b', fontSize: '0.9rem', animation: 'pulseGlow 1s infinite' }}>(Processing Fast Forward...)</span>}
           </div>
 
           {!isEnded && (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <button onClick={() => setIsRunning(!isRunning)} className={isRunning ? 'running' : ''}>
                 {isRunning ? 'Pause Simulation' : 'Start Simulation'}
               </button>
+              
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.3rem 0.8rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <select 
+                      value={fastForwardYears} 
+                      onChange={(e) => setFastForwardYears(Number(e.target.value))}
+                      style={{ background: 'transparent', color: 'white', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                      disabled={isFastForwarding}
+                  >
+                      <option value={5} style={{color: 'black'}}>5 Years</option>
+                      <option value={10} style={{color: 'black'}}>10 Years</option>
+                      <option value={15} style={{color: 'black'}}>15 Years</option>
+                      <option value={20} style={{color: 'black'}}>20 Years</option>
+                  </select>
+                  
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                      <input 
+                          type="checkbox" 
+                          checked={autoResume} 
+                          onChange={(e) => setAutoResume(e.target.checked)} 
+                          disabled={isFastForwarding}
+                          style={{ cursor: 'pointer' }}
+                      />
+                      Auto-Resume
+                  </label>
+                  
+                  <button 
+                      onClick={handleFastForward} 
+                      disabled={isFastForwarding}
+                      style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: isFastForwarding ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
+                  >
+                      ⏩ Skip
+                  </button>
+              </div>
+
               <button 
                 onClick={() => {
                   // Hard stop timeline
