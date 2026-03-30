@@ -2,54 +2,104 @@ import type { FC } from 'react';
 
 export const Explanation: FC = () => {
   return (
-    <div className="explanation-container glass-panel" style={{ padding: '2rem', lineHeight: '1.6', maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '1rem', color: '#60a5fa' }}>
-        How The ABM Simulation Works
-      </h2>
-      <p style={{ fontSize: '1.1rem', color: '#e2e8f0', marginBottom: '2rem' }}>
-        This Medical Digital Twin simulation is an advanced <strong>Agent-Based Model (ABM)</strong> that replaces generic probability with continuous mathematical physics rooted directly in verified epidemiological guidelines (AHA, ADA, CDC, JAMA).
+    <div className="explanation-container glass-panel" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.5s ease-out', overflowY: 'auto', maxHeight: '100%' }}>
+      <h2 style={{ color: '#a78bfa', marginBottom: '1.5rem', borderBottom: '1px solid rgba(167, 139, 250, 0.3)', paddingBottom: '0.5rem' }}>Core Simulation Architecture</h2>
+      <p style={{ color: '#e2e8f0', lineHeight: 1.6, fontSize: '1.05rem', marginBottom: '2rem' }}>
+        The Medical Digital Twins architecture has evolved from a static deterministic decay model into a highly advanced <strong>Generative Agent-Based Model (ABM)</strong> completely driven by real-time Large Language Models (LLMs) and rigorous CDC/AHA empirical hazard algorithms. 
       </p>
 
-      <section style={{ marginBottom: '2.5rem' }}>
-        <h3 style={{ color: '#fcd34d' }}>1. Deep Clinical Trajectories & Hazard Ratios</h3>
-        <p>Every digital patient harbors a massive interlocking matrix of clinical state data (Family History, Smoker Status, Surgical History) mapping directly to continuous <strong>Vitals (BP, HR, BMI)</strong> and <strong>Labs (A1C, LDL, eGFR, CV Health)</strong>.</p>
-        <p>When a patient experiences an environmental or clinical stressor, the hit isn't arbitrary. The simulation actively multipliers baseline illness using rigorous mathematically-applied <strong>Hazard Ratios (HR)</strong> (e.g., JAMA studies mapping a strict 2.57x HR penalty to Food Desert mortality risks).</p>
-      </section>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        
+        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #10b981' }}>
+          <h3 style={{ color: '#10b981', margin: '0 0 0.8rem 0' }}>1. The Multi-Agent Generative Network</h3>
+          <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+            The primary simulation houses autonomous digital patients structurally organized into a unified information network. <strong>Researchers</strong> actively ping integrated external Language Models (OpenAI, Gemini, Claude). However, these LLMs are completely fenced by highly-restrictive system prompts forcing them to generate novel clinical interventions strictly derived from reputable authorities (<strong>CDC, WHO, JAMA, NEJM, Nature, AHA, NKF, ADA</strong>). The prompts explicitly force the generation of "changing literature," including inventing sudden drug retractions and adverse-event warnings that actively crash physical agent trajectories over time.
+          </p>
+        </div>
 
-      <section style={{ marginBottom: '2.5rem' }}>
-        <h3 style={{ color: '#ef4444' }}>2. The "Vicious Cycle" of End-Organ Damage</h3>
-        <p>Human biology is not isolated. The engine meticulously tracks the devastating real-world bidirectional interplay between metabolic loads and kidney failure based on American Diabetes Association guidelines:</p>
-        <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem' }}>
-          <li style={{ marginBottom: '0.5rem' }}><strong>Metabolic Nephropathy:</strong> Uncontrolled glucose (A1C &gt; 7.0) actively deteriorates nephrons every tick, crashing the patient's Estimated Glomerular Filtration Rate (eGFR).</li>
-          <li style={{ marginBottom: '0.5rem' }}><strong>Hypertensive Reflex:</strong> When a kidney begins failing (eGFR &lt; 60), the body retains fluid. This mechanism mechanically forces Systolic Blood Pressure rapidly higher, destroying Cardiovascular Health and further punishing the eGFR in an endless recursive loop.</li>
-          <li><strong>Preventative Reversibility:</strong> Governed by the AASK Trials, if a patient adopts exercise or extreme medical compliance to drive SBP &lt; 130 and A1C &lt; 7.0, the engine physically begins regenerating eGFR and triggering LVH (cardiovascular) regression.</li>
-        </ul>
-      </section>
+        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #f59e0b' }}>
+          <h3 style={{ color: '#f59e0b', margin: '0 0 0.8rem 0' }}>2. Actuarial Epidemiological Pathology Engine</h3>
+          <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+            Agent mortality is tightly constrained. Exactly every 52 weeks (1 Simulation Year), the underlying <code>PathologyEngine</code> runs an exhaustive baseline statistical roll on every single living Agent heavily mapped against their biometric arrays. Referencing strictly mapped CDC/AHA incidence rates, agents structurally acquire highly lethal secondary complications. Rapid Obesity forces <strong>Hypertension</strong>; sustained Hypertension guarantees inevitable <strong>Congestive Heart Failure</strong>; and uncontrolled Diabetic progression permanently drags the agent into <strong>Chronic Renal Failure</strong>. 
+          </p>
+        </div>
 
-      <section style={{ marginBottom: '2.5rem' }}>
-        <h3 style={{ color: '#10b981' }}>3. Probabilistic Triage & Medical Evidence Engine</h3>
-        <p>Instead of hardcoding unrealistic absolute triggers (e.g., `If BP &gt; 180, Patient Dies`), the simulation abstracts all clinical boundaries to a custom Probabilistic Evidence Engine.</p>
-        <p><strong>Example: Hypertensive Emergency Triage</strong></p>
-        <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem' }}>
-          <li style={{ marginBottom: '0.5rem' }}>When a patient hits 180 SBP, they enter Emergency Dept triage. The engine mathematically scans for End Organ active damage (crashing eGFR/CV Health).</li>
-          <li style={{ marginBottom: '0.5rem' }}><strong>Urgency:</strong> If organs are stable, the patient is classified as an Urgency, stabilized cleanly with oral medication, and discharged with low penalty.</li>
-          <li><strong>Emergency & Off-Label Salvage:</strong> If organs are actively failing, it is an Emergency (historically 100% ICU admit). However, the Evidence Engine respects clinical leeway: it rolls a 30% probabilistic chance that physicians use intensive <strong>FDA Off-Label polypharmacy</strong> to violently safely avert the ICU—or suffer extremely adverse drug reactions trying.</li>
-        </ul>
-      </section>
+        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #14b8a6' }}>
+          <h3 style={{ color: '#14b8a6', margin: '0 0 0.8rem 0' }}>3. Autonomous Physician CDSS</h3>
+          <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+            Agents do not blindly follow static primary guidelines. They are rigidly governed by an advanced <strong>Clinical Decision Support System (CDSS)</strong> that recursively cross-references real-world comorbidities mimicking experienced clinician logic. For instance, uncomplicated Hypertension receives standard Amlodipine; but if an Agent suffers from Diabetes, the CDSS exclusively executes renoprotective ACE-Inhibitors (Lisinopril). 
+          </p>
+        </div>
 
-      <section style={{ marginBottom: '2.5rem' }}>
-        <h3 style={{ color: '#a78bfa' }}>4. 10-Year Clinical Predictive Forecasts</h3>
-        <p>The system actively peers into the future! We have incorporated world-class prognostic equations to evaluate the likelihood of massive catastrophic events occurring to each agent over the next 10 years:</p>
-        <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem' }}>
-          <li style={{ marginBottom: '0.5rem' }}><strong>ASCVD (Stroke/MI):</strong> Utilizing the official <strong>AHA PREVENT Equations (2023)</strong> accounting for Age, SBP, eGFR, HDL, Smoking Status, and Diabetes.</li>
-          <li style={{ marginBottom: '0.5rem' }}><strong>Heart Failure (CHF):</strong> Utilizing the <strong>PCP-HF Tool</strong> parsing BMI, glycemic load, SBP strain, and CV Health.</li>
-          <li><strong>Real-time Reversals:</strong> Not only does the dashboard output the exact % danger, it dynamically writes textual suggestions mapping exactly what immediate actions (like smoking cessation or intense bp lowering) will mathematically reverse the equations.</li>
-        </ul>
-      </section>
-      
-      <div style={{ padding: '1.5rem', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px' }}>
-        <strong style={{ color: '#93c5fd' }}>Visualizing the Math:</strong><br/>
-        In the "Detailed Timelines" tab, keep an eye on the <strong>Citation Badges</strong> on each event card (e.g., "[📖 Evidence Basis: JAMA]"). These badges explicitly state the Hazard Ratios or medical literature the underlying algorithm utilized to generate the failure or recovery. 
+        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
+          <h3 style={{ color: '#3b82f6', margin: '0 0 0.8rem 0' }}>4. Isolated Synthetic Custom Trials</h3>
+          <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+            The overarching global 100-Agent simulation simply serves as a massive experimental proving ground. By navigating to the <strong>Add Digital Twin</strong> ingestion tool, you can deploy a customized real-world patient narrative securely detached from the population bounds. The app explicitly filters the absolute highest-yielding protocols analytically discovered by the main network, allowing you to explicitly construct a fully isolated 1-vs-1 (Control Vs Optimized) proxy testing dashboard visually comparing exact trajectory deltas strictly based on your selected LLM interventions.
+          </p>
+        </div>
+
+        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
+          <h3 style={{ color: '#ef4444', margin: '0 0 0.8rem 0' }}>5. Post-Mortem Data Subsystems</h3>
+          <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+            When navigating through the headers you retain complete control over both the global scale clock and the independent localized Custom Sandbox clock independently. Terminating the global clock drops the entire UI explicitly into the <strong>Post-Mortem Analytics Report</strong> evaluating exactly what dynamic LLM pipelines toxified populations versus which paradigms empirically accelerated survival. 
+          </p>
+        </div>
+
+        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #8b5cf6' }}>
+          <h3 style={{ color: '#8b5cf6', margin: '0 0 0.8rem 0' }}>6. Client-Side RWD ETL & Empirical Logic</h3>
+          <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+            Beyond rigid CDC/AHA literature, you can actively drag pure unstructured <strong>Medical Claims</strong> and <strong>Laboratory Datasets</strong> directly into the <strong>RWD Training</strong> interface. The Training Engine acts as a massive native ETL pipeline—weaving scattered records by Patient ID, isolating strict ICD-10 chronologies, enforcing "Active Management" confirmation protocols across discrete dates, and dynamically generating Annualized Incidence Rates (AIR). These exact empirical weights permanently overwrite the simulation's baseline physics models!
+          </p>
+        </div>
+
+        <h2 style={{ color: '#a78bfa', marginTop: '1.5rem', marginBottom: '1rem', borderBottom: '1px solid rgba(167, 139, 250, 0.3)', paddingBottom: '0.5rem' }}>Biological Data Matrices & Variables</h2>
+        <p style={{ color: '#e2e8f0', lineHeight: 1.6, fontSize: '1.05rem', marginBottom: '1.5rem' }}>
+          The Mathematical Agents calculate their survival trajectories explicitly utilizing deeply parameterized clinical schemas. Every single Twin evaluates the following complex variable architectures under the hood:
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h4 style={{ color: '#60a5fa', marginTop: 0, marginBottom: '0.5rem' }}>🧬 Biometric Vitals & Labs</h4>
+            <ul style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, paddingLeft: '1.2rem', lineHeight: 1.6 }}>
+              <li><strong>Vitals Engine:</strong> Systolic/Diastolic Blood Pressure (BP), Resting Heart Rate (HR), Body Mass Index (BMI).</li>
+              <li><strong>Laboratory Metrics:</strong> Hemoglobin A1c (Endocrine), LDL Cholesterol (Lipids), eGFR (Renal capacity), Global CV Health (Cardiac array).</li>
+            </ul>
+          </div>
+
+          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h4 style={{ color: '#fca5a5', marginTop: 0, marginBottom: '0.5rem' }}>🏥 Chronic Conditions & Pathology</h4>
+            <ul style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, paddingLeft: '1.2rem', lineHeight: 1.6 }}>
+              <li><strong>Cardiometabolic Vectors:</strong> Diabetes, Hypertension, Obesity, CAD, CHF, CKD, High Cholesterol.</li>
+              <li><strong>Respiratory & Hepatic:</strong> Asthma, COPD, Hepatitis, Cirrhosis, ESLD.</li>
+              <li><strong>Psychiatric & Cognitive:</strong> Schizophrenia, Bipolar, Major Depression, Anxiety, Alzheimer's/Dementia (Acting as severe multipliers destroying preventative Medical Compliance capacities).</li>
+            </ul>
+          </div>
+
+          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h4 style={{ color: '#34d399', marginTop: 0, marginBottom: '0.5rem' }}>🌍 Social Determinants of Health (SDoH)</h4>
+            <ul style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, paddingLeft: '1.2rem', lineHeight: 1.6 }}>
+              <li><strong>Geographic/Economic:</strong> Food Desert status, Wealth Percentile mapping, Raw Access to Care scaling points.</li>
+              <li><strong>Behavioral Vectors:</strong> Formal Medical Compliance gradients (High/Med/Low), Smoking status, Diet Quality arrays.</li>
+            </ul>
+          </div>
+
+          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h4 style={{ color: '#c084fc', marginTop: 0, marginBottom: '0.5rem' }}>💊 Modern Pharmacotherapy Vectors</h4>
+            <ul style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, paddingLeft: '1.2rem', lineHeight: 1.6 }}>
+              <li><strong>Metabolic Blockade:</strong> GLP-1 Agonists (Semaglutide) stripping BMI and A1c natively; SGLT2 Inhibitors aggressively shielding eGFR.</li>
+              <li><strong>Advanced Polypharmacy:</strong> Mimicking strict psychiatric tradeoffs (e.g. Lithium inducing inevitable explicit nephrotoxic decay; Olanzapine destroying metabolic profiles).</li>
+            </ul>
+          </div>
+
+          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h4 style={{ color: '#fcd34d', marginTop: 0, marginBottom: '0.5rem' }}>📈 Data Sources & Deep Mathematics</h4>
+            <ul style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, paddingLeft: '1.2rem', lineHeight: 1.6 }}>
+              <li><strong>AHA/CDC Actuarial Baselines:</strong> Exact statistical formulas mapping default literature Relative Risks for mortality events.</li>
+              <li><strong>Poisson Incidence Normalization:</strong> Natively normalizes aggregated varying historical document arrays mathematically against exposure lifespans to weave definitive Medical Target weights.</li>
+            </ul>
+          </div>
+        </div>
+
       </div>
     </div>
   );

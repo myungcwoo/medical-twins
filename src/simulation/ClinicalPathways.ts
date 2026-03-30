@@ -133,6 +133,32 @@ export const ClinicalPathways = {
         if (Math.random() < 0.6) agent.state.labs.cvHealth += 0.2;
       }
     }
+
+    // Condition Remission Dynamics
+    const currentTick = agent.state.history.length > 0 ? agent.state.history[agent.state.history.length - 1].tick + 1 : 0;
+    
+    // Reverse Obesity
+    if (agent.state.chronicConditions.includes('Obesity') && agent.state.vitals.bmi < 24.9) {
+        agent.state.chronicConditions = agent.state.chronicConditions.filter(c => c !== 'Obesity');
+        agent.logEvent({ tick: currentTick, type: 'Condition Remitted', description: 'Patient successfully dropped BMI below clinical obesity threshold. Diagnosis formally reversed.', impactHealth: 10, impactStress: -10 });
+    }
+
+    // Reverse Hypertension 
+    if (agent.state.chronicConditions.includes('Hypertension') && agent.state.vitals.bpSystolic <= 115) {
+        // 5% chance per evaluation cycle to definitively declare remission if maintained pristine
+        if (Math.random() < 0.05) {
+            agent.state.chronicConditions = agent.state.chronicConditions.filter(c => c !== 'Hypertension');
+            agent.logEvent({ tick: currentTick, type: 'Condition Remitted', description: 'Unprecedented vascular remodeling. Blood pressure completely normalized organically. Hypertension formally reversed.', impactHealth: 10, impactStress: -10 });
+        }
+    }
+
+    // Reverse Diabetes
+    if (agent.state.chronicConditions.includes('Diabetes') && agent.state.labs.a1c <= 5.8 && !agent.state.medications.includes("Insulin")) {
+        if (Math.random() < 0.02) {
+            agent.state.chronicConditions = agent.state.chronicConditions.filter(c => c !== 'Diabetes');
+            agent.logEvent({ tick: currentTick, type: 'Condition Remitted', description: 'Metabolic homeostasis achieved. A1c stably maintained in normal parameters. Type-II Diabetes officially mapped as in remission.', impactHealth: 12, impactStress: -15 });
+        }
+    }
   }
 
 };

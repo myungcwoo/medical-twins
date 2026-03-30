@@ -1,4 +1,4 @@
-import type { AgentState, Sex, ExerciseRoutine, MedicalCompliance } from './Agent';
+import type { AgentState, Sex, ExerciseRoutine, MedicalCompliance, AgentRole } from './Agent';
 
 const firstNames = ["James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen", "Carlos", "Maria", "Ali", "Fatima", "Chen", "Wei", "Hiroshi", "Yuki", "Kwame", "Aisha"];
 const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson"];
@@ -72,11 +72,12 @@ const generateAgent = (idNum: number): Omit<AgentState, 'history' | 'isDead'> =>
 
   const exerciseRoutine = randomChoice<ExerciseRoutine>(['None', 'Moderate', 'High']);
   const medicalCompliance = randomChoice<MedicalCompliance>(['Low', 'Moderate', 'High']);
+  const role = randomChoice<AgentRole>(['Patient', 'Patient', 'Patient', 'Patient', 'Patient', 'Patient', 'Researcher', 'WebSurfer', 'WebSurfer']);
 
   return {
     id: `agent_${idNum}`,
     name: `${randomChoice(firstNames)} ${randomChoice(lastNames)}`,
-    age, sex, baseHealth, stressLevel, dietQuality, wealth, accessToCare, foodDesert, smoker,
+    age, sex, role, baseHealth, stressLevel, dietQuality, wealth, accessToCare, foodDesert, smoker,
     chronicConditions: conditions,
     familyHistory: fhx,
     surgicalHistory: Math.random() < 0.2 ? [randomChoice(["Appendectomy", "Cholecystectomy", "Knee Replacement", "CABG"])] : [],
@@ -84,7 +85,8 @@ const generateAgent = (idNum: number): Omit<AgentState, 'history' | 'isDead'> =>
     exerciseRoutine,
     medicalCompliance,
     vitals: { bpSystolic: sysBp, bpDiastolic: diaBp, heartRate: hr, bmi },
-    labs: { a1c, ldlCholesterol: ldl, egfr, cvHealth }
+    labs: { a1c, ldlCholesterol: ldl, egfr, cvHealth },
+    memory: []
   };
 };
 

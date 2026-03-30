@@ -1,6 +1,8 @@
 import { Agent } from './Agent';
 import type { AgentState } from './Agent';
 import { runGlobalEvents } from './Events';
+import { LLMEngine } from './LLMEngine';
+import { KnowledgeBase } from './KnowledgeNetwork';
 
 export class SimulationEngine {
   agents: Agent[] = [];
@@ -21,6 +23,23 @@ export class SimulationEngine {
         agent.state.age++;
       }
     });
+
+    // Accelerated Throttled Artificial Intelligence Injection (Generative Network Evolution)
+    if (this.currentTick % 12 === 0) {
+      const potentialAuthors = this.agents.filter(a => !a.state.isDead && (a.state.role === 'Researcher' || a.state.role === 'WebSurfer'));
+      if (potentialAuthors.length > 0) {
+        const electedAuthor = potentialAuthors[Math.floor(Math.random() * potentialAuthors.length)];
+        
+        if (LLMEngine.apiKey && !LLMEngine.isGenerating) {
+            LLMEngine.generateProtocolAsync(electedAuthor, this.currentTick);
+        } else if (!LLMEngine.apiKey) {
+            // Unauthenticated Safe Fallback
+            const fallbackArray = electedAuthor.state.role === 'Researcher' ? KnowledgeBase.CLINICAL_IDEAS : KnowledgeBase.LIFESTYLE_IDEAS;
+            const fallbackIdea = fallbackArray[Math.floor(Math.random() * fallbackArray.length)];
+            KnowledgeBase.broadcast(electedAuthor, fallbackIdea, this.currentTick);
+        }
+      }
+    }
   }
 
   getAgents(): AgentState[] {

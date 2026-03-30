@@ -1,15 +1,16 @@
-import { useState } from 'react';
 import type { AgentState } from '../simulation/Agent';
 import { PredictiveEngine } from '../simulation/PredictiveEngine';
 import type { FC } from 'react';
 
 interface Props {
   agents: AgentState[];
+  selectedId: string;
+  onSelectAgent: (id: string) => void;
 }
 
-export const TimelineView: FC<Props> = ({ agents }) => {
-  const [selectedId, setSelectedId] = useState<string>(agents[0]?.id || '');
-  const selected = agents.find(a => a.id === selectedId);
+export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) => {
+  const selected = agents.find(a => a.id === selectedId) || agents[0];
+  const pair = selected?.pairedTwinId ? agents.find(a => a.id === selected.pairedTwinId) : null;
 
   return (
     <div className="timeline-container">
@@ -17,10 +18,11 @@ export const TimelineView: FC<Props> = ({ agents }) => {
         {agents.map(a => (
           <button 
             key={a.id} 
-            className={`sidebar-btn ${selectedId === a.id ? 'active' : ''} ${a.isDead ? 'dead' : ''}`}
-            onClick={() => setSelectedId(a.id)}
-            style={a.isDead ? { color: '#fca5a5', borderColor: 'rgba(239,68,68,0.3)', background: selectedId === a.id ? 'rgba(239,68,68,0.2)' : 'transparent' } : {}}
+            className={`sidebar-btn ${selected?.id === a.id ? 'active' : ''} ${a.isDead ? 'dead' : ''}`}
+            onClick={() => onSelectAgent(a.id)}
+            style={a.isDead ? { color: '#fca5a5', borderColor: 'rgba(239,68,68,0.3)', background: selected?.id === a.id ? 'rgba(239,68,68,0.2)' : 'transparent' } : {}}
           >
+            {a.comparativeGroup && <span style={{fontSize: '0.8rem', color: a.comparativeGroup === 'Intervention' ? '#10b981' : '#f59e0b', marginRight: '6px'}}>[{a.comparativeGroup === 'Intervention' ? 'OPT' : 'CTL'}]</span>}
             {a.isDead ? '✝ ' : ''}{a.name}
           </button>
         ))}
@@ -34,6 +36,24 @@ export const TimelineView: FC<Props> = ({ agents }) => {
                 {selected.isDead ? '✝ ' : ''}{selected.name}'s Electronic Health Record
               </h2>
               
+              {pair && (
+                <div style={{background: 'rgba(16, 185, 129, 0.1)', padding: '1rem', border: `1px solid ${selected.comparativeGroup === 'Intervention' ? '#10b981' : '#f59e0b'}`, borderRadius: '8px', marginBottom: '1.5rem'}}>
+                  <h3 style={{margin: '0 0 0.5rem 0', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '0.5rem'}}><span role="img" aria-label="compare">⚖️</span> Real-World Comparative Axis Live</h3>
+                  <p style={{margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem'}}>This agent is physically decoupled into an Isolated Synthetic Trial. Utilizing empirical network datasets, you explicitly selected and injected the top-yielding Generative protocols straight into the Optimized twin's chronological trajectory.</p>
+                  
+                  <div style={{display: 'flex', gap: '2rem', marginTop: '1rem'}}>
+                    <div style={{flex: 1, padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', borderLeft: selected.comparativeGroup === 'Control' ? '4px solid #60a5fa' : '4px solid rgba(255,255,255,0.1)'}}>
+                      <div style={{fontWeight: 'bold', color: '#f59e0b'}}>Control Physiology</div>
+                      <div style={{fontSize: '2rem', fontWeight: '800', color: (selected.comparativeGroup === 'Control' ? selected.isDead : pair.isDead) ? '#fca5a5' : '#e2e8f0'}}>{Math.round(selected.comparativeGroup === 'Control' ? selected.baseHealth : pair.baseHealth)}% Health</div>
+                    </div>
+                    <div style={{flex: 1, padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', borderLeft: selected.comparativeGroup === 'Intervention' ? '4px solid #60a5fa' : '4px solid rgba(255,255,255,0.1)'}}>
+                      <div style={{fontWeight: 'bold', color: '#10b981'}}>Optimized Physiology (Network Driven)</div>
+                      <div style={{fontSize: '2rem', fontWeight: '800', color: (selected.comparativeGroup === 'Intervention' ? selected.isDead : pair.isDead) ? '#fca5a5' : '#10b981'}}>{Math.round(selected.comparativeGroup === 'Intervention' ? selected.baseHealth : pair.baseHealth)}% Health</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {selected.isDead && (
                 <div style={{background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px', color: '#fca5a5', marginBottom: '1.5rem'}}>
                   <h3 style={{margin: 0}}><span role="img" aria-label="alert">⚠️</span> Patient Deceased</h3>
