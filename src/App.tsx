@@ -217,9 +217,22 @@ function App() {
   return (
     <div className="dashboard">
       <header className="header">
-        <div className="title">
-          <h1>Digital Patient Simulation</h1>
-          <p>Clinical AI Studio Pillar: Predictive Agent-Based Population Modeling</p>
+        <div className="title" style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+          <img 
+            src="/logo.png" 
+            alt="Medical Twins Logo" 
+            style={{ 
+              width: '64px', 
+              height: '64px', 
+              borderRadius: '12px', 
+              boxShadow: '0 4px 15px rgba(139, 92, 246, 0.3)', 
+              objectFit: 'cover' 
+            }} 
+          />
+          <div>
+            <h1>Digital Patient Simulation</h1>
+            <p>Clinical AI Studio Pillar: Predictive Agent-Based Population Modeling</p>
+          </div>
         </div>
         
         <div className="nav-tabs">
