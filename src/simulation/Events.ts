@@ -29,6 +29,23 @@ export function runGlobalEvents(agent: Agent, currentTick: number) {
   const crisisResult = ClinicalPathways.evaluateHypertensiveCrisis(agent, currentTick);
   if (crisisResult === 'HALT_SIMULATION') return;
 
+  // 0.25 Catastrophic Cardiovascular Events (MI / Stroke)
+  if (agent.state.vitals.bpSystolic > 175 || agent.state.labs.cvHealth < 25) {
+      const strokeRisk = Math.max(0, (agent.state.vitals.bpSystolic - 170) * 0.0005) + Math.max(0, (25 - agent.state.labs.cvHealth) * 0.0005);
+      if (Math.random() < strokeRisk) {
+          agent.state.isDead = true;
+          agent.state.baseHealth = 0;
+          agent.logEvent({
+            tick: currentTick,
+            type: 'Sudden Catastrophic Mortality',
+            description: `Patient perished from sudden fatal ${Math.random() > 0.5 ? 'Myocardial Infarction' : 'Ischemic Stroke'} directly linked to acute cardiovascular decompensation.`,
+            impactHealth: 0,
+            impactStress: 0
+          });
+          return;
+      }
+  }
+
   // 0.5 General Cumulative Mortality
   if (agent.state.baseHealth <= 0) {
     agent.state.isDead = true;
@@ -43,7 +60,11 @@ export function runGlobalEvents(agent: Agent, currentTick: number) {
   }
 
   // 1. Illness Risk (Evidence-Based Hazard Ratios)
-  let baseIllnessChance = 0.002; // Reduced substantially to balance the simulation (100-patient survivability)
+  let baseIllnessChance = 0.002; 
+  // Escalating age-related immunocompromise and frailty risk
+  if (agent.state.age > 65) {
+      baseIllnessChance += 0.001 * Math.exp((agent.state.age - 65) * 0.08); 
+  }
   let currentHR = 1.0;
   let activeCitation = "";
 

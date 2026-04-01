@@ -1,5 +1,6 @@
 import type { AgentState } from '../simulation/Agent';
 import { PredictiveEngine } from '../simulation/PredictiveEngine';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { FC } from 'react';
 
 interface Props {
@@ -11,6 +12,38 @@ interface Props {
 export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) => {
   const selected = agents.find(a => a.id === selectedId) || agents[0];
   const pair = selected?.pairedTwinId ? agents.find(a => a.id === selected.pairedTwinId) : null;
+
+  let chartData: any[] = [];
+  if (selected && selected.biometricHistory) {
+    if (pair && pair.biometricHistory) {
+      const isControl = selected.comparativeGroup === 'Control';
+      const controlTwin = isControl ? selected : pair;
+      const optTwin = isControl ? pair : selected;
+
+      const ticksSet = new Set([...controlTwin.biometricHistory.map(b=>b.tick), ...optTwin.biometricHistory.map(b=>b.tick)]);
+      const sortedTicks = Array.from(ticksSet).sort((a,b)=>a-b);
+      
+      chartData = sortedTicks.map(tick => {
+          const cSnap = controlTwin.biometricHistory.find(b=>b.tick===tick);
+          const oSnap = optTwin.biometricHistory.find(b=>b.tick===tick);
+          return {
+              tick, 
+              year: Math.floor(tick/52),
+              age: cSnap ? cSnap.age : (oSnap ? oSnap.age : 0),
+              controlHealth: cSnap ? Math.round(cSnap.health) : null,
+              optHealth: oSnap ? Math.round(oSnap.health) : null,
+          };
+      });
+    } else {
+      chartData = selected.biometricHistory.map(snap => ({
+          tick: snap.tick,
+          year: Math.floor(snap.tick/52),
+          age: snap.age,
+          health: Math.round(snap.health),
+          bp: Math.round(snap.bpSystolic)
+      }));
+    }
+  }
 
   return (
     <div className="timeline-container">
@@ -76,6 +109,35 @@ export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) =
                 <span style={{color: selected.medicalCompliance === 'High' ? 'var(--health-good)' : selected.medicalCompliance === 'Low' ? 'var(--health-crit)' : '#fcd34d'}}><strong>Compliance:</strong> {selected.medicalCompliance}</span>
                 <span style={{color: selected.exerciseRoutine === 'High' ? 'var(--health-good)' : selected.exerciseRoutine === 'None' ? 'var(--health-crit)' : '#fcd34d'}}><strong>Exercise:</strong> {selected.exerciseRoutine}</span>
               </div>
+
+              {/* Comparative Trajectory Chart */}
+              {chartData.length > 0 && (
+                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '1.5rem', marginTop: '1.5rem' }}>
+                  <h3 style={{ margin: '0 0 1rem 0', color: '#e2e8f0', fontSize: '1.1rem' }}>Overall Biological Output Trajectory</h3>
+                  <div style={{ width: '100%', height: 300 }}>
+                    <ResponsiveContainer>
+                      <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                        <XAxis dataKey="age" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} type="number" domain={['dataMin', 'dataMax']} tickFormatter={val => Math.floor(val).toString()} />
+                        <YAxis domain={[0, 100]} stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
+                        <Tooltip 
+                            contentStyle={{ background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }} 
+                            labelFormatter={(label) => `Age: ${Math.floor(Number(label))}`}
+                        />
+                        <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                        {pair ? (
+                          <>
+                            <Line type="monotone" dataKey="controlHealth" name="Control Health %" stroke="#f59e0b" strokeWidth={3} dot={false} isAnimationActive={false} />
+                            <Line type="monotone" dataKey="optHealth" name="Optimized Health %" stroke="#10b981" strokeWidth={3} dot={false} isAnimationActive={false} />
+                          </>
+                        ) : (
+                          <Line type="monotone" dataKey="health" name="Base Health %" stroke="#3b82f6" strokeWidth={3} dot={false} isAnimationActive={false} />
+                        )}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
 
               {/* Vitals & Labs Panel */}
               <div className="vitals-panel" style={{opacity: selected.isDead ? 0.6 : 1}}>

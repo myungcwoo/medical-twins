@@ -1,6 +1,7 @@
 import { ClinicalPathways } from './ClinicalPathways';
 import { KnowledgeBase } from './KnowledgeNetwork';
 import { PathologyEngine } from './PathologyEngine';
+import { InferenceEngine } from './InferenceEngine';
 
 export interface AgentEvent {
   tick: number;
@@ -10,6 +11,15 @@ export interface AgentEvent {
   impactStress: number;
   citation?: string;
   hazardRatio?: number;
+}
+
+export interface BiometricSnapshot {
+  tick: number;
+  age: number;
+  health: number;
+  stress: number;
+  bpSystolic: number;
+  a1c: number;
 }
 
 export type Sex = 'Male' | 'Female';
@@ -53,6 +63,7 @@ export interface AgentState {
   vitals: Vitals;
   labs: Labs;
   history: AgentEvent[];
+  biometricHistory: BiometricSnapshot[];
   memory: string[]; // Tracked ideas
   isDead: boolean;
   comparativeGroup?: 'Control' | 'Intervention';
@@ -62,11 +73,12 @@ export interface AgentState {
 export class Agent {
   state: AgentState;
 
-  constructor(initialState: Omit<AgentState, 'history' | 'isDead' | 'memory'> & { memory?: string[] }) {
+  constructor(initialState: Omit<AgentState, 'history' | 'isDead' | 'memory' | 'biometricHistory'> & { memory?: string[] }) {
     this.state = {
       ...initialState,
       isDead: false,
       history: [],
+      biometricHistory: [],
       memory: initialState.memory || [],
     };
   }
@@ -79,10 +91,13 @@ export class Agent {
 
     this.processNetworkLearning(currentTick);
 
-// 1. Natural Age Decay (Drastically slowed down for realism)
-    let agePenalty = 0;
-    if (this.state.age > 60) agePenalty = (this.state.age - 60) * 0.001 + 0.01;
-    else if (this.state.age > 40) agePenalty = (this.state.age - 40) * 0.0005;
+    // 1. Gompertz-Makeham Exponential Age Decay (Rebalanced for ~82yr average lifespan)
+    let agePenalty = 0.002; // Base Makeham parameter (accidents, baseline natural decay)
+    if (this.state.age > 40) {
+        // Gompertz exponential term: Risk doubles roughly every 8-9 years
+        // At age 80, this drains ~2-3 health per year rapidly. At age 90, it's severe.
+        agePenalty += 0.001 * Math.exp((this.state.age - 40) * 0.065);
+    }
     this.state.baseHealth -= agePenalty;
     
     if (this.state.age > 50) {
@@ -90,18 +105,16 @@ export class Agent {
       this.state.labs.cvHealth -= 0.01; 
     }
 
-    // 2. Behavioral Mitigation
+    // 2. Behavioral Mitigation (Preventative cardiovascular buffering, removed direct flat base health regeneration to prevent immortality)
     if (this.state.exerciseRoutine === 'High') {
-      this.state.vitals.bmi -= 0.01;
-      this.state.vitals.heartRate -= 0.1;
-      this.state.vitals.bpSystolic -= 0.1;
-      this.state.stressLevel -= 0.1;
-      this.state.baseHealth += 0.02;
+      if (this.state.vitals.bmi > 20) this.state.vitals.bmi -= 0.01;
+      if (this.state.vitals.heartRate > 55) this.state.vitals.heartRate -= 0.1;
+      if (this.state.vitals.bpSystolic > 110) this.state.vitals.bpSystolic -= 0.1;
+      this.state.stressLevel -= 0.15;
     } else if (this.state.exerciseRoutine === 'Moderate') {
-      this.state.vitals.bmi -= 0.005;
-      this.state.vitals.heartRate -= 0.05;
-      this.state.stressLevel -= 0.05;
-      this.state.baseHealth += 0.01;
+      if (this.state.vitals.bmi > 22) this.state.vitals.bmi -= 0.005;
+      if (this.state.vitals.heartRate > 60) this.state.vitals.heartRate -= 0.05;
+      this.state.stressLevel -= 0.08;
     }
 
     // 3. MULTIFACTORIAL ORGAN DAMAGE (The Vicious Cycle)
@@ -119,87 +132,24 @@ export class Agent {
 
     ClinicalPathways.evaluateOrganRecovery(this);
 
-    // 4. Broad Condition Matrix (Phase 12 Expansion)
-    let conditionPenalty = 0;
-    
-    // Metabolic & Cardiac
-    if (this.state.chronicConditions.includes("Diabetes")) {
-      const hasMeds = this.state.medications.includes("Metformin") || this.state.medications.includes("Insulin") || this.state.medications.includes("SGLT2_Inhibitor") || this.state.medications.includes("Empagliflozin") || this.state.medications.includes("Semaglutide");
-
-      let multiplier = hasMeds ? 0.02 : 0.08; 
-      if (this.state.dietQuality < 50) conditionPenalty += multiplier;
-
-      this.state.labs.a1c += 0.005; 
-      if (this.state.dietQuality <= 50) this.state.labs.a1c += 0.01;
-      if (hasMeds && this.state.labs.a1c > 6.0) this.state.labs.a1c -= 0.02; 
-    }
-    
-    if (this.state.chronicConditions.includes("Hypertension")) {
-      const hasMeds = this.state.medications.includes("Lisinopril") || this.state.medications.includes("Amlodipine") || this.state.medications.includes("ACE_Inhibitor") || this.state.medications.includes("Metoprolol") || this.state.medications.includes("Chlorthalidone");
-
-      let multiplier = hasMeds ? 0.02 : 0.06;
-      if (this.state.stressLevel > 60) conditionPenalty += multiplier;
-
-      this.state.vitals.bpSystolic += 0.03;
-      if (hasMeds) {
-        if (this.state.vitals.bpSystolic > 120) this.state.vitals.bpSystolic -= 0.1;
-        if (this.state.vitals.bpDiastolic > 80) this.state.vitals.bpDiastolic -= 0.05;
-      }
-    }
-
-    if (this.state.chronicConditions.includes("CHF")) {
-      this.state.labs.cvHealth -= 0.03;
-      if (this.state.dietQuality < 50) {
-        this.state.labs.cvHealth -= 0.05; // Salt/Fluid overload
-        conditionPenalty += 0.1;
-      }
-    }
-
-    // Renal
-    if (this.state.chronicConditions.includes("CKD")) {
-      if (this.state.vitals.bpSystolic > 130) this.state.labs.egfr -= 0.04;
-    }
-    
-    if (this.state.chronicConditions.includes("ESRD")) {
-      this.state.labs.egfr = Math.min(this.state.labs.egfr, 14); // Locked active failure
-      conditionPenalty += 0.2; // Massive toxic strain
-    }
-
-    // Pulmonary
-    if (this.state.chronicConditions.includes("Asthma")) {
-      if (this.state.foodDesert) this.state.stressLevel += 0.1; // Proxy for environmental poor air quality
-      if (this.state.smoker) {
-        conditionPenalty += 0.05;
-      }
-    }
-
-    if (this.state.chronicConditions.includes("COPD")) {
-      this.state.vitals.heartRate += 0.05;
-      this.state.stressLevel += 0.05;
-      conditionPenalty += 0.08;
-      if (this.state.smoker) conditionPenalty += 0.15; // Active destruction
-    }
-
-    // Hepatology
-    if (this.state.chronicConditions.includes("Hepatitis")) {
-      conditionPenalty += 0.05;
-    }
-
-    if (this.state.chronicConditions.includes("Cirrhosis") || this.state.chronicConditions.includes("ESLD")) {
-      conditionPenalty += 0.15;
-      // Unpredictable liver toxicity slashing lab stability natively
-      if (Math.random() < 0.05) {
-        this.state.labs.a1c += Math.random() > 0.5 ? 0.1 : -0.1;
-        this.state.vitals.bpSystolic += Math.random() > 0.5 ? 2 : -2;
-      }
-    }
-    
-    // Apply environmental and gender-based acceleration 
-    if (this.state.sex === 'Male' && this.state.age < 60 && conditionPenalty > 0) conditionPenalty *= 1.1;
-    if (this.state.foodDesert && conditionPenalty > 0) conditionPenalty *= 1.5; 
-    
-    // Divide final condition penalty by 5 to drastically slow catastrophic cascades
-    this.state.baseHealth -= (conditionPenalty / 5);
+    // 4. ML Sequence Prediction (Replacing Hardcoded Condition Bounding)
+    // We fire this asynchronously so it doesn't block the React render loop.
+    InferenceEngine.predictNextTickDelta(this.state).then(res => {
+        if (res.healthDelta !== 0) {
+            this.state.baseHealth += res.healthDelta;
+            this.clampState();
+            // Optional: Log deep learning interventions into history occasionally
+            if (currentTick % 26 === 0 && Math.abs(res.healthDelta) > 0.05) {
+               this.logEvent({
+                 tick: currentTick,
+                 type: 'AI Sequence Engine',
+                 description: res.log,
+                 impactHealth: res.healthDelta,
+                 impactStress: 0
+               });
+            }
+        }
+    });
 
     // 5. Stress impact & HR/BP drift
     if (this.state.stressLevel > 70) {
@@ -294,6 +244,17 @@ export class Agent {
         this.state.baseHealth += 0.02;
     }
 
+    if (currentTick % 4 === 0) { // Take snapshot once a month for chronological charting
+      this.state.biometricHistory.push({
+        tick: currentTick,
+        age: this.state.age,
+        health: this.state.baseHealth,
+        stress: this.state.stressLevel,
+        bpSystolic: this.state.vitals.bpSystolic,
+        a1c: this.state.labs.a1c
+      });
+    }
+
     this.clampState();
   }
 
@@ -305,7 +266,12 @@ export class Agent {
   }
 
   private clampState() {
-    this.state.baseHealth = Math.max(0, Math.min(100, this.state.baseHealth));
+    // Hard Biological Age Ceiling
+    let maxBaseHlth = 100;
+    if (this.state.age > 65) maxBaseHlth = 100 - (this.state.age - 65) * 1.5; // e.g. at 85, max potential health is 70
+    maxBaseHlth = Math.max(10, maxBaseHlth); // Absolute floor to the ceiling
+    
+    this.state.baseHealth = Math.max(0, Math.min(maxBaseHlth, this.state.baseHealth));
     this.state.stressLevel = Math.max(0, Math.min(100, this.state.stressLevel));
     this.state.dietQuality = Math.max(0, Math.min(100, this.state.dietQuality));
     

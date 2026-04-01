@@ -11,6 +11,8 @@ import { DashboardView } from './components/DashboardView';
 import { SimulationReport } from './components/SimulationReport';
 import { CustomTwinDashboard } from './components/CustomTwinDashboard';
 import { TrainingDashboard } from './components/TrainingDashboard';
+import { BackendTrainer } from './components/BackendTrainer';
+import { ConsumerWizard } from './components/ConsumerWizard';
 import heroBg from './assets/hero_bg.png';
 
 // Helpers extracted to DashboardView component
@@ -27,13 +29,14 @@ function App() {
   const [isCustomRunning, setIsCustomRunning] = useState(false);
   const [isCustomEnded, setIsCustomEnded] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'timeline' | 'explanation' | 'ingestion' | 'network' | 'report' | 'custom-trial' | 'training'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'timeline' | 'explanation' | 'ingestion' | 'network' | 'report' | 'custom-trial' | 'training' | 'backend-train' | 'consumer-wizard'>('dashboard');
   const [selectedId, setSelectedId] = useState<string>('');
   
   // Fast Forward State
   const [fastForwardYears, setFastForwardYears] = useState<number>(5);
   const [autoResume, setAutoResume] = useState<boolean>(true);
   const [isFastForwarding, setIsFastForwarding] = useState<boolean>(false);
+  const [isCustomFastForwarding, setIsCustomFastForwarding] = useState<boolean>(false);
 
   useEffect(() => {
     engineRef.current = new SimulationEngine(initialAgents);
@@ -178,6 +181,33 @@ function App() {
     }, 50);
   };
 
+  const handleCustomFastForward = (years: number) => {
+    if (!customEngineRef.current || isCustomEnded) return;
+
+    setIsCustomRunning(false);
+    setIsCustomFastForwarding(true);
+
+    setTimeout(() => {
+      const ticksToAdvance = years * 52;
+      
+      for (let i = 0; i < ticksToAdvance; i++) {
+        if (!customEngineRef.current || isCustomEnded) break;
+        customEngineRef.current.tick();
+      }
+
+      if (customEngineRef.current) {
+         setCustomTwins([...customEngineRef.current.getAgents()]);
+         setCustomTicks(customEngineRef.current.currentTick);
+      }
+
+      setIsCustomFastForwarding(false);
+
+      if (autoResume && !isCustomEnded) {
+          setIsCustomRunning(true);
+      }
+    }, 50);
+  };
+
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset the entire Sandbox? All biological data arrays and Network feed protocols will be permanently wiped.")) {
       engineRef.current = new SimulationEngine(initialAgents);
@@ -239,11 +269,15 @@ function App() {
           {isEnded && <button className={`tab-btn ${activeTab === 'report' ? 'active' : ''}`} onClick={() => setActiveTab('report')} style={{ color: '#ef4444', fontWeight: 'bold' }}>Simulation Report</button>}
           <button className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>Dashboard</button>
           <button className={`tab-btn ${activeTab === 'timeline' ? 'active' : ''}`} onClick={() => setActiveTab('timeline')}>Detailed Timelines</button>
+          <button className={`tab-btn ${activeTab === 'consumer-wizard' ? 'active' : ''}`} onClick={() => setActiveTab('consumer-wizard')} style={{ color: '#f472b6', fontWeight: 'bold' }}>🔮 Simulate Me!</button>
           <button className={`tab-btn ${activeTab === 'network' ? 'active' : ''}`} onClick={() => setActiveTab('network')}>Global Network</button>
           <button className={`tab-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => setActiveTab('training')} style={{ color: '#f59e0b', fontWeight: 'bold' }}>RWD Training</button>
-          <button className={`tab-btn ${activeTab === 'ingestion' ? 'active' : ''}`} onClick={() => setActiveTab('ingestion')}>Add Digital Twin</button>
+          <button className={`tab-btn ${activeTab === 'ingestion' ? 'active' : ''}`} onClick={() => setActiveTab('ingestion')}>Add Twin (JSON)</button>
           <button className={`tab-btn ${activeTab === 'custom-trial' ? 'active' : ''}`} onClick={() => setActiveTab('custom-trial')} style={{ color: '#3b82f6', fontWeight: 'bold' }}>Custom Trial</button>
           <button className={`tab-btn ${activeTab === 'explanation' ? 'active' : ''}`} onClick={() => setActiveTab('explanation')}>How It Works</button>
+          {import.meta.env.DEV && (
+            <button className={`tab-btn ${activeTab === 'backend-train' ? 'active' : ''}`} onClick={() => setActiveTab('backend-train')} style={{ color: '#ec4899', fontWeight: 'bold' }}>Train PyTorch [DEV]</button>
+          )}
         </div>
 
         <div className="controls">
@@ -328,12 +362,14 @@ function App() {
       </header>
 
       <main className="main-content">
+        {activeTab === 'backend-train' && import.meta.env.DEV && <BackendTrainer />}
         {activeTab === 'report' && isEnded && <SimulationReport agents={agents} ticks={ticks} />}
         {activeTab === 'explanation' && <Explanation />}
         {activeTab === 'network' && <NetworkFeed ticks={ticks} />}
         {activeTab === 'training' && <TrainingDashboard />}
         {activeTab === 'timeline' && <TimelineView agents={agents} selectedId={selectedId} onSelectAgent={setSelectedId} />}
-        {activeTab === 'custom-trial' && <CustomTwinDashboard customTwins={customTwins} customTicks={customTicks} isCustomRunning={isCustomRunning} isCustomEnded={isCustomEnded} onTogglePlay={() => setIsCustomRunning(!isCustomRunning)} onEndTrial={() => { setIsCustomRunning(false); setIsCustomEnded(true); }} />}
+        {activeTab === 'custom-trial' && <CustomTwinDashboard customTwins={customTwins} customTicks={customTicks} isCustomRunning={isCustomRunning} isCustomEnded={isCustomEnded} isCustomFastForwarding={isCustomFastForwarding} onFastForward={handleCustomFastForward} onTogglePlay={() => setIsCustomRunning(!isCustomRunning)} onEndTrial={() => { setIsCustomRunning(false); setIsCustomEnded(true); }} />}
+        {activeTab === 'consumer-wizard' && <ConsumerWizard onStartCustomTrial={handleStartCustomTrial} />}
         {activeTab === 'ingestion' && <IngestionView onStartCustomTrial={handleStartCustomTrial} />}
         {activeTab === 'dashboard' && <DashboardView agents={agents} onSelectAgent={(id) => { setSelectedId(id); setActiveTab('timeline'); }} />}
       </main>

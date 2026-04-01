@@ -10,10 +10,13 @@ interface Props {
   onTogglePlay: () => void;
   onEndTrial: () => void;
   customTicks: number;
+  isCustomFastForwarding: boolean;
+  onFastForward: (years: number) => void;
 }
 
-export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, isCustomEnded, onTogglePlay, onEndTrial, customTicks }) => {
+export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, isCustomEnded, onTogglePlay, onEndTrial, customTicks, isCustomFastForwarding, onFastForward }) => {
   const [selectedId, setSelectedId] = useState<string>(customTwins[0]?.id || '');
+  const [ffYears, setFfYears] = useState<number>(5);
 
   // Safety trigger just in case the tab mounts early
   if (customTwins.length === 0) {
@@ -95,6 +98,22 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+          {!isCustomEnded && (
+              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '0.3rem 0.5rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <select value={ffYears} onChange={e => setFfYears(Number(e.target.value))} style={{ background: 'transparent', color: 'white', border: 'none', outline: 'none', cursor: 'pointer', marginRight: '0.5rem', fontWeight: 'bold' }}>
+                      <option value={1} style={{background:'#1e293b'}}>1 Year</option>
+                      <option value={5} style={{background:'#1e293b'}}>5 Years</option>
+                      <option value={10} style={{background:'#1e293b'}}>10 Years</option>
+                  </select>
+                  <button 
+                      onClick={() => onFastForward(ffYears)}
+                      disabled={isCustomFastForwarding}
+                      style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', fontWeight: 'bold', cursor: isCustomFastForwarding ? 'not-allowed' : 'pointer', animation: isCustomFastForwarding ? 'pulseGlow 1s infinite' : 'none' }}
+                  >
+                      {isCustomFastForwarding ? 'Wait...' : '⏩ Skip'}
+                  </button>
+              </div>
+          )}
           {!isCustomEnded && (
               <button 
                 onClick={onTogglePlay}
