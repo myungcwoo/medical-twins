@@ -24,6 +24,7 @@ const getStressColor = (val: number) => {
 
 export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
   const [page, setPage] = useState(1);
+  const [subTab, setSubTab] = useState<'overview' | 'database'>('overview');
   const [apiKey, setApiKey] = useState(LLMEngine.apiKey || '');
   const [provider, setProvider] = useState<any>(LLMEngine.provider);
   const itemsPerPage = 20;
@@ -51,7 +52,23 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
 
   return (
     <div className="dashboard-wrapper">
-       {/* Generative AI Configuration */}
+      {/* Sub-Tab Navigation */}
+      <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+        <button 
+          onClick={() => setSubTab('overview')} 
+          style={{ background: 'transparent', border: 'none', color: subTab === 'overview' ? '#3b82f6' : 'var(--text-muted)', fontWeight: 'bold', fontSize: '1.1rem', cursor: 'pointer', borderBottom: subTab === 'overview' ? '2px solid #3b82f6' : '2px solid transparent', paddingBottom: '0.4rem', transition: 'all 0.2s' }}>
+          Global Overview
+        </button>
+        <button 
+          onClick={() => setSubTab('database')} 
+          style={{ background: 'transparent', border: 'none', color: subTab === 'database' ? '#10b981' : 'var(--text-muted)', fontWeight: 'bold', fontSize: '1.1rem', cursor: 'pointer', borderBottom: subTab === 'database' ? '2px solid #10b981' : '2px solid transparent', paddingBottom: '0.4rem', transition: 'all 0.2s' }}>
+          Population Database
+        </button>
+      </div>
+
+       {subTab === 'overview' && (
+         <>
+           {/* Generative AI Configuration */}
        <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(16, 185, 129, 0.1)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <span style={{ fontSize: '1.5rem' }}>🧠</span>
@@ -117,8 +134,12 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
             </div>
           </div>
        </div>
+       </>
+      )}
 
-       {/* Pagination Controls */}
+       {subTab === 'database' && (
+        <>
+        {/* Pagination Controls */}
        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.2)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
          <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#e2e8f0' }}>Population Database</h2>
          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -198,6 +219,8 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
               </div>
             ))}
        </div>
+       </>
+      )}
     </div>
   );
 };
