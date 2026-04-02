@@ -30,9 +30,9 @@ export class SimulationEngine {
       if (potentialAuthors.length > 0) {
         const electedAuthor = potentialAuthors[Math.floor(Math.random() * potentialAuthors.length)];
         
-        if (LLMEngine.apiKey && !LLMEngine.isGenerating) {
+        if (LLMEngine.isEnabled && LLMEngine.apiKey && !LLMEngine.isGenerating) {
             LLMEngine.generateProtocolAsync(electedAuthor, this.currentTick);
-        } else if (!LLMEngine.apiKey) {
+        } else if (!LLMEngine.isEnabled || !LLMEngine.apiKey) {
             // Unauthenticated Safe Fallback
             const fallbackArray = electedAuthor.state.role === 'Researcher' ? KnowledgeBase.CLINICAL_IDEAS : KnowledgeBase.LIFESTYLE_IDEAS;
             const fallbackIdea = fallbackArray[Math.floor(Math.random() * fallbackArray.length)];
