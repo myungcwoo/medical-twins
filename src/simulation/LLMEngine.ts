@@ -6,7 +6,7 @@ export type Provider = 'OpenAI' | 'Claude' | 'Gemini';
 export class LLMEngine {
   public static provider: Provider = (localStorage.getItem('llm_provider') as Provider) || 'OpenAI';
   public static apiKey: string | null = localStorage.getItem('llm_key');
-  public static activeModel: string = localStorage.getItem('llm_model') || 'gemini-1.5-flash';
+  public static activeModel: string = localStorage.getItem('llm_model') || 'gemini-2.5-flash';
   public static isGenerating = false;
   public static lastGenerationTick = 0;
 

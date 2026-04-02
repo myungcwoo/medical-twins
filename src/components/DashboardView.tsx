@@ -27,7 +27,7 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
   const [subTab, setSubTab] = useState<'overview' | 'database'>('overview');
   const [apiKey, setApiKey] = useState(LLMEngine.apiKey || '');
   const [provider, setProvider] = useState<any>(LLMEngine.provider);
-  const [targetModel, setTargetModel] = useState<string>(LLMEngine.activeModel || 'gemini-1.5-flash');
+  const [targetModel, setTargetModel] = useState<string>(LLMEngine.activeModel || 'gemini-2.5-flash');
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const itemsPerPage = 20;
 
