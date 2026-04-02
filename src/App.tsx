@@ -153,7 +153,7 @@ function App() {
     
     // Automatically pan the window down sequentially to expose the newly spawned Cohorts chart
     setTimeout(() => {
-        const container = document.getElementById('wizard-scroll-container');
+        const container = document.getElementById('global-scroll-container');
         const dash = document.getElementById('simulate-me-dashboard');
         if (container && dash) {
            container.scrollTo({ top: dash.offsetTop - 20, behavior: 'smooth' });
@@ -380,17 +380,17 @@ function App() {
         </div>
       </header>
 
-      <main className="main-content" style={{ padding: activeTab === 'dashboard' ? '1rem 0' : '2rem' }}>
+      <main id="global-scroll-container" className="main-content" style={{ padding: activeTab === 'dashboard' ? '1rem 0' : '1rem 1rem 2rem 1rem' }}>
         {activeTab === 'backend-train' && import.meta.env.DEV && <BackendTrainer />}
         {activeTab === 'report' && isEnded && (
-            <div style={{ height: 'calc(100vh - 250px)', overflowY: 'auto', paddingRight: '1rem' }}>
+            <div>
                 <SimulationReport agents={agents} ticks={ticks} />
             </div>
         )}
-        {activeTab === 'explanation' && <div style={{ height: 'calc(100vh - 200px)', overflowY: 'auto', paddingRight: '1rem' }}><Explanation /></div>}
+        {activeTab === 'explanation' && <div><Explanation /></div>}
         {activeTab === 'training' && <TrainingDashboard />}
         {activeTab === 'consumer-wizard' && (
-          <div id="wizard-scroll-container" style={{ display: 'flex', flexDirection: 'column', gap: '3rem', height: 'calc(100vh - 200px)', overflowY: 'auto', padding: '0.5rem 1rem 2rem 0.5rem' }}>
+          <div id="wizard-scroll-container" style={{ display: 'flex', flexDirection: 'column', gap: '3rem', padding: '0.5rem 0.5rem 2rem 0.5rem' }}>
              <ConsumerWizard onStartCustomTrial={handleStartCustomTrial} />
              {customTwins.length > 0 && (
                 <div id="simulate-me-dashboard">
