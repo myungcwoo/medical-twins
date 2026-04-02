@@ -4,7 +4,7 @@ import type { AgentState } from '../simulation/Agent';
 import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
 
 interface Props {
-  onStartCustomTrial: (agent: Omit<AgentState, 'history' | 'isDead'>, protocols: any[]) => void;
+  onStartCustomTrial: (agent: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>, protocols: any[]) => void;
 }
 
 const COMMON_CONDITIONS = [
@@ -60,7 +60,7 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
       // Dynamically calculate some fun starting biological metrics dependent on lifestyle
       const baseHlth = Math.min(100, Math.max(10, 85 - (age * 0.1) - (stressLevel * 0.15) + (dietQuality * 0.2) - (smoker ? 15 : 0)));
       
-      const parsedAgent: Omit<AgentState, 'history' | 'isDead'> = {
+      const parsedAgent: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'> = {
           id: `clone_${Math.floor(Math.random() * 100000)}`,
           name: name,
           age: age,

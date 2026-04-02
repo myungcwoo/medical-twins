@@ -6,7 +6,7 @@ const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "
 const randomChoice = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const randomRange = (min: number, max: number): number => Math.random() * (max - min) + min;
 
-const generateAgent = (idNum: number): Omit<AgentState, 'history' | 'isDead'> => {
+const generateAgent = (idNum: number): Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'> => {
   const age = Math.floor(randomRange(25, 85));
   const sex = randomChoice<Sex>(['Male', 'Female']);
   const smoker = Math.random() < 0.2;
@@ -90,4 +90,4 @@ const generateAgent = (idNum: number): Omit<AgentState, 'history' | 'isDead'> =>
   };
 };
 
-export const initialAgents: Omit<AgentState, 'history' | 'isDead'>[] = Array.from({ length: 100 }, (_, i) => generateAgent(i + 1));
+export const initialAgents: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>[] = Array.from({ length: 100 }, (_, i) => generateAgent(i + 1));

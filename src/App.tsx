@@ -70,7 +70,7 @@ function App() {
     return () => clearInterval(interval);
   }, [isRunning, isCustomRunning]);
 
-  const handleStartCustomTrial = (rawPayload: Omit<AgentState, 'history' | 'isDead'>, selectedProtocols: any[]) => {
+  const handleStartCustomTrial = (rawPayload: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>, selectedProtocols: any[]) => {
     // --- Spawning Bifurcated Comparative Clones For Isolated Sandbox ---
     const controlId = crypto.randomUUID();
     const interventionId = crypto.randomUUID();
@@ -80,7 +80,7 @@ function App() {
       memory: []
     };
 
-    const controlPayload: Omit<AgentState, 'history' | 'isDead'> = {
+    const controlPayload: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'> = {
       ...baseTwinParams,
       id: controlId,
       name: `${rawPayload.name} (Control)`,
@@ -88,7 +88,7 @@ function App() {
       pairedTwinId: interventionId
     };
 
-    const altPayload: Omit<AgentState, 'history' | 'isDead'> = {
+    const altPayload: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'> = {
       ...baseTwinParams,
       id: interventionId,
       name: `${rawPayload.name} (Optimized)`,

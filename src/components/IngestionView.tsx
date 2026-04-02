@@ -4,7 +4,7 @@ import type { AgentState } from '../simulation/Agent';
 import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
 
 interface Props {
-  onStartCustomTrial: (agent: Omit<AgentState, 'history' | 'isDead'>, protocols: any[]) => void;
+  onStartCustomTrial: (agent: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>, protocols: any[]) => void;
 }
 
 const TEMPLATE_HEALTHY = JSON.stringify({

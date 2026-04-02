@@ -9,7 +9,7 @@ export class SimulationEngine {
   currentTick: number = 0; 
   isRunning: boolean = false;
 
-  constructor(initialData: Omit<AgentState, 'history' | 'isDead'>[]) {
+  constructor(initialData: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>[]) {
     this.agents = initialData.map(d => new Agent(d));
   }
 
@@ -46,7 +46,7 @@ export class SimulationEngine {
     return this.agents.map(a => a.state);
   }
 
-  addAgent(rawPatient: Omit<AgentState, 'history' | 'isDead'>) {
+  addAgent(rawPatient: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>) {
     const newAgent = new Agent(rawPatient);
     this.agents.push(newAgent);
   }
