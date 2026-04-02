@@ -28,6 +28,7 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
   const [apiKey, setApiKey] = useState(LLMEngine.apiKey || '');
   const [provider, setProvider] = useState<any>(LLMEngine.provider);
   const [targetModel, setTargetModel] = useState<string>(LLMEngine.activeModel || 'gemini-2.5-flash');
+  const [llmEnabled, setLlmEnabled] = useState<boolean>(LLMEngine.isEnabled);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const itemsPerPage = 20;
 
@@ -96,10 +97,31 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
            {/* Generative AI Configuration */}
        <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(16, 185, 129, 0.1)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <span style={{ fontSize: '1.5rem' }}>🧠</span>
-              <div>
-                 <div style={{ fontWeight: 'bold', color: '#34d399', fontSize: '1.1rem' }}>Clinical Gen-AI Injection</div>
-                 <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Authenticate an LLM to dynamically prompt the network. Your keys never leave your browser loop.</div>
+              <span style={{ fontSize: '1.5rem', opacity: llmEnabled ? 1 : 0.5 }}>🧠</span>
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                 <div>
+                    <div style={{ fontWeight: 'bold', color: llmEnabled ? '#34d399' : 'var(--text-muted)', fontSize: '1.1rem' }}>Clinical Gen-AI Injection {llmEnabled ? '(Active)' : '(Disabled)'}</div>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Authenticate an LLM to dynamically prompt the network. Your keys never leave your browser loop.</div>
+                 </div>
+                 <button 
+                    onClick={() => {
+                        const newState = !llmEnabled;
+                        setLlmEnabled(newState);
+                        LLMEngine.setEnabled(newState);
+                    }}
+                    style={{
+                        background: llmEnabled ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                        color: llmEnabled ? '#fca5a5' : '#34d399',
+                        border: `1px solid ${llmEnabled ? '#fca5a5' : '#34d399'}`,
+                        padding: '0.5rem 1rem',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        whiteSpace: 'nowrap'
+                    }}
+                 >
+                    {llmEnabled ? 'Disable LLM Sandbox' : 'Enable LLM Sandbox'}
+                 </button>
               </div>
           </div>
           

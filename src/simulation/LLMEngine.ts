@@ -7,8 +7,14 @@ export class LLMEngine {
   public static provider: Provider = (localStorage.getItem('llm_provider') as Provider) || 'OpenAI';
   public static apiKey: string | null = localStorage.getItem('llm_key');
   public static activeModel: string = localStorage.getItem('llm_model') || 'gemini-2.5-flash';
+  public static isEnabled: boolean = localStorage.getItem('llm_enabled') !== 'false';
   public static isGenerating = false;
   public static lastGenerationTick = 0;
+
+  public static setEnabled(state: boolean) {
+      this.isEnabled = state;
+      localStorage.setItem('llm_enabled', state.toString());
+  }
 
   public static setCredentials(provider: Provider, key: string, modelStr?: string) {
     this.provider = provider;
@@ -22,7 +28,7 @@ export class LLMEngine {
   }
 
   public static async generateProtocolAsync(author: Agent, currentTick: number) {
-    if (!this.apiKey || this.isGenerating) return;
+    if (!this.isEnabled || !this.apiKey || this.isGenerating) return;
 
     this.isGenerating = true;
     this.lastGenerationTick = currentTick;
