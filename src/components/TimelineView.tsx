@@ -10,7 +10,7 @@ interface Props {
   onSelectAgent: (id: string) => void;
 }
 
-export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) => {
+export const TimelineView: FC<Props> = ({ agents, selectedId }) => {
   const selected = agents.find(a => a.id === selectedId) || agents[0];
   const pair = selected?.pairedTwinId ? agents.find(a => a.id === selected.pairedTwinId) : null;
 
@@ -37,7 +37,7 @@ export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) =
             ]);
         }
     })
-    .catch(err => {
+    .catch(_err => {
         console.warn("PyTorch Engine Offline. Falling back to TS Predictive Physics.");
         setForecasts(PredictiveEngine.getForecast(selected));
     });
@@ -226,7 +226,7 @@ export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) =
                         <div style={{flex: '3 1 300px'}}>
                           <div style={{fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '4px'}}>Recommended Preventative Mitigations:</div>
                           <ul style={{margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem'}}>
-                            {forecast.mitigations.map((mg, idx) => (
+                            {forecast.mitigations.map((mg: string, idx: number) => (
                               <li key={idx} style={{marginBottom: '3px', color: '#e2e8f0'}}>{mg}</li>
                             ))}
                           </ul>
