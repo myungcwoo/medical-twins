@@ -6,12 +6,17 @@ export type Provider = 'OpenAI' | 'Claude' | 'Gemini';
 export class LLMEngine {
   public static provider: Provider = (localStorage.getItem('llm_provider') as Provider) || 'OpenAI';
   public static apiKey: string | null = localStorage.getItem('llm_key');
+  public static activeModel: string = localStorage.getItem('llm_model') || 'gemini-1.5-flash';
   public static isGenerating = false;
   public static lastGenerationTick = 0;
 
-  public static setCredentials(provider: Provider, key: string) {
+  public static setCredentials(provider: Provider, key: string, modelStr?: string) {
     this.provider = provider;
     this.apiKey = key;
+    if (modelStr) {
+        this.activeModel = modelStr;
+        localStorage.setItem('llm_model', modelStr);
+    }
     localStorage.setItem('llm_provider', provider);
     localStorage.setItem('llm_key', key);
   }
@@ -68,21 +73,54 @@ export class LLMEngine {
             temperature: 0.8
           })
         });
-        if (!res.ok) throw new Error(`OpenAI HTTP ${res.status}`);
+        if (!res.ok) {
+            let errText = await res.text();
+            throw new Error(`OpenAI HTTP ${res.status}: ${errText}`);
+        }
         const data = await res.json();
         rawPayload = data.choices[0].message.content.trim();
       
       } else if (this.provider === 'Gemini') {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.activeModel}:generateContent?key=${this.apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: `You are a strict JSON medical AI simulator. Ensure no markdown formatting or text besides raw JSON: ${prompt}` }] }],
-            generationConfig: { temperature: 0.8 }
+            contents: [{ role: 'user', parts: [{ text: `You are a strict JSON medical AI simulator. Ensure no markdown formatting or text besides raw JSON: ${prompt}` }] }],
+            generationConfig: { 
+              temperature: 0.8
+            },
+            safetySettings: [
+              { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" }
+            ]
           })
         });
-        if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
+        
+        if (!res.ok) {
+            let errText = await res.text();
+            if (res.status === 404) {
+                try {
+                    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`);
+                    const listData = await listRes.json();
+                    if (listData.models) {
+                        const modelsArray = listData.models.map((m: any) => m.name.replace('models/', '')).filter((n: string) => n.includes('gemini'));
+                        errText = `404 Not Found. Your specific API Key has access to: ${modelsArray.join(', ')}`;
+                    }
+                } catch (e) {
+                    // silently fail the diagnostic
+                }
+            }
+            throw new Error(`Gemini HTTP ${res.status}: ${errText}`);
+        }
         const data = await res.json();
+        
+        // Handle potential Safety blocks returning undefined contents
+        if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
+            throw new Error(`Gemini Safety Block or Empty Response: ${JSON.stringify(data)}`);
+        }
+        
         rawPayload = data.candidates[0].content.parts[0].text.trim();
 
       } else if (this.provider === 'Claude') {
@@ -102,7 +140,10 @@ export class LLMEngine {
             temperature: 0.8
           })
         });
-        if (!res.ok) throw new Error(`Claude HTTP ${res.status}`);
+        if (!res.ok) {
+            let errText = await res.text();
+            throw new Error(`Claude HTTP ${res.status}: ${errText}`);
+        }
         const data = await res.json();
         rawPayload = data.content[0].text.trim();
       }
@@ -137,7 +178,17 @@ export class LLMEngine {
       KnowledgeBase.broadcast(author, template, currentTick);
 
     } catch (error) {
-      console.warn("LLM Generation Failed (Token limit elapsed or Invalid JSON):", error);
+      console.warn("LLM Generation Failed:", error);
+      KnowledgeBase.broadcast(author, {
+        id: `err_${Date.now()}`,
+        source: 'Personal',
+        type: 'Lifestyle',
+        title: `${this.provider} API Rejection`,
+        impact: {
+          healthDelta: 0, stressDelta: 0, bpDelta: 0, a1cDelta: 0, cvDelta: 0, egfrDelta: 0, newMeds: [],
+          description: `Auth or Payload Error: ${error instanceof Error ? error.message : String(error)}`
+        }
+      }, currentTick);
     } finally {
       this.isGenerating = false;
     }

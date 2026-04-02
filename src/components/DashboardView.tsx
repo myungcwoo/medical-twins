@@ -27,11 +27,36 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
   const [subTab, setSubTab] = useState<'overview' | 'database'>('overview');
   const [apiKey, setApiKey] = useState(LLMEngine.apiKey || '');
   const [provider, setProvider] = useState<any>(LLMEngine.provider);
+  const [targetModel, setTargetModel] = useState<string>(LLMEngine.activeModel || 'gemini-1.5-flash');
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
   const itemsPerPage = 20;
 
   const handleSaveKey = () => {
-    LLMEngine.setCredentials(provider, apiKey);
-    alert(`${provider} Engine Authenticated and Secured! The digital twins will now prompt this network for protocol evaluations.`);
+    LLMEngine.setCredentials(provider, apiKey, targetModel);
+    alert(`${provider} Engine Authenticated (${targetModel})! The digital twins will now prompt this network for protocol evaluations.`);
+  };
+
+  const handleFetchModels = async () => {
+      if (provider !== 'Gemini') return;
+      if (!apiKey) {
+          alert('Please enter your API Key first.');
+          return;
+      }
+      try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+          const data = await res.json();
+          if (data.models) {
+              const ms = data.models.map((m: any) => m.name.replace('models/', '')).filter((n: string) => n.includes('gemini'));
+              setAvailableModels(ms);
+              if (ms.length > 0 && !ms.includes(targetModel)) {
+                  setTargetModel(ms[0]);
+              }
+          } else {
+              alert('Could not fetch models. Check your API Key.');
+          }
+      } catch (e) {
+          alert("Failed to fetch models.");
+      }
   };
 
   useEffect(() => {
@@ -103,6 +128,22 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
                 Save
               </button>
           </div>
+
+          {/* Dynamic Model Sub-Selection */}
+          {provider === 'Gemini' && (
+              <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button onClick={handleFetchModels} style={{ background: 'var(--panel-bg)', color: '#3b82f6', border: '1px solid currentColor', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                     Scan Authorized Models
+                  </button>
+                  {availableModels.length > 0 ? (
+                      <select value={targetModel} onChange={e => setTargetModel(e.target.value)} style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '4px', flex: 1, minWidth: '200px' }}>
+                          {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                  ) : (
+                      <input type="text" value={targetModel} onChange={e => setTargetModel(e.target.value)} placeholder="Manual Override: e.g. gemini-2.5-flash" style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '4px', flex: 1, minWidth: '200px' }} />
+                  )}
+              </div>
+          )}
        </div>
 
        {/* Analytics Banner */}
