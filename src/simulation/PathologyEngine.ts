@@ -1,5 +1,6 @@
 import { Agent } from './Agent';
 import { TrainingEngine } from './TrainingEngine';
+import { InferenceEngine } from './InferenceEngine';
 
 export class PathologyEngine {
   /**
@@ -41,7 +42,9 @@ export class PathologyEngine {
 
     // 2. Hypertension -> Congestive Heart Failure (CHF)
     // Base incidence ~1.5% annually. RR ~1.71. +28% risk per 20mmHg over 120.
-    if (state.chronicConditions.includes('Hypertension') && !state.chronicConditions.includes('CHF')) {
+    const mlActive = InferenceEngine.isOnline();
+    
+    if (!mlActive && state.chronicConditions.includes('Hypertension') && !state.chronicConditions.includes('CHF')) {
       let risk = getCompoundRisk('CHF', 0.015);
       const excessBP = Math.max(0, state.vitals.bpSystolic - 120);
       const bpMultiplier = 1 + (Math.floor(excessBP / 20) * 0.28);
@@ -64,7 +67,7 @@ export class PathologyEngine {
 
     // 3. Smoking/Asthma -> COPD
     // Base incidence ~2.0% annually per CDC data for current smokers. 
-    if ((state.smoker || state.chronicConditions.includes('Asthma')) && !state.chronicConditions.includes('COPD')) {
+    if (!mlActive && (state.smoker || state.chronicConditions.includes('Asthma')) && !state.chronicConditions.includes('COPD')) {
       let risk = getCompoundRisk('COPD', 0.02);
       if (state.age > 50) risk *= 1.5;
       if (state.smoker && state.chronicConditions.includes('Asthma')) risk *= 3.0; // Synergistic destruction

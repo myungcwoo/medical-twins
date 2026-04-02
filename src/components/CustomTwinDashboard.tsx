@@ -102,6 +102,84 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
     });
   };
 
+  const renderPopulationSurvivalHeatmap = () => {
+    if (customTwins.length < 2) return null;
+    
+    // We strictly map from age 40 to Max Lifespan boundary
+    const allAges = customTwins.flatMap(t => t.biometricHistory.map(h => h.age));
+    const minAge = 40; 
+    const maxAge = Math.max(...allAges, 50); // Ensure at least 10 columns exist natively
+    
+    // Sub-render physical grid map
+    const renderCohortGrid = (cohort: AgentState[], title: string, color: string) => {
+        return (
+            <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ color, margin: '0 0 0.5rem 0' }}>{title} ({cohort.length} Agents)</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', background: 'rgba(0,0,0,0.5)', padding: '0.8rem', borderRadius: '6px', border: `1px solid ${color}33` }}>
+                    {cohort.map((agent, agentIdx) => {
+                        // Scan physical event history bounds
+                        const pathologyEvents = agent.history.filter(h => h.type === 'Pathology Acquired');
+                        const deathEvent = agent.history.find(h => h.type === 'Catastrophic Mortality');
+                        const startAge = agent.biometricHistory[0]?.age || 40;
+                        
+                        const squares = [];
+                        for (let a = minAge; a <= maxAge; a++) {
+                           if (a < startAge) continue;
+                           let bg = '#10b981'; // Green
+                           
+                           let isDead = false;
+                           if (deathEvent) {
+                               const dAge = deathEvent.tick === 0 ? 0 : startAge + Math.floor(deathEvent.tick / 52);
+                               if (a >= dAge) {
+                                   bg = '#0f172a'; // Dead
+                                   isDead = true;
+                               }
+                           }
+                           
+                           if (!isDead) {
+                               const pathCount = pathologyEvents.filter(h => (startAge + Math.floor(h.tick / 52)) <= a).length;
+                               if (pathCount === 1) bg = '#fbbf24'; // Yellow
+                               if (pathCount >= 2) bg = '#ef4444'; // Red
+                           }
+                           
+                           squares.push(<div key={a} style={{ flex: 1, height: '10px', background: bg, borderRadius: '1px', opacity: a > agent.age && !isDead ? 0.1 : 1 }} title={`Agent ${agentIdx} | Age ${a}`} />);
+                        }
+                        
+                        return (
+                           <div key={agentIdx} style={{ display: 'flex', gap: '2px', width: '100%' }}>
+                               {squares}
+                           </div>
+                        );
+                    })}
+                </div>
+            </div>
+        )
+    };
+
+    const controls = customTwins.filter(t => t.comparativeGroup === 'Control');
+    const tests = customTwins.filter(t => t.comparativeGroup === 'Intervention');
+    
+    return (
+        <div className="fade-in" style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '2rem' }}>
+            <h3 style={{ margin: '0 0 1rem 0', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+               <span>🔥</span> Cohort Pathological Heatmap
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+               Visualizing timeline divergence per agent. Each row represents a single Patient's chronological lifespan. Colors indicate cumulative physical decay determined mechanically by sequence gradients.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px' }}>
+                <div style={{display:'flex', alignItems:'center', gap:'0.4rem'}}><div style={{width:'14px',height:'14px',background:'#10b981', borderRadius:'2px'}}/> Stable Baseline</div>
+                <div style={{display:'flex', alignItems:'center', gap:'0.4rem'}}><div style={{width:'14px',height:'14px',background:'#fbbf24', borderRadius:'2px'}}/> Single Pathology</div>
+                <div style={{display:'flex', alignItems:'center', gap:'0.4rem'}}><div style={{width:'14px',height:'14px',background:'#ef4444', borderRadius:'2px'}}/> Poly-Morbid Condition</div>
+                <div style={{display:'flex', alignItems:'center', gap:'0.4rem'}}><div style={{width:'14px',height:'14px',background:'#0f172a', borderRadius:'2px'}}/> Critical Event / Mortality</div>
+            </div>
+            
+            {renderCohortGrid(controls, 'Unoptimized Base Cohort', '#fca5a5')}
+            {renderCohortGrid(tests, 'AI-Protocoled Cohort', '#34d399')}
+        </div>
+    );
+  };
+
   const renderComparativeSummary = () => {
     if (!isCustomEnded || customTwins.length < 2) return null;
     
@@ -264,8 +342,8 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
           )}
         </div>
       </div>
-      
       {renderComparativeSummary()}
+      {renderPopulationSurvivalHeatmap()}
 
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem' }}>
          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '1.5rem' }}>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { FC } from 'react';
+import { Agent, type AgentRole, type Sex } from '../simulation/Agent';
 
 export const BackendTrainer: FC = () => {
     const [apiUrl, setApiUrl] = useState('http://localhost:8000/train');
@@ -25,16 +26,62 @@ export const BackendTrainer: FC = () => {
         reader.readAsText(file);
     };
 
-    const handleMockGeneration = () => {
-        setLog(prev => [`[${new Date().toLocaleTimeString()}] Generating mock trajectory...`, ...prev]);
-        const mockData = {
-            patient_id: crypto.randomUUID(),
-            sequence_length: 15,
-            conditions: ['Hypertension', 'Diabetes'],
-            vitals: { hr: 80, bp: '120/80', a1c: 7.2 }
-        };
-        setPayload(mockData);
-        setLog(prev => [`[${new Date().toLocaleTimeString()}] Bound mock trajectory payload to buffer.`, ...prev]);
+    const handleSyntheticFarming = () => {
+        setLog(prev => [`[${new Date().toLocaleTimeString()}] Spawning 1,000 Headless Synthetic Farm Clones...`, ...prev]);
+        const syntheticCohort = [];
+
+        for (let i = 0; i < 1000; i++) {
+            const sex: Sex = Math.random() > 0.5 ? 'Male' : 'Female';
+            const role: AgentRole = 'Patient';
+            const initialAge = Math.floor(Math.random() * 20) + 20; // 20 to 40
+            
+            const agent = new Agent({
+                id: crypto.randomUUID(),
+                name: `Synth_Farm_${i}`,
+                age: initialAge,
+                sex,
+                role,
+                baseHealth: 100 - (Math.random() * 10),
+                stressLevel: Math.random() * 30,
+                dietQuality: Math.random() * 50 + 50,
+                wealth: Math.random() * 100,
+                accessToCare: Math.random() * 100,
+                foodDesert: Math.random() > 0.8,
+                exerciseRoutine: Math.random() > 0.5 ? 'Moderate' : 'None',
+                medicalCompliance: Math.random() > 0.5 ? 'Moderate' : 'High',
+                chronicConditions: [],
+                familyHistory: [],
+                surgicalHistory: [],
+                medications: [],
+                smoker: Math.random() > 0.8,
+                vitals: {
+                    bpSystolic: 110 + (Math.random() * 20),
+                    bpDiastolic: 70 + (Math.random() * 10),
+                    heartRate: 60 + (Math.random() * 20),
+                    bmi: 20 + (Math.random() * 10)
+                },
+                labs: {
+                    a1c: 4.5 + (Math.random() * 1.5),
+                    ldlCholesterol: 80 + (Math.random() * 40),
+                    egfr: 90 + (Math.random() * 20),
+                    cvHealth: 80 + (Math.random() * 20)
+                }
+            });
+
+            // Fast-forward 50 years to generate deep life sequences
+            for (let t = 1; t <= (52 * 50); t++) {
+                if (agent.state.isDead) break;
+                // We tick the agent to invoke Pathology routines strictly
+                agent.tick(t);
+                // Agent internal tick already records to agent.state.biometricHistory every 52 weeks
+                if (t % 52 === 0) agent.state.age++;
+            }
+            
+            syntheticCohort.push(agent.state);
+        }
+
+        setPayload({ agentPopulation: syntheticCohort });
+        setLog(prev => [`[${new Date().toLocaleTimeString()}] Successfully synthesized 1,000 50-Year lifespans (Distillation Matrix).`, ...prev]);
     }
 
     const triggerTraining = async () => {
@@ -90,8 +137,8 @@ export const BackendTrainer: FC = () => {
                         <input type="file" accept=".json" onChange={handleFileUpload} style={{ display: 'none' }} />
                     </label>
                     <br />
-                    <button onClick={handleMockGeneration} style={{ background: 'transparent', color: '#a78bfa', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid rgba(167, 139, 250, 0.4)', cursor: 'pointer', fontSize: '0.85rem' }}>
-                        Generate Mock Telemetry
+                    <button onClick={handleSyntheticFarming} style={{ background: 'transparent', color: '#a78bfa', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid rgba(167, 139, 250, 0.4)', cursor: 'pointer', fontSize: '0.85rem' }}>
+                        Generate 1,000 Synthetic Agent Histories (Self-Play)
                     </button>
                 </div>
                 

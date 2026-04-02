@@ -9,32 +9,38 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-class MortalityPredictor(nn.Module):
-    def __init__(self, input_dim=8):
-        super(MortalityPredictor, self).__init__()
-        self.fc1 = nn.Linear(input_dim, 64)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(64, 32)
-        # Multiclass output heads for clinical risks
-        self.head_ascvd = nn.Linear(32, 1)
-        self.head_chf = nn.Linear(32, 1)
-        self.head_diabetes = nn.Linear(32, 1)
-        self.head_copd = nn.Linear(32, 1)
+class TransformerPredictor(nn.Module):
+    def __init__(self, input_dim=8, d_model=32, nhead=4, num_layers=2):
+        super(TransformerPredictor, self).__init__()
+        self.embedding = nn.Linear(input_dim, d_model)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=nhead, batch_first=True)
+        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        
+        # Multiclass output heads for clinical risks matching causal vector
+        self.head_ascvd = nn.Linear(d_model, 1)
+        self.head_chf = nn.Linear(d_model, 1)
+        self.head_diabetes = nn.Linear(d_model, 1)
+        self.head_copd = nn.Linear(d_model, 1)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        h = self.relu(self.fc1(x))
-        h = self.relu(self.fc2(h))
-        # Returns risk probabilities (0 to 1) mapped safely via Sigmoid
-        out_ascvd = self.sigmoid(self.head_ascvd(h))
-        out_chf = self.sigmoid(self.head_chf(h))
-        out_db = self.sigmoid(self.head_diabetes(h))
-        out_copd = self.sigmoid(self.head_copd(h))
+        # x is robust shape (Batch, Seq_Len, Features)
+        emb = self.embedding(x)
+        # Temporally convolve sequence across self-attention blocks
+        out = self.transformer(emb)
+        # Snip the ultimate temporal layer containing holistic agent representation
+        last_step = out[:, -1, :] 
+        
+        # Hazard probabilities gracefully bound between 0 and 1
+        out_ascvd = self.sigmoid(self.head_ascvd(last_step))
+        out_chf = self.sigmoid(self.head_chf(last_step))
+        out_db = self.sigmoid(self.head_diabetes(last_step))
+        out_copd = self.sigmoid(self.head_copd(last_step))
         return torch.cat((out_ascvd, out_chf, out_db, out_copd), dim=-1)
 
 # Initialize the Native Torch Engine
 device = torch.device("cpu")
-model = MortalityPredictor().to(device)
+model = TransformerPredictor().to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.005)
 criterion = nn.MSELoss()
 
@@ -81,36 +87,60 @@ async def train_model_from_payload(request: Request):
         # Run 5 epochs of training over the payload batch to demonstrate authentic descent
         for epoch in range(5):
             batch_loss = 0.0
+            processed_rows = 0
             optimizer.zero_grad()
             
             for agent in data_arr:
-                # Safely parse heuristic states
-                try:
-                    age = float(agent.get("age", 40.0) if isinstance(agent, dict) else 40.0)
-                    bp = agent.get("vitals", {}).get("bpSystolic", 120.0) if isinstance(agent, dict) else 120.0
-                    a1c = agent.get("labs", {}).get("a1c", 5.5) if isinstance(agent, dict) else 5.5
-                    bmi = agent.get("vitals", {}).get("bmi", 25.0) if isinstance(agent, dict) else 25.0
-                    cvh = agent.get("labs", {}).get("cvHealth", 80.0) if isinstance(agent, dict) else 80.0
-                    ldl = agent.get("labs", {}).get("ldlCholesterol", 100.0) if isinstance(agent, dict) else 100.0
-                    stress = float(agent.get("stressLevel", 20.0) if isinstance(agent, dict) else 20.0)
-                    egfr = agent.get("labs", {}).get("egfr", 90.0) if isinstance(agent, dict) else 90.0
+                # Safely parse heuristic states - unroll full biometric sequences
+                history_track = agent.get("biometricHistory", [])
+                
+                # If no deep history, just wrap the root agent in a list to process it identically
+                if not history_track:
+                    history_track = [agent]
                     
-                    # Target Proxy Generation (Since this is unsupervised simulation ingestion, we math-map a proxy target tensor)
-                    # Fake Target = [Stroke, CHF, Diabetes, COPD]
-                    target = torch.tensor([[min(1.0, age/100 + bp/300), min(1.0, bmi/50 + (100-cvh)/100), min(1.0, a1c/12), min(1.0, age/120)]], dtype=torch.float32)
+                seq_tensors = []
+                final_target = None
+                
+                for snapshot in history_track:
+                    try:
+                        age = float(snapshot.get("age", agent.get("age", 40.0)))
+                        
+                        # Handle deep nesting in root vs flat in snapshot
+                        bp = float(snapshot.get("bpSystolic", agent.get("vitals", {}).get("bpSystolic", 120.0)))
+                        a1c = float(snapshot.get("a1c", agent.get("labs", {}).get("a1c", 5.5)))
+                        
+                        # Static variables that might not be in the snapshot
+                        bmi = float(agent.get("vitals", {}).get("bmi", 25.0))
+                        cvh = float(agent.get("labs", {}).get("cvHealth", 80.0))
+                        ldl = float(agent.get("labs", {}).get("ldlCholesterol", 100.0))
+                        stress = float(snapshot.get("stress", agent.get("stressLevel", 20.0)))
+                        egfr = float(agent.get("labs", {}).get("egfr", 90.0))
+                        
+                        # Target Proxy Generation (Unsupervised Math Vector) evaluates to the final tick
+                        stroke_risk = min(1.0, age/100 + bp/300)
+                        chf_risk = min(1.0, bmi/50 + (100-cvh)/100)
+                        db_risk = min(1.0, a1c/12)
+                        copd_risk = min(1.0, age/120)
 
-                    x = torch.tensor([[age, bmi, bp, a1c, cvh, ldl, stress, egfr]], dtype=torch.float32)
-                    
+                        step_vec = torch.tensor([age, bmi, bp, a1c, cvh, ldl, stress, egfr], dtype=torch.float32)
+                        seq_tensors.append(step_vec)
+                        
+                        final_target = torch.tensor([[stroke_risk, chf_risk, db_risk, copd_risk]], dtype=torch.float32).to(device)
+                    except Exception as ex:
+                        pass
+                        
+                if len(seq_tensors) > 0 and final_target is not None:
+                    # Construct Rank 3 Sequence Tensor: (Batch=1, Seq_Length=N, Features=8)
+                    x = torch.stack(seq_tensors).unsqueeze(0).to(device) 
                     outputs = model(x)
-                    loss = criterion(outputs, target)
+                    loss = criterion(outputs, final_target)
                     loss.backward()
                     
                     batch_loss += loss.item()
-                except Exception as ex:
-                    pass
+                    processed_rows += len(seq_tensors)
             
             optimizer.step()
-            avg_loss = batch_loss / max(1, records)
+            avg_loss = batch_loss / max(1, processed_rows)
             epoch_losses.append(round(avg_loss, 4))
             print(f"Epoch {epoch+1}/5 | Backward Loss Gradient: {avg_loss:.4f}")
 
@@ -119,8 +149,8 @@ async def train_model_from_payload(request: Request):
             print("Compiling active Deep Learning Tensors into WASM ONNX Graph...")
             import os
             
-            # Create a dummy tensor that matches our exact input expectations (1 batch, 8 dimension floats)
-            dummy_input = torch.randn(1, 8, device=device)
+            # Create a dummy tensor expecting Sequence Input (1 batch, 10 sequence length, 8 dimension floats)
+            dummy_input = torch.randn(1, 10, 8, device=device)
             # Define exact output path mapping to Vite Public Directory
             onnx_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'public', 'medical_twin_model.onnx'))
             
@@ -133,7 +163,10 @@ async def train_model_from_payload(request: Request):
                 do_constant_folding=True,
                 input_names=['vitals_input'],
                 output_names=['hazard_preds'],
-                dynamic_axes={'vitals_input': {0: 'batch_size'}, 'hazard_preds': {0: 'batch_size'}}
+                dynamic_axes={
+                    'vitals_input': {0: 'batch_size', 1: 'seq_len'}, 
+                    'hazard_preds': {0: 'batch_size'}
+                }
             )
             print(f"ONNX Graph physically bound to React Engine: {onnx_path}")
         except Exception as onnx_e:
@@ -143,8 +176,8 @@ async def train_model_from_payload(request: Request):
             "status": "success",
             "message": "Model Successfully updated with Backpropagation & ONNX Binding",
             "metrics": {
-                "records_processed": records,
-                "epoch_loss": epoch_losses[-1],
+                "records_processed": processed_rows,
+                "epoch_loss": epoch_losses[-1] if epoch_losses else 0,
                 "loss_history": epoch_losses,
                 "attention_heads": 8,
                 "ode_solver": "Torch-Adam-MSE-ONNX"
@@ -157,30 +190,41 @@ async def train_model_from_payload(request: Request):
 async def process_inference(request: Request):
     """
     Live TS Integration endpoint. Takes a full arbitrary Twin JSON payload,
-    unrolls it into Torch arrays, executes an NN forward pass, and returns mathematically
+    unrolls its entire longitudinal history into Torch temporal arrays,
+    executes an NN forward Sequence pass, and returns mathematically
     bounded hazard probabilities natively via JSON tensor extraction.
     """
     try:
         agent = await request.json()
-        # Safe extraction mirroring the training parser
-        age = float(agent.get("age", 40.0))
-        bp = float(agent.get("vitals", {}).get("bpSystolic", 120.0))
-        a1c = float(agent.get("labs", {}).get("a1c", 5.5))
-        bmi = float(agent.get("vitals", {}).get("bmi", 25.0))
-        cvh = float(agent.get("labs", {}).get("cvHealth", 80.0))
-        ldl = float(agent.get("labs", {}).get("ldlCholesterol", 100.0))
-        stress = float(agent.get("stressLevel", 20.0))
-        egfr = float(agent.get("labs", {}).get("egfr", 90.0))
+        
+        # Pull sequence array
+        history_track = agent.get("biometricHistory", [])
+        if not history_track:
+            history_track = [agent]
+            
+        seq_tensors = []
+        for snapshot in history_track:
+            age = float(snapshot.get("age", agent.get("age", 40.0)))
+            bp = float(snapshot.get("bpSystolic", agent.get("vitals", {}).get("bpSystolic", 120.0)))
+            a1c = float(snapshot.get("a1c", agent.get("labs", {}).get("a1c", 5.5)))
+            bmi = float(agent.get("vitals", {}).get("bmi", 25.0))
+            cvh = float(agent.get("labs", {}).get("cvHealth", 80.0))
+            ldl = float(agent.get("labs", {}).get("ldlCholesterol", 100.0))
+            stress = float(snapshot.get("stress", agent.get("stressLevel", 20.0)))
+            egfr = float(agent.get("labs", {}).get("egfr", 90.0))
+            
+            step_vec = torch.tensor([age, bmi, bp, a1c, cvh, ldl, stress, egfr], dtype=torch.float32)
+            seq_tensors.append(step_vec)
 
         model.eval()
         with torch.no_grad():
-            x = torch.tensor([[age, bmi, bp, a1c, cvh, ldl, stress, egfr]], dtype=torch.float32)
+            x = torch.stack(seq_tensors).unsqueeze(0).to(device) # Rank 3 (1, Seq_Len, 8)
             outputs = model(x).squeeze(0) # Returns shape [4]
             
             # Map native Torch floats to 0-100 hazard percentages
             preds = [round(float(out) * 100, 1) for out in outputs]
             
-        print(f"[INFERENCE] Pass successful for Agent ID: {agent.get('id', 'Unknown')}. Results computed.")
+        print(f"[INFERENCE] Sequence Pass successful for Agent ID: {agent.get('id', 'Unknown')}. Extracted temporal frame length: {len(seq_tensors)}")
 
         return {
             "status": "success",
@@ -193,7 +237,7 @@ async def process_inference(request: Request):
         }
     except Exception as e:
         print(f"Inference Error: {e}")
-        return {"status": "error", "message": "Neural Forward Pass Failed."}
+        return {"status": "error", "message": "Transformer Sequence Forward Pass Failed."}
 
 @app.get("/harvest_literature")
 def harvest_literature():

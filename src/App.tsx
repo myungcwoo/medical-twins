@@ -14,6 +14,8 @@ import { TrainingDashboard } from './components/TrainingDashboard';
 import { BackendTrainer } from './components/BackendTrainer';
 import { ConsumerWizard } from './components/ConsumerWizard';
 import heroBg from './assets/hero_bg.png';
+import { DatabaseEngine } from './simulation/DatabaseEngine';
+import { InferenceEngine } from './simulation/InferenceEngine';
 
 // Helpers extracted to DashboardView component
 
@@ -39,8 +41,23 @@ function App() {
   const [isCustomFastForwarding, setIsCustomFastForwarding] = useState<boolean>(false);
 
   useEffect(() => {
-    engineRef.current = new SimulationEngine(initialAgents);
-    setAgents(engineRef.current.getAgents());
+    const hydrator = async () => {
+      // 1. Await Edge ML Memory Loading
+      await InferenceEngine.initialize();
+      
+      // 2. Hydrate the persistent simulation twin population
+      const persisted = await DatabaseEngine.loadSnapshot();
+      if (persisted && persisted.agents && persisted.agents.length > 0) {
+          engineRef.current = new SimulationEngine(persisted.agents as any);
+          engineRef.current.currentTick = persisted.ticks;
+          setTicks(persisted.ticks);
+          console.log("[IndexedDB] Simulation completely restored to Week " + persisted.ticks);
+      } else {
+          engineRef.current = new SimulationEngine(initialAgents);
+      }
+      setAgents(engineRef.current.getAgents());
+    };
+    hydrator();
 
     // Force strict Vite hot-reloading for the Nano Banana background
     document.body.style.backgroundImage = `url(${heroBg})`;
@@ -75,6 +92,11 @@ function App() {
 
           setAgents([...engineRef.current.getAgents()]);
           setTicks(engineRef.current.currentTick);
+
+          // Phase 5 Persistence: Autosave silently in the background
+          if (engineRef.current.currentTick > 0 && engineRef.current.currentTick % 52 === 0) {
+              DatabaseEngine.saveSnapshot(engineRef.current.currentTick, engineRef.current.getAgents());
+          }
         }
         if (isCustomRunning && customEngineRef.current) {
           customEngineRef.current.tick();
@@ -230,8 +252,9 @@ function App() {
     }, 50);
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (window.confirm("Are you sure you want to reset the entire Sandbox? All biological data arrays and Network feed protocols will be permanently wiped.")) {
+      await DatabaseEngine.clearSnapshot();
       engineRef.current = new SimulationEngine(initialAgents);
       customEngineRef.current = null;
       KnowledgeBase.globalFeed = [];
@@ -267,118 +290,115 @@ function App() {
   };
 
   return (
-    <div className="dashboard">
-      <header className="header">
-        <div className="title" style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+    <div className="layout-wrapper">
+      
+      {/* 1. Collapsible Vertical Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-header">
           <img 
             src="/logo.png" 
             alt="Medical Twins Logo" 
-            style={{ 
-              width: '64px', 
-              height: '64px', 
-              borderRadius: '12px', 
-              boxShadow: '0 4px 15px rgba(139, 92, 246, 0.3)', 
-              objectFit: 'cover' 
-            }} 
+            className="logo"
           />
-          <div>
-            <h1>Digital Patient Simulation</h1>
-            <p>Clinical AI Studio Pillar: Generative Agent-Based MLOps & Deep Learning Forecasts</p>
+          <div className="brand">
+            <h1>Clinical AI</h1>
+            <p>Digital Patient Studio</p>
           </div>
         </div>
         
-        <div className="nav-tabs">
-          {isEnded && <button className={`tab-btn ${activeTab === 'report' ? 'active' : ''}`} onClick={() => setActiveTab('report')} style={{ color: '#ef4444', fontWeight: 'bold' }}>Simulation Report</button>}
-          <button className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')} style={{ color: '#3b82f6', fontWeight: 'bold' }}>⚡ Live Command Center</button>
-          <button className={`tab-btn ${activeTab === 'consumer-wizard' ? 'active' : ''}`} onClick={() => setActiveTab('consumer-wizard')} style={{ color: '#f472b6', fontWeight: 'bold' }}>🔮 Simulate Me!</button>
-          <button className={`tab-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => setActiveTab('training')} style={{ color: '#f59e0b', fontWeight: 'bold' }}>RWD Training</button>
-          <button className={`tab-btn ${activeTab === 'ingestion' ? 'active' : ''}`} onClick={() => setActiveTab('ingestion')}>Add Twin (JSON)</button>
-          <button className={`tab-btn ${activeTab === 'explanation' ? 'active' : ''}`} onClick={() => setActiveTab('explanation')}>How It Works</button>
+        <nav className="sidebar-nav">
+          <div className="nav-group-title">Primary Workspaces</div>
+          <button className={`sidebar-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')} style={{ color: '#3b82f6', fontWeight: 'bold' }}>⚡ Command Center</button>
+          <button className={`sidebar-btn ${activeTab === 'consumer-wizard' ? 'active' : ''}`} onClick={() => setActiveTab('consumer-wizard')} style={{ color: '#f472b6', fontWeight: 'bold' }}>🔮 Simulate Me</button>
+          
+          <div className="nav-group-title" style={{ marginTop: '1rem' }}>Data & Logs</div>
+          {isEnded && <button className={`sidebar-btn ${activeTab === 'report' ? 'active' : ''}`} onClick={() => setActiveTab('report')} style={{ color: '#ef4444', fontWeight: 'bold' }}>📊 Terminated Report</button>}
+          <button className={`sidebar-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => setActiveTab('training')} style={{ color: '#f59e0b', fontWeight: 'bold' }}>💉 RWD Training</button>
+          <button className={`sidebar-btn ${activeTab === 'ingestion' ? 'active' : ''}`} onClick={() => setActiveTab('ingestion')}>🧬 Add Twin (JSON)</button>
+          <button className={`sidebar-btn ${activeTab === 'explanation' ? 'active' : ''}`} onClick={() => setActiveTab('explanation')}>📖 How It Works</button>
+        </nav>
+
+        <div className="sidebar-footer">
           {import.meta.env.DEV && (
-            <button className={`tab-btn ${activeTab === 'backend-train' ? 'active' : ''}`} onClick={() => setActiveTab('backend-train')} style={{ color: '#ec4899', fontWeight: 'bold' }}>Train PyTorch [DEV]</button>
+            <button className={`sidebar-btn dev-btn ${activeTab === 'backend-train' ? 'active' : ''}`} onClick={() => setActiveTab('backend-train')} style={{ color: '#ec4899', fontWeight: 'bold' }}>⚙️ ML Diagnostics</button>
           )}
         </div>
+      </aside>
 
-        <div className="controls">
-          <div className="tick-counter" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span>Global Clock: Week {ticks} {ticks > 0 && `(Year ${(ticks/52).toFixed(1)})`}</span>
-            {isFastForwarding && <span style={{ color: '#f59e0b', fontSize: '0.9rem', animation: 'pulseGlow 1s infinite' }}>(Processing Fast Forward...)</span>}
-          </div>
+      {/* 2. Main Content Area & Floating Island */}
+      <div className="main-content-area">
+        
+        <header className="top-island">
+            <div className="island-controls">
+              <div className="tick-counter" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span>Global Clock: Week {ticks} {ticks > 0 && `(Year ${(ticks/52).toFixed(1)})`}</span>
+                {isFastForwarding && <span style={{ color: '#f59e0b', fontSize: '0.9rem', animation: 'pulseGlow 1s infinite' }}>(Processing Fast Forward...)</span>}
+              </div>
 
-          {!isEnded && (
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button onClick={() => setIsRunning(!isRunning)} className={isRunning ? 'running' : ''}>
-                {isRunning ? 'Pause Simulation' : 'Start Simulation'}
-              </button>
-              
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.3rem 0.8rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <select 
-                      value={fastForwardYears} 
-                      onChange={(e) => setFastForwardYears(Number(e.target.value))}
-                      style={{ background: 'transparent', color: 'white', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-                      disabled={isFastForwarding}
-                  >
-                      <option value={5} style={{color: 'black'}}>5 Years</option>
-                      <option value={10} style={{color: 'black'}}>10 Years</option>
-                      <option value={15} style={{color: 'black'}}>15 Years</option>
-                      <option value={20} style={{color: 'black'}}>20 Years</option>
-                  </select>
-                  
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                      <input 
-                          type="checkbox" 
-                          checked={autoResume} 
-                          onChange={(e) => setAutoResume(e.target.checked)} 
-                          disabled={isFastForwarding}
-                          style={{ cursor: 'pointer' }}
-                      />
-                      Auto-Resume
-                  </label>
-                  
-                  <button 
-                      onClick={handleFastForward} 
-                      disabled={isFastForwarding}
-                      style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: isFastForwarding ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
-                  >
-                      ⏩ Skip
+              {!isEnded && (
+                <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button onClick={() => setIsRunning(!isRunning)} className={`action-btn ${isRunning ? 'running' : ''}`}>
+                    {isRunning ? '⏸ Pause' : '▶ Start'}
                   </button>
-              </div>
+                  
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <select 
+                          value={fastForwardYears} 
+                          onChange={(e) => setFastForwardYears(Number(e.target.value))}
+                          style={{ background: 'transparent', color: 'white', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                          disabled={isFastForwarding}
+                      >
+                          <option value={5} style={{color: 'black'}}>5 YRS</option>
+                          <option value={10} style={{color: 'black'}}>10 YRS</option>
+                          <option value={15} style={{color: 'black'}}>15 YRS</option>
+                          <option value={20} style={{color: 'black'}}>20 YRS</option>
+                      </select>
+                      
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                          <input 
+                              type="checkbox" 
+                              checked={autoResume} 
+                              onChange={(e) => setAutoResume(e.target.checked)} 
+                              disabled={isFastForwarding}
+                              style={{ cursor: 'pointer' }}
+                          />
+                          Auto-Resume
+                      </label>
+                      
+                      <button 
+                          onClick={handleFastForward} 
+                          disabled={isFastForwarding}
+                          className="ff-btn"
+                          style={{ cursor: isFastForwarding ? 'not-allowed' : 'pointer' }}
+                      >
+                          ⏩ Skip
+                      </button>
+                  </div>
 
-              <button 
-                onClick={() => {
-                  // Hard stop timeline
-                  setIsRunning(false);
-                  setIsEnded(true);
-                  setActiveTab('report');
-                }}
-                style={{ background: '#ef4444', color: 'white', border: 'none', padding: '0.5rem 1.2rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                End Simulation
-              </button>
-            </div>
-          )}
+                  <button 
+                    onClick={() => {
+                      setIsRunning(false);
+                      setIsEnded(true);
+                      setActiveTab('report');
+                    }}
+                    className="end-btn"
+                  >
+                    ⏹ End Simulation
+                  </button>
+                </div>
+              )}
 
-          {isEnded && (
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <div style={{ padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5', fontWeight: 'bold', borderRadius: '4px', border: '1px solid rgba(239, 68, 68, 0.3)', marginRight: '1rem' }}>
-                Terminated
-              </div>
-              <button 
-                onClick={handleReset}
-                style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0.5rem 1.2rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                Reset
-              </button>
-              <button 
-                onClick={handleSaveSimulation}
-                style={{ background: '#10b981', color: 'white', border: 'none', padding: '0.5rem 1.2rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                Save Data
-              </button>
+              {isEnded && (
+                <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                  <div style={{ padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5', fontWeight: 'bold', borderRadius: '4px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                    Terminated
+                  </div>
+                  <button onClick={handleReset} className="reset-btn">Reset</button>
+                  <button onClick={handleSaveSimulation} className="save-btn">Save Data</button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </header>
+        </header>
 
       <main id="global-scroll-container" className="main-content" style={{ padding: activeTab === 'dashboard' ? '1rem 0' : '1rem 1rem 2rem 1rem' }}>
         {activeTab === 'backend-train' && import.meta.env.DEV && <BackendTrainer />}
@@ -428,21 +448,7 @@ function App() {
            </div>
         )}
       </main>
-
-      <footer style={{
-        marginTop: 'auto',
-        padding: '1rem',
-        textAlign: 'center',
-        background: 'rgba(0, 0, 0, 0.4)',
-        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-        fontSize: '0.8rem',
-        color: 'var(--text-muted)'
-      }}>
-        <p style={{ margin: 0 }}>
-          <strong>Legal Disclaimer:</strong> This application is a mathematical simulation built strictly for entertainment, educational, and research modeling purposes. It does not provide medical advice, diagnosis, or treatment. 
-          The Gen-AI endpoints and Actuarial hazard integrations must not be taken literally. This application is <strong>NOT HIPAA compliant</strong> and must not be fed Real Patient Health Information (PHI). Always consult a licensed physician for healthcare decisions.
-        </p>
-      </footer>
+      </div>
     </div>
   );
 }

@@ -37,11 +37,22 @@ export class LLMEngine {
     const sourceOptions: IdeaSource[] = isClinical ? ['JAMA', 'NEJM', 'Nature', 'CDC', 'WHO', 'AHA', 'NKF', 'ADA'] : ['WebMD', 'Reddit', 'Personal'];
     const chosenSource = sourceOptions[Math.floor(Math.random() * sourceOptions.length)];
 
+    const RAG_CONTEXT = `
+[SYSTEM_RAG_VECTOR_INJECTION - STRICT ADHERENCE REQUIRED]:
+- AHA Guideline 2024: Target BP for high risk should be <120/80 mmHg. ACE inhibitors or ARBs are first-line for patients with CKD.
+- CDC Note: Smoking cessation instantly halts COPD acceleration.
+- NKF Note: eGFR < 60 requires immediate cessation of nephrotoxic drugs like NSAIDs.
+- NEJM Trial: GLP-1 agonists (Semaglutide/Tirzepatide) show heavy cardiovascular risk buffering, reversing CHF severity.
+- ACC Note: Statins (Rosuvastatin) should aggressively target LDL < 70 in CAD patients.
+    `;
+
     const prompt = `
       You are generating a medically-plausible ${isClinical ? 'clinical' : 'lifestyle'} protocol for a simulated Digital Twin ABM.
       The author of this discovery belongs to a ${author.state.role} network, referencing guidelines explicitly from: ${chosenSource}.
       
-      Generate a highly realistic protocol that could affect biological factors (Health, Stress, BP, A1C, CV Health, eGFR).
+      ${RAG_CONTEXT}
+      
+      Generate a highly realistic protocol that could affect biological factors (Health, Stress, BP, A1C, CV Health, eGFR) strictly grounded in the RAG Vector context above.
       CRITICAL INSTRUCTION: Interventions change over time. You must occasionally generate protocols that are being WITHDRAWN or REDUCED because they originally caused severe adverse reactions (e.g. "Previous protocol X actually causes kidney decay, halting immediately" yielding negative effects if continued, or positive health deltas upon removal).
       
       Return strictly and ONLY a JSON object matching this TypeScript interface exactly:

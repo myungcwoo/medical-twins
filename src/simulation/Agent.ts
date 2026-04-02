@@ -149,6 +149,22 @@ export class Agent {
                });
             }
         }
+        
+        // Machine Learning Native Pathology Assignment
+        if (res.newPathologies && res.newPathologies.length > 0) {
+            res.newPathologies.forEach(pathology => {
+                if (!this.state.chronicConditions.includes(pathology)) {
+                    this.state.chronicConditions.push(pathology);
+                    this.logEvent({
+                        tick: currentTick,
+                        type: 'Pathology Acquired',
+                        description: `[WASM PREDICTION ALIGNMENT] Neural Sequence strictly forecasted onset of ${pathology}.`,
+                        impactHealth: -10,
+                        impactStress: 15
+                    });
+                }
+            });
+        }
     });
 
     // 5. Stress impact & HR/BP drift

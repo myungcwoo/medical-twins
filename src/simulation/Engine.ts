@@ -33,10 +33,24 @@ export class SimulationEngine {
         if (LLMEngine.isEnabled && LLMEngine.apiKey && !LLMEngine.isGenerating) {
             LLMEngine.generateProtocolAsync(electedAuthor, this.currentTick);
         } else if (!LLMEngine.isEnabled || !LLMEngine.apiKey) {
-            // Unauthenticated Safe Fallback
-            const fallbackArray = electedAuthor.state.role === 'Researcher' ? KnowledgeBase.CLINICAL_IDEAS : KnowledgeBase.LIFESTYLE_IDEAS;
-            const fallbackIdea = fallbackArray[Math.floor(Math.random() * fallbackArray.length)];
-            KnowledgeBase.broadcast(electedAuthor, fallbackIdea, this.currentTick);
+            // Unauthenticated Safe Fallback: Ping native PubMed E-Utilities REST Scraper!
+            if (!(this as any).isHarvesting) {
+                (this as any).isHarvesting = true;
+                fetch('http://127.0.0.1:8000/harvest_literature')
+                    .then(res => res.json())
+                    .then(data => {
+                         if (data.id && data.title) {
+                             KnowledgeBase.broadcast(electedAuthor, data, this.currentTick);
+                         }
+                    })
+                    .catch(e => {
+                         console.warn("PubMed Gateway Timeout. Falling back to static arrays.", e);
+                         const fallbackArray = electedAuthor.state.role === 'Researcher' ? KnowledgeBase.CLINICAL_IDEAS : KnowledgeBase.LIFESTYLE_IDEAS;
+                         const fallbackIdea = fallbackArray[Math.floor(Math.random() * fallbackArray.length)];
+                         KnowledgeBase.broadcast(electedAuthor, fallbackIdea, this.currentTick);
+                    })
+                    .finally(() => { (this as any).isHarvesting = false; });
+            }
         }
       }
     }

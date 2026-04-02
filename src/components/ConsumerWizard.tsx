@@ -157,7 +157,7 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
                   <h4 style={{ color: '#f8fafc', margin: '0 0 0.3rem 0', fontSize: '1.1rem' }}>{protocol.title}</h4>
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0 }}>
                     <strong style={{ color: '#f472b6' }}>Impact:</strong> +{protocol.impact.healthDelta.toFixed(1)} Health | 
-                    &nbsp;<strong style={{ color: '#a78bfa' }}>Adoption:</strong> {((protocol.successCount / protocol.adoptions) * 100).toFixed(0)}%
+                    &nbsp;<strong style={{ color: '#a78bfa' }}>Adoption:</strong> {protocol.adoptions > 0 ? ((protocol.successCount / protocol.adoptions) * 100).toFixed(0) : '0'}%
                   </p>
                 </div>
               </div>
