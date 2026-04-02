@@ -20,6 +20,7 @@ export interface IdeaTemplate {
   type: IdeaType;
   title: string;
   impact: IdeaImpact;
+  targetConditions?: string[];
 }
 
 export interface BroadcastedIdea {
@@ -53,21 +54,24 @@ export class KnowledgeBase {
       source: 'NEJM',
       type: 'Clinical',
       title: 'SGLT2 Inhibitor Protocol for Heart Failure',
-      impact: { healthDelta: 8, stressDelta: 0, bpDelta: -5, a1cDelta: -0.5, cvDelta: 15, egfrDelta: 2, newMeds: ['SGLT2_Inhibitor'], description: 'Radically reduced cardiovascular strain via sodium-glucose transport blockade.' }
+      impact: { healthDelta: 8, stressDelta: 0, bpDelta: -5, a1cDelta: -0.5, cvDelta: 15, egfrDelta: 2, newMeds: ['SGLT2_Inhibitor'], description: 'Radically reduced cardiovascular strain via sodium-glucose transport blockade.' },
+      targetConditions: ['Hypertension', 'CHF', 'Diabetes']
     },
     {
       id: 'c2_ace',
       source: 'JAMA',
       type: 'Clinical',
       title: 'Aggressive ACE-Inhibitor Titration (AASK Trials)',
-      impact: { healthDelta: 5, stressDelta: 0, bpDelta: -15, a1cDelta: 0, cvDelta: 5, egfrDelta: 5, newMeds: ['ACE_Inhibitor'], description: 'Forced systolic BP < 130, preserving nephron count.' }
+      impact: { healthDelta: 5, stressDelta: 0, bpDelta: -15, a1cDelta: 0, cvDelta: 5, egfrDelta: 5, newMeds: ['ACE_Inhibitor'], description: 'Forced systolic BP < 130, preserving nephron count.' },
+      targetConditions: ['Hypertension', 'CKD']
     },
     {
       id: 'c3_statin',
       source: 'Nature',
       type: 'Clinical',
       title: 'High-Intensity Statin Therapy',
-      impact: { healthDelta: 4, stressDelta: 0, bpDelta: 0, a1cDelta: 0, cvDelta: 10, egfrDelta: 0, newMeds: ['Rosuvastatin'], description: 'Crushed LDL lipids to < 70 mg/dL, halting ASCVD progression.' }
+      impact: { healthDelta: 4, stressDelta: 0, bpDelta: 0, a1cDelta: 0, cvDelta: 10, egfrDelta: 0, newMeds: ['Rosuvastatin'], description: 'Crushed LDL lipids to < 70 mg/dL, halting ASCVD progression.' },
+      targetConditions: ['Hyperlipidemia', 'Diabetes']
     }
   ];
 

@@ -5,7 +5,7 @@ export const Explanation: FC = () => {
     <div className="explanation-container glass-panel" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.5s ease-out', overflowY: 'auto', maxHeight: '100%' }}>
       <h2 style={{ color: '#a78bfa', marginBottom: '1.5rem', borderBottom: '1px solid rgba(167, 139, 250, 0.3)', paddingBottom: '0.5rem' }}>Core Simulation Architecture</h2>
       <p style={{ color: '#e2e8f0', lineHeight: 1.6, fontSize: '1.05rem', marginBottom: '2rem' }}>
-        As a core pillar of the Clinical AI Studio, the Digital Patient Simulation architecture represents a highly advanced <strong>Generative Agent-Based Model (ABM)</strong> completely driven by real-time Large Language Models (LLMs) and rigorous CDC/AHA empirical hazard algorithms. 
+        As a core pillar of the Clinical AI Studio, the Digital Patient Simulation architecture represents a highly advanced <strong>Data-Driven Clinical Prediction Engine</strong>. It discards hardcoded physiological rules in favor of a genuine full-stack Machine Learning Operations (MLOps) pipeline, bridging Python Deep Learning directly into React WebAssembly. 
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -13,42 +13,35 @@ export const Explanation: FC = () => {
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #10b981' }}>
           <h3 style={{ color: '#10b981', margin: '0 0 0.8rem 0' }}>1. The Multi-Agent Generative Network</h3>
           <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-            The primary simulation houses autonomous digital patients structurally organized into a unified information network. <strong>Researchers</strong> actively ping integrated external Language Models (OpenAI, Gemini, Claude). However, these LLMs are completely fenced by highly-restrictive system prompts forcing them to generate novel clinical interventions strictly derived from reputable authorities (<strong>CDC, WHO, JAMA, NEJM, Nature, AHA, NKF, ADA</strong>). The prompts explicitly force the generation of "changing literature," including inventing sudden drug retractions and adverse-event warnings that actively crash physical agent trajectories over time.
+            The primary simulation houses autonomous digital patients structurally organized into a unified information network. <strong>Researchers</strong> actively ping integrated external Language Models (OpenAI, Gemini, Claude). These LLMs are heavily fenced by system prompts forcing them to generate novel clinical interventions strictly derived from reputable authorities (<strong>CDC, WHO, JAMA, Nature</strong>). The prompts explicitly force the generation of "changing literature," including inventing sudden drug retractions and adverse-event warnings that actively crash or save agent trajectories!
           </p>
         </div>
 
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #f59e0b' }}>
-          <h3 style={{ color: '#f59e0b', margin: '0 0 0.8rem 0' }}>2. Actuarial Epidemiological Pathology Engine</h3>
+          <h3 style={{ color: '#f59e0b', margin: '0 0 0.8rem 0' }}>2. PyTorch Deep Learning Backend</h3>
           <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-            Agent mortality is tightly constrained. Exactly every 52 weeks (1 Simulation Year), the underlying <code>PathologyEngine</code> runs an exhaustive baseline statistical roll on every single living Agent heavily mapped against their biometric arrays. Referencing strictly mapped CDC/AHA incidence rates, agents structurally acquire highly lethal secondary complications. Rapid Obesity forces <strong>Hypertension</strong>; sustained Hypertension guarantees inevitable <strong>Congestive Heart Failure</strong>; and uncontrolled Diabetic progression permanently drags the agent into <strong>Chronic Renal Failure</strong>. 
+            Under the hood, agent mortality is not driven by heuristic guesses. The platform utilizes a literal <code>torch.nn.Module</code> (Multi-Layer Perceptron) hosted via a live FastAPI service. By feeding raw agent parameters into the `/train` endpoint, the Neural Network mathematically fits tensor gradients via the Adam optimizer, calculating the exact long-term hazard bounds (Stroke, CHF, Diabetic Coma, COPD) natively leveraging the GPU/CPU.
           </p>
         </div>
 
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #14b8a6' }}>
-          <h3 style={{ color: '#14b8a6', margin: '0 0 0.8rem 0' }}>3. Autonomous Physician CDSS</h3>
+          <h3 style={{ color: '#14b8a6', margin: '0 0 0.8rem 0' }}>3. Real-Time ONNX WebAssembly (WASM) Loop</h3>
           <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-            Agents do not blindly follow static primary guidelines. They are rigidly governed by an advanced <strong>Clinical Decision Support System (CDSS)</strong> that recursively cross-references real-world comorbidities mimicking experienced clinician logic. For instance, uncomplicated Hypertension receives standard Amlodipine; but if an Agent suffers from Diabetes, the CDSS exclusively executes renoprotective ACE-Inhibitors (Lisinopril). 
+            Because running REST API calls 50 times a second for 100 clones would crash your browser, the loop is completely closed natively. When the Python PyTorch model finishes backpropagating, it calls <code>torch.onnx.export()</code> to auto-compile the AI structural weights into a binary `.onnx` graph. The React browser clones natively ingest this binary memory matrix using Microsoft’s <strong>onnxruntime-web</strong>, allowing them to explicitly run 60FPS Deep Learning inference directly on their own physiological vitals natively in your browser.
           </p>
         </div>
 
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
-          <h3 style={{ color: '#3b82f6', margin: '0 0 0.8rem 0' }}>4. Isolated Synthetic Custom Trials</h3>
+          <h3 style={{ color: '#3b82f6', margin: '0 0 0.8rem 0' }}>4. Probabilistic Multiverse Custom Trials</h3>
           <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-            The overarching global 100-Agent simulation simply serves as a massive experimental proving ground. By navigating to the <strong>Add Digital Twin</strong> ingestion tool, you can deploy a customized real-world patient narrative securely detached from the population bounds. The app explicitly filters the absolute highest-yielding protocols analytically discovered by the main network, allowing you to explicitly construct a fully isolated 1-vs-1 (Control Vs Optimized) proxy testing dashboard visually comparing exact trajectory deltas strictly based on your selected LLM interventions.
+            The overarching global 100-Agent simulation simply serves as a massive experimental proving ground. By navigating to the <strong>Simulate Me!</strong> ingestion tool, you can deploy a customized real-world patient narrative securely detached from the population bounds. The app dynamically splits the multiverse—spawning exactly 50 Control Clones and 50 Optimized Clones equipped with your selected protocols—constructing a fully isolated probabilistic testing dashboard visually comparing the exact Neural Trajectory deltas.
           </p>
         </div>
 
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
-          <h3 style={{ color: '#ef4444', margin: '0 0 0.8rem 0' }}>5. Post-Mortem Data Subsystems</h3>
+          <h3 style={{ color: '#ef4444', margin: '0 0 0.8rem 0' }}>5. Narrative Physician EHR Subsystems</h3>
           <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-            When navigating through the headers you retain complete control over both the global scale clock and the independent localized Custom Sandbox clock independently. Terminating the global clock drops the entire UI explicitly into the <strong>Post-Mortem Analytics Report</strong> evaluating exactly what dynamic LLM pipelines toxified populations versus which paradigms empirically accelerated survival. 
-          </p>
-        </div>
-
-        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #8b5cf6' }}>
-          <h3 style={{ color: '#8b5cf6', margin: '0 0 0.8rem 0' }}>6. Client-Side RWD ETL & Empirical Logic</h3>
-          <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-            Beyond rigid CDC/AHA literature, you can actively drag pure unstructured <strong>Medical Claims</strong> and <strong>Laboratory Datasets</strong> directly into the <strong>RWD Training</strong> interface. The Training Engine acts as a massive native ETL pipeline—weaving scattered records by Patient ID, isolating strict ICD-10 chronologies, enforcing "Active Management" confirmation protocols across discrete dates, and dynamically generating Annualized Incidence Rates (AIR). These exact empirical weights permanently overwrite the simulation's baseline physics models!
+            As agents progress, their data isn't just displayed as raw JSON. The UI actively generates deeply immersive contextual Narrative Physician Notes logging their simulated timelines—bridging the gap between raw analytical tensor telemetry and authentic human clinical storytelling. 
           </p>
         </div>
 

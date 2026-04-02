@@ -42,9 +42,28 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
   };
 
   const handleNextStep = () => {
-      // Pull latest protocols from active simulation engine
-      const topFound = KnowledgeBase.getTopValidatedProtocols(8);
-      setAvailableProtocols(topFound);
+      // Pull wide array to filter aggressively
+      const topFound = KnowledgeBase.getTopValidatedProtocols(30);
+      
+      const tailoredProtocols = topFound.filter(protocol => {
+         // Pass Lifestyle natively
+         if (protocol.type === 'Lifestyle') return true;
+         // If clinical target exists, verify patient has at least one of the chronicity signatures
+         if (protocol.targetConditions && protocol.targetConditions.length > 0) {
+             const hasRelevantCondition = protocol.targetConditions.some(cond => selectedConditions.has(cond));
+             return hasRelevantCondition;
+         }
+         return true; // Un-restricted clinicals
+      });
+
+      // Enforce lifestyle backups if patient is 100% healthy
+      if (tailoredProtocols.length < 3) {
+          KnowledgeBase.LIFESTYLE_IDEAS.forEach(life => {
+              if (!tailoredProtocols.find(f => f.id === life.id)) tailoredProtocols.push(life);
+          });
+      }
+
+      setAvailableProtocols(tailoredProtocols.slice(0, 10));
       setStep(2);
       window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -181,7 +200,7 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '2rem', marginBottom: '2.5rem' }}>
         
         {/* LIFESTYLE BLOCK */}
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>

@@ -52,36 +52,40 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
   return (
     <div className="dashboard-wrapper">
        {/* Generative AI Configuration */}
-       <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', background: 'rgba(16, 185, 129, 0.1)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-          <span style={{ fontSize: '1.5rem' }}>🧠</span>
-          <div style={{ flex: 1 }}>
-             <div style={{ fontWeight: 'bold', color: '#34d399', fontSize: '1.1rem' }}>Clinical Gen-AI Injection</div>
-             <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Authenticate a competitive LLM to dynamically prompt the network. Your keys never leave your browser loop. Note: Browser-side Anthropic requests may hit hard CORS blocks.</div>
+       <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(16, 185, 129, 0.1)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <span style={{ fontSize: '1.5rem' }}>🧠</span>
+              <div>
+                 <div style={{ fontWeight: 'bold', color: '#34d399', fontSize: '1.1rem' }}>Clinical Gen-AI Injection</div>
+                 <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Authenticate an LLM to dynamically prompt the network. Your keys never leave your browser loop.</div>
+              </div>
           </div>
           
-          <select 
-            value={provider} 
-            onChange={(e) => setProvider(e.target.value)}
-            style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.6rem', borderRadius: '4px', fontSize: '1rem', outline: 'none' }}
-          >
-            <option value="OpenAI">OpenAI (GPT-4o-mini)</option>
-            <option value="Gemini">Google Gemini (1.5 Flash)</option>
-            <option value="Claude">Anthropic Claude (3 Haiku)</option>
-          </select>
+          <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <select 
+                value={provider} 
+                onChange={(e) => setProvider(e.target.value)}
+                style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.6rem', borderRadius: '4px', fontSize: '0.95rem', outline: 'none', flex: 1, minWidth: '150px' }}
+              >
+                <option value="OpenAI">OpenAI (GPT-4o)</option>
+                <option value="Gemini">Google Gemini</option>
+                <option value="Claude">Anthropic Claude</option>
+              </select>
 
-          <input 
-            type="password" 
-            value={apiKey} 
-            onChange={e => setApiKey(e.target.value)} 
-            placeholder="Paste raw API token..." 
-            style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.6rem 1rem', borderRadius: '4px', width: '250px', fontSize: '1rem' }} 
-          />
-          <button 
-            onClick={handleSaveKey} 
-            style={{ background: '#10b981', color: 'white', padding: '0.6rem 1.2rem', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem' }}
-          >
-            Save Authentication
-          </button>
+              <input 
+                type="password" 
+                value={apiKey} 
+                onChange={e => setApiKey(e.target.value)} 
+                placeholder="Paste raw API token..." 
+                style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.6rem', borderRadius: '4px', flex: 2, minWidth: '200px', fontSize: '0.95rem' }} 
+              />
+              <button 
+                onClick={handleSaveKey} 
+                style={{ background: '#10b981', color: 'white', padding: '0.6rem 1rem', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem', whiteSpace: 'nowrap' }}
+              >
+                Save
+              </button>
+          </div>
        </div>
 
        {/* Analytics Banner */}
@@ -127,9 +131,12 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
        <div className="grid">
             {paginatedAgents.map((agent) => (
               <div key={agent.id} className="card" onClick={() => onSelectAgent(agent.id)} style={{ cursor: 'pointer', transition: 'all 0.2s', borderColor: agent.isDead ? 'rgba(239, 68, 68, 0.4)' : '' }}>
-                <div className="card-header">
-                  <h2 style={{color: agent.isDead ? '#fca5a5' : 'inherit'}}>{agent.isDead ? '✝ ' : ''}{agent.name} {agent.id.includes('custom') ? <span style={{fontSize: '0.9rem', color: '#a78bfa'}}>(Custom)</span> : null}</h2>
-                  <span>Age: {Math.floor(agent.age)}</span>
+                <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.8rem', marginBottom: '0.8rem' }}>
+                  <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${agent.id}`} alt="avatar" style={{ width: '40px', height: '40px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', filter: agent.isDead ? 'grayscale(100%)' : 'none' }} />
+                  <div>
+                    <h2 style={{color: agent.isDead ? '#fca5a5' : 'inherit', margin: 0, fontSize: '1.2rem'}}>{agent.isDead ? '✝ ' : ''}{agent.name} {agent.id.includes('custom') ? <span style={{fontSize: '0.8rem', color: '#a78bfa'}}>(Custom)</span> : null}</h2>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Chronological Age: {Math.floor(agent.age)} Years</span>
+                  </div>
                 </div>
 
                 <div className="tag-container" style={{opacity: agent.isDead ? 0.6 : 1}}>
@@ -182,7 +189,8 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
                   ) : (
                     agent.history.slice(-2).reverse().map((ev, i) => (
                       <p key={i}>
-                        <strong style={{color: ev.type.includes('Mortality') ? '#fca5a5' : ev.type.includes('Adoption') ? '#a78bfa' : 'inherit'}}>Wk {ev.tick} - {ev.type}:</strong> {ev.description}
+                        <strong style={{color: ev.type.includes('Mortality') ? '#fca5a5' : ev.type.includes('Adoption') ? '#a78bfa' : '#60a5fa'}}>Wk {ev.tick} - {ev.type} | </strong> 
+                        <span style={{ fontStyle: 'italic', color: '#e2e8f0', fontSize: '0.9rem', lineHeight: '1.4' }}>"ATTENDING NOTE: {ev.description}"</span>
                       </p>
                     ))
                   )}

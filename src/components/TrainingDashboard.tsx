@@ -121,20 +121,20 @@ export const TrainingDashboard: FC = () => {
 
   return (
     <div className="glass-panel" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', animation: 'fadeIn 0.5s ease-out', overflowY: 'auto', maxHeight: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid rgba(245, 158, 11, 0.3)', paddingBottom: '1rem' }}>
-        <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid rgba(245, 158, 11, 0.3)', paddingBottom: '1rem' }}>
+        <div style={{ flex: '1 1 500px' }}>
             <h2 style={{ color: '#f59e0b', margin: '0 0 0.5rem 0' }}>Longitudinal RWD ETL Pipeline</h2>
             <p style={{ color: 'var(--text-muted)', margin: 0 }}>Train the Agent-Based Model systematically using scattered Medical Claims and Pharmacy structures. The Engine natively weaves them together utilizing disjointed identical Patient Hooks.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem' }}>
+        <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
             <button 
                 onClick={handleExportModel}
-                style={{ background: '#10b981', color: 'white', padding: '0.6rem 1.2rem', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                style={{ background: '#10b981', color: 'white', padding: '0.6rem 1.2rem', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                 Export Model (.JSON)
             </button>
             <button 
                 onClick={handleClearModel}
-                style={{ background: 'transparent', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.4)', padding: '0.6rem 1.2rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                style={{ background: 'transparent', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.4)', padding: '0.6rem 1.2rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                 Wipe Local Database
             </button>
         </div>
@@ -183,7 +183,7 @@ export const TrainingDashboard: FC = () => {
           </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
           
           <div>
             <h3 style={{ marginTop: 0, color: '#e2e8f0' }}>Current Empirical Physics Model</h3>

@@ -126,13 +126,48 @@ export const BackendTrainer: FC = () => {
                 </div>
            </div>
 
-           <div>
-              <h4 style={{ color: '#e2e8f0', margin: '0 0 0.5rem 0' }}>Terminal Output</h4>
-              <div style={{ background: '#000', padding: '1rem', borderRadius: '8px', height: '250px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '0.85rem', color: '#f472b6', border: '1px solid rgba(236, 72, 153, 0.3)' }}>
-                  {log.map((l, i) => (
-                      <div key={i} style={{ marginBottom: '0.5rem' }}>&gt; {l}</div>
-                  ))}
-              </div>
+           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem', alignItems: 'stretch' }}>
+               <div>
+                  <h4 style={{ color: '#e2e8f0', margin: '0 0 0.5rem 0' }}>Data Stream</h4>
+                  <div style={{ background: '#000', padding: '1rem', borderRadius: '8px', height: '250px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '0.85rem', color: '#f472b6', border: '1px solid rgba(236, 72, 153, 0.3)' }}>
+                      {log.map((l, i) => (
+                          <div key={i} style={{ marginBottom: '0.5rem' }}>&gt; {l}</div>
+                      ))}
+                  </div>
+               </div>
+               
+               <div>
+                  <h4 style={{ color: '#e2e8f0', margin: '0 0 0.5rem 0' }}>Neural Graphical Engine</h4>
+                  <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1.5rem', borderRadius: '8px', height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+                      {isTraining ? (
+                         <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', justifyContent: 'center' }}>
+                             {/* Mock Transformer Animation */}
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                 {[1,2,3,4].map(n => <div key={n} style={{ width: '25px', height: '25px', borderRadius: '50%', background: '#ec4899', animation: `pulseGlow ${0.5 + (n*0.2)}s infinite alternate` }} />)}
+                             </div>
+                             
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', color: '#ec4899' }}>
+                                 <div style={{ borderBottom: '2px solid #ec4899', width: '80px', animation: 'flowRight 1s infinite linear' }}></div>
+                                 <div style={{ borderBottom: '2px solid #ec4899', width: '80px', animation: 'flowRight 1s infinite linear reverse' }}></div>
+                             </div>
+                             
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                 {[1,2].map(n => <div key={n} style={{ width: '40px', height: '40px', background: '#8b5cf6', borderRadius: '8px', border: '2px solid #c4b5fd', animation: `pulseGlow ${1 + (n*0.5)}s infinite alternate` }} />)}
+                             </div>
+                             
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', color: '#8b5cf6' }}>
+                                 <div style={{ borderBottom: '2px solid #8b5cf6', width: '80px', animation: 'flowRight 1s infinite linear' }}></div>
+                             </div>
+                             
+                             <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--health-good)', border: '4px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', animation: 'pulseGlow 2s infinite' }}>
+                                🧠
+                             </div>
+                         </div>
+                      ) : (
+                         <span style={{ color: 'var(--text-muted)' }}>Idle. Feed PyTorch Payload to engage.</span>
+                      )}
+                  </div>
+               </div>
            </div>
         </div>
     );

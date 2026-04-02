@@ -55,6 +55,24 @@ function App() {
       interval = window.setInterval(() => {
         if (isRunning && engineRef.current) {
           engineRef.current.tick();
+          
+          // --- PYTORCH LIVE CLINICAL HARVESTER HOOK ---
+          // Every 52 weeks (1 Year), explicitly attempt to scrape Live Research
+          if (engineRef.current.currentTick > 0 && engineRef.current.currentTick % 52 === 0) {
+              fetch('http://localhost:8000/harvest_literature')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.title) {
+                        const doctors = engineRef.current!.agents.filter((a: any) => a.state.role === 'Physician' && !a.state.isDead);
+                        if (doctors.length > 0) {
+                             const author = doctors[Math.floor(Math.random() * doctors.length)];
+                             KnowledgeBase.broadcast(author, data as any, engineRef.current!.currentTick);
+                        }
+                    }
+                })
+                .catch(err => console.error("Background PubMed Harvester disconnected:", err));
+          }
+
           setAgents([...engineRef.current.getAgents()]);
           setTicks(engineRef.current.currentTick);
         }
@@ -72,41 +90,37 @@ function App() {
 
   const handleStartCustomTrial = (rawPayload: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>, selectedProtocols: any[]) => {
     // --- Spawning Bifurcated Comparative Clones For Isolated Sandbox ---
-    const controlId = crypto.randomUUID();
-    const interventionId = crypto.randomUUID();
+    const allPayloads: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>[] = [];
+    const baseTwinParams = { ...rawPayload, memory: [] };
 
-    const baseTwinParams = {
-      ...rawPayload,
-      memory: []
-    };
+    // Inject 50 Control Clones and 50 Intervention Clones for mathematical statistically significant Area charts
+    for (let c = 0; c < 50; c++) {
+      allPayloads.push({
+        ...baseTwinParams,
+        id: crypto.randomUUID(),
+        name: `${rawPayload.name} (Control ${c+1})`,
+        comparativeGroup: 'Control'
+      });
+      
+      allPayloads.push({
+        ...baseTwinParams,
+        id: crypto.randomUUID(),
+        name: `${rawPayload.name} (Optimized ${c+1})`,
+        comparativeGroup: 'Intervention'
+      });
+    }
 
-    const controlPayload: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'> = {
-      ...baseTwinParams,
-      id: controlId,
-      name: `${rawPayload.name} (Control)`,
-      comparativeGroup: 'Control',
-      pairedTwinId: interventionId
-    };
-
-    const altPayload: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'> = {
-      ...baseTwinParams,
-      id: interventionId,
-      name: `${rawPayload.name} (Optimized)`,
-      comparativeGroup: 'Intervention',
-      pairedTwinId: controlId
-    };
-
-    // Spin up an entirely secondary sandboxed instance for just these two twins
-    customEngineRef.current = new SimulationEngine([controlPayload, altPayload]);
+    // Spin up an entirely secondary sandboxed instance for just these two cohorts
+    customEngineRef.current = new SimulationEngine(allPayloads);
+    
     // Force the chronological clock sequence strictly against the active time structure so charts align natively 
     if (engineRef.current) {
        customEngineRef.current.currentTick = engineRef.current.currentTick;
     }
     setCustomTicks(customEngineRef.current.currentTick);
 
-    // Pre-emptively apply the explicitly selected protocols natively
-    const interventionAgent = customEngineRef.current.agents.find(a => a.state.id === interventionId);
-    if (interventionAgent) {
+    // Pre-emptively apply the explicitly selected protocols natively across ALL Intervention clones
+    customEngineRef.current.agents.filter(a => a.state.comparativeGroup === 'Intervention').forEach(interventionAgent => {
       selectedProtocols.forEach((idea: any) => {
         interventionAgent.state.history.push({ 
           tick: customEngineRef.current!.currentTick, 
@@ -132,11 +146,15 @@ function App() {
       });
       // Safety bounds check
       interventionAgent.state.baseHealth = Math.min(100, interventionAgent.state.baseHealth);
-    }
+    });
 
     setCustomTwins([...customEngineRef.current.getAgents()]);
     setIsCustomEnded(false);
-    setActiveTab('custom-trial');
+    
+    // Automatically pan the window down sequentially to expose the newly spawned Cohorts chart
+    setTimeout(() => {
+        document.getElementById('simulate-me-dashboard')?.scrollIntoView({ behavior: 'smooth' });
+    }, 150);
   };
 
   const handleFastForward = () => {
@@ -261,19 +279,16 @@ function App() {
           />
           <div>
             <h1>Digital Patient Simulation</h1>
-            <p>Clinical AI Studio Pillar: Predictive Agent-Based Population Modeling</p>
+            <p>Clinical AI Studio Pillar: Generative Agent-Based MLOps & Deep Learning Forecasts</p>
           </div>
         </div>
         
         <div className="nav-tabs">
           {isEnded && <button className={`tab-btn ${activeTab === 'report' ? 'active' : ''}`} onClick={() => setActiveTab('report')} style={{ color: '#ef4444', fontWeight: 'bold' }}>Simulation Report</button>}
-          <button className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>Dashboard</button>
-          <button className={`tab-btn ${activeTab === 'timeline' ? 'active' : ''}`} onClick={() => setActiveTab('timeline')}>Detailed Timelines</button>
+          <button className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')} style={{ color: '#3b82f6', fontWeight: 'bold' }}>⚡ Live Command Center</button>
           <button className={`tab-btn ${activeTab === 'consumer-wizard' ? 'active' : ''}`} onClick={() => setActiveTab('consumer-wizard')} style={{ color: '#f472b6', fontWeight: 'bold' }}>🔮 Simulate Me!</button>
-          <button className={`tab-btn ${activeTab === 'network' ? 'active' : ''}`} onClick={() => setActiveTab('network')}>Global Network</button>
           <button className={`tab-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => setActiveTab('training')} style={{ color: '#f59e0b', fontWeight: 'bold' }}>RWD Training</button>
           <button className={`tab-btn ${activeTab === 'ingestion' ? 'active' : ''}`} onClick={() => setActiveTab('ingestion')}>Add Twin (JSON)</button>
-          <button className={`tab-btn ${activeTab === 'custom-trial' ? 'active' : ''}`} onClick={() => setActiveTab('custom-trial')} style={{ color: '#3b82f6', fontWeight: 'bold' }}>Custom Trial</button>
           <button className={`tab-btn ${activeTab === 'explanation' ? 'active' : ''}`} onClick={() => setActiveTab('explanation')}>How It Works</button>
           {import.meta.env.DEV && (
             <button className={`tab-btn ${activeTab === 'backend-train' ? 'active' : ''}`} onClick={() => setActiveTab('backend-train')} style={{ color: '#ec4899', fontWeight: 'bold' }}>Train PyTorch [DEV]</button>
@@ -361,17 +376,49 @@ function App() {
         </div>
       </header>
 
-      <main className="main-content">
+      <main className="main-content" style={{ padding: activeTab === 'dashboard' ? '1rem 0' : '2rem' }}>
         {activeTab === 'backend-train' && import.meta.env.DEV && <BackendTrainer />}
         {activeTab === 'report' && isEnded && <SimulationReport agents={agents} ticks={ticks} />}
-        {activeTab === 'explanation' && <Explanation />}
-        {activeTab === 'network' && <NetworkFeed ticks={ticks} />}
+        {activeTab === 'explanation' && <div style={{ height: 'calc(100vh - 200px)', overflowY: 'auto', paddingRight: '1rem' }}><Explanation /></div>}
         {activeTab === 'training' && <TrainingDashboard />}
-        {activeTab === 'timeline' && <TimelineView agents={agents} selectedId={selectedId} onSelectAgent={setSelectedId} />}
-        {activeTab === 'custom-trial' && <CustomTwinDashboard customTwins={customTwins} customTicks={customTicks} isCustomRunning={isCustomRunning} isCustomEnded={isCustomEnded} isCustomFastForwarding={isCustomFastForwarding} onFastForward={handleCustomFastForward} onTogglePlay={() => setIsCustomRunning(!isCustomRunning)} onEndTrial={() => { setIsCustomRunning(false); setIsCustomEnded(true); }} />}
-        {activeTab === 'consumer-wizard' && <ConsumerWizard onStartCustomTrial={handleStartCustomTrial} />}
-        {activeTab === 'ingestion' && <IngestionView onStartCustomTrial={handleStartCustomTrial} />}
-        {activeTab === 'dashboard' && <DashboardView agents={agents} onSelectAgent={(id) => { setSelectedId(id); setActiveTab('timeline'); }} />}
+        {activeTab === 'consumer-wizard' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem', height: 'calc(100vh - 200px)', overflowY: 'auto', padding: '0.5rem 1rem 2rem 0.5rem' }}>
+             <ConsumerWizard onStartCustomTrial={handleStartCustomTrial} />
+             {customTwins.length > 0 && (
+                <div id="simulate-me-dashboard">
+                   <CustomTwinDashboard customTwins={customTwins} customTicks={customTicks} isCustomRunning={isCustomRunning} isCustomEnded={isCustomEnded} isCustomFastForwarding={isCustomFastForwarding} onFastForward={handleCustomFastForward} onTogglePlay={() => setIsCustomRunning(!isCustomRunning)} onEndTrial={() => { setIsCustomRunning(false); setIsCustomEnded(true); }} />
+                </div>
+             )}
+          </div>
+        )}
+        {activeTab === 'ingestion' && <div style={{ height: 'calc(100vh - 200px)', overflowY: 'auto', paddingRight: '1rem' }}><IngestionView onStartCustomTrial={handleStartCustomTrial} /></div>}
+        {activeTab === 'dashboard' && (
+           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1.2fr) minmax(400px, 2fr) minmax(350px, 1.5fr)', gap: '1.5rem', width: '100%', height: 'calc(100vh - 200px)' }}>
+              
+              <div style={{ overflowY: 'auto', background: 'rgba(0,0,0,0.15)', borderRadius: '12px', padding: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <NetworkFeed ticks={ticks} />
+              </div>
+              
+              <div style={{ overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '1.5rem 1rem', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
+                  <DashboardView agents={agents} onSelectAgent={setSelectedId} />
+              </div>
+
+              <div style={{ overflowY: 'auto', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
+                  {selectedId ? (
+                     <TimelineView agents={agents} selectedId={selectedId} onSelectAgent={setSelectedId} />
+                  ) : (
+                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
+                        <div>
+                          <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>📊</div>
+                          <h3>Trajectory Analytics Pipeline</h3>
+                          <p>Click on any digital patient twin within the active simulation arena to physically extract them into detailed graph telemetry.</p>
+                        </div>
+                     </div>
+                  )}
+              </div>
+              
+           </div>
+        )}
       </main>
 
       <footer style={{
