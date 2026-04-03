@@ -15,6 +15,7 @@ export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) =
   const pair = selected?.pairedTwinId ? agents.find(a => a.id === selected.pairedTwinId) : null;
 
   const [forecasts, setForecasts] = useState<any[] | null>(null);
+  const [chartMetric, setChartMetric] = useState<'Health' | 'BP' | 'A1C'>('Health');
 
   useEffect(() => {
     if (!selected || selected.isDead) return;
@@ -62,6 +63,10 @@ export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) =
               age: cSnap ? cSnap.age : (oSnap ? oSnap.age : 0),
               controlHealth: cSnap ? Math.round(cSnap.health) : null,
               optHealth: oSnap ? Math.round(oSnap.health) : null,
+              controlBP: cSnap ? Math.round(cSnap.bpSystolic) : null,
+              optBP: oSnap ? Math.round(oSnap.bpSystolic) : null,
+              controlA1c: cSnap ? Number(cSnap.a1c.toFixed(1)) : null,
+              optA1c: oSnap ? Number(oSnap.a1c.toFixed(1)) : null,
           };
       });
     } else {
@@ -70,31 +75,31 @@ export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) =
           year: Math.floor(snap.tick/52),
           age: snap.age,
           health: Math.round(snap.health),
-          bp: Math.round(snap.bpSystolic)
+          bp: Math.round(snap.bpSystolic),
+          a1c: Number(snap.a1c.toFixed(1))
       }));
     }
   }
 
   return (
-    <div className="timeline-container" style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 5000,
-        backgroundColor: 'rgba(0,0,0,0.85)',
+    <div className="timeline-container inline-dashboard-panel" style={{
+        marginBottom: '2rem',
+        backgroundColor: 'rgba(0,0,0,0.5)',
         backdropFilter: 'blur(10px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem'
+        borderRadius: '16px',
+        border: '1px solid rgba(139, 92, 246, 0.3)',
+        padding: '2rem',
+        position: 'relative',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
     }}>
       
       <div className="timeline-content glass-panel" style={{ 
           width: '100%', 
-          maxWidth: '1400px', 
-          maxHeight: '90vh', 
-          overflowY: 'auto',
           position: 'relative',
           padding: '2rem',
+          backgroundColor: 'transparent',
+          border: 'none',
+          boxShadow: 'none',
           ...(selected?.isDead ? { border: '1px solid rgba(239, 68, 68, 0.4)' } : {})
       }}>
         <button onClick={() => onSelectAgent('')} style={{
@@ -162,13 +167,29 @@ export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) =
 
               {chartData.length > 0 && (
                 <div style={{ background: 'rgba(0,0,0,0.4)', padding: '2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '2rem', marginTop: '2rem', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.5)' }}>
-                  <h3 style={{ margin: '0 0 1.5rem 0', color: '#e2e8f0', fontSize: '1.3rem' }}>Deep-Dive Biological Output Trajectory</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                      <h3 style={{ margin: 0, color: '#e2e8f0', fontSize: '1.3rem' }}>Deep-Dive Biological Output Trajectory</h3>
+                      <select 
+                          value={chartMetric} 
+                          onChange={e => setChartMetric(e.target.value as any)}
+                          style={{ background: 'rgba(15, 23, 42, 0.9)', color: 'white', border: '1px solid #3b82f6', padding: '0.4rem 1rem', borderRadius: '6px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}
+                      >
+                          <option value="Health">Overall Health % Axis</option>
+                          <option value="BP">Systolic BP (Hypertension) Axis</option>
+                          <option value="A1C">HbA1c (Glycemic) Axis</option>
+                      </select>
+                  </div>
+                  
                   <div style={{ width: '100%', height: 400 }}>
                     <ResponsiveContainer>
                       <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                         <XAxis dataKey="age" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} type="number" domain={['dataMin', 'dataMax']} tickFormatter={val => Math.floor(val).toString()} />
-                        <YAxis domain={[0, 100]} stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
+                        <YAxis 
+                            domain={chartMetric === 'Health' ? [0, 100] : chartMetric === 'BP' ? [90, 220] : [4.0, 15.0]} 
+                            stroke="#94a3b8" 
+                            tick={{ fill: '#94a3b8' }} 
+                        />
                         <Tooltip 
                             contentStyle={{ background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }} 
                             labelFormatter={(label) => `Age: ${Math.floor(Number(label))}`}
@@ -176,11 +197,31 @@ export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) =
                         <Legend wrapperStyle={{ paddingTop: '10px' }} />
                         {pair ? (
                           <>
-                            <Line type="monotone" dataKey="controlHealth" name="Control Health %" stroke="#f59e0b" strokeWidth={3} dot={false} isAnimationActive={false} />
-                            <Line type="monotone" dataKey="optHealth" name="Optimized Health %" stroke="#10b981" strokeWidth={3} dot={false} isAnimationActive={false} />
+                            {chartMetric === 'Health' && (
+                                <>
+                                    <Line type="monotone" dataKey="controlHealth" name="Control Health %" stroke="#f59e0b" strokeWidth={3} dot={false} isAnimationActive={false} />
+                                    <Line type="monotone" dataKey="optHealth" name="Optimized Health %" stroke="#10b981" strokeWidth={3} dot={false} isAnimationActive={false} />
+                                </>
+                            )}
+                            {chartMetric === 'BP' && (
+                                <>
+                                    <Line type="monotone" dataKey="controlBP" name="Control Systolic BP" stroke="#f59e0b" strokeWidth={3} dot={false} isAnimationActive={false} />
+                                    <Line type="monotone" dataKey="optBP" name="Optimized Systolic BP" stroke="#10b981" strokeWidth={3} dot={false} isAnimationActive={false} />
+                                </>
+                            )}
+                            {chartMetric === 'A1C' && (
+                                <>
+                                    <Line type="monotone" dataKey="controlA1c" name="Control HbA1c" stroke="#f59e0b" strokeWidth={3} dot={false} isAnimationActive={false} />
+                                    <Line type="monotone" dataKey="optA1c" name="Optimized HbA1c" stroke="#10b981" strokeWidth={3} dot={false} isAnimationActive={false} />
+                                </>
+                            )}
                           </>
                         ) : (
-                          <Line type="monotone" dataKey="health" name="Base Health %" stroke="#3b82f6" strokeWidth={3} dot={false} isAnimationActive={false} />
+                          <>
+                             {chartMetric === 'Health' && <Line type="monotone" dataKey="health" name="Base Health %" stroke="#3b82f6" strokeWidth={3} dot={false} isAnimationActive={false} />}
+                             {chartMetric === 'BP' && <Line type="monotone" dataKey="bp" name="Systolic BP" stroke="#ef4444" strokeWidth={3} dot={false} isAnimationActive={false} />}
+                             {chartMetric === 'A1C' && <Line type="monotone" dataKey="a1c" name="HbA1c" stroke="#a855f7" strokeWidth={3} dot={false} isAnimationActive={false} />}
+                          </>
                         )}
                       </LineChart>
                     </ResponsiveContainer>

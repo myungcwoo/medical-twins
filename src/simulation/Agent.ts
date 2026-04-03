@@ -39,6 +39,14 @@ export interface Labs {
   ldlCholesterol: number;
   egfr: number;      
   cvHealth: number;  
+  ntProBNP: number;
+  hsCRP: number;
+  uacr: number;
+}
+
+export interface Imaging {
+  lvef: number;
+  cacScore: number;
 }
 
 export interface AgentState {
@@ -62,9 +70,11 @@ export interface AgentState {
   medicalCompliance: MedicalCompliance;
   vitals: Vitals;
   labs: Labs;
+  imaging: Imaging;
   history: AgentEvent[];
   biometricHistory: BiometricSnapshot[];
   memory: string[]; // Tracked ideas
+  networkConnections?: string[]; // Tracked authors communicated with
   isDead: boolean;
   comparativeGroup?: 'Control' | 'Intervention';
   pairedTwinId?: string;
@@ -73,13 +83,38 @@ export interface AgentState {
 export class Agent {
   state: AgentState;
 
-  constructor(initialState: Omit<AgentState, 'history' | 'isDead' | 'memory' | 'biometricHistory'> & { memory?: string[] }) {
+  constructor(initialState: Omit<AgentState, 'history' | 'isDead' | 'memory' | 'biometricHistory' | 'networkConnections' | 'imaging' | 'labs'> & { memory?: string[], networkConnections?: string[], labs?: Partial<Labs>, imaging?: Partial<Imaging> }) {
+    
+    // Generate organic baselines for older configurations / swarms missing explicit inputs
+    const baseAge = initialState.age;
+    const isSmoker = initialState.smoker;
+    const hasHF = initialState.chronicConditions.includes('CHF');
+    
+    // Baseline Defaults generating biological approximations
+    const fullLabs: Labs = {
+       a1c: initialState.labs?.a1c || (initialState.vitals?.bmi > 30 ? 6.5 : 5.4),
+       ldlCholesterol: initialState.labs?.ldlCholesterol || 110,
+       egfr: initialState.labs?.egfr || Math.max(10, 120 - (baseAge * 0.4)),
+       cvHealth: initialState.labs?.cvHealth || 85,
+       ntProBNP: initialState.labs?.ntProBNP !== undefined ? initialState.labs.ntProBNP : (hasHF ? (baseAge > 60 ? 800 : 500) : (baseAge > 50 ? 50 : 20)),
+       hsCRP: initialState.labs?.hsCRP !== undefined ? initialState.labs.hsCRP : (isSmoker ? 4.5 : 1.2),
+       uacr: initialState.labs?.uacr !== undefined ? initialState.labs.uacr : (initialState.chronicConditions.includes('Diabetes') ? 80 : 15)
+    };
+
+    const fullImaging: Imaging = {
+       lvef: initialState.imaging?.lvef !== undefined ? initialState.imaging.lvef : (hasHF ? 35 : 60), // HF < 40% typically, normal > 55%
+       cacScore: initialState.imaging?.cacScore !== undefined ? initialState.imaging.cacScore : (baseAge > 50 ? (isSmoker ? 150 : 0) : 0) 
+    };
+
     this.state = {
       ...initialState,
+      labs: fullLabs,
+      imaging: fullImaging,
       isDead: false,
       history: [],
       biometricHistory: [],
       memory: initialState.memory || [],
+      networkConnections: initialState.networkConnections || [],
     };
   }
 
@@ -297,8 +332,15 @@ export class Agent {
     this.state.vitals.heartRate = Math.max(40, this.state.vitals.heartRate);
     this.state.labs.a1c = Math.max(4.0, this.state.labs.a1c);
     this.state.labs.ldlCholesterol = Math.max(40, this.state.labs.ldlCholesterol);
-    this.state.labs.egfr = Math.max(0, Math.min(120, this.state.labs.egfr));
+    this.state.labs.egfr = Math.max(0, Math.min(130, this.state.labs.egfr));
     this.state.labs.cvHealth = Math.max(0, Math.min(100, this.state.labs.cvHealth));
+    
+    // Advanced Diagnostic Clamps
+    this.state.imaging.lvef = Math.max(10, Math.min(85, this.state.imaging.lvef)); // Normal is 50-70. Below 10 is lethal.
+    this.state.imaging.cacScore = Math.max(0, Math.min(5000, this.state.imaging.cacScore)); // CAC is 0 (perfect) to thousands
+    this.state.labs.ntProBNP = Math.max(0, this.state.labs.ntProBNP);
+    this.state.labs.hsCRP = Math.max(0, this.state.labs.hsCRP);
+    this.state.labs.uacr = Math.max(0, this.state.labs.uacr);
   }
 
   // --- Clinical Decision Support System (CDSS) ---
@@ -400,6 +442,11 @@ export class Agent {
       if (!this.state.memory.includes(bcast.template.id)) {
         this.state.memory.push(bcast.template.id);
         
+        // Track the peer-to-peer communication topology
+        if (!this.state.networkConnections!.includes(bcast.authorId) && bcast.authorId !== this.state.id) {
+            this.state.networkConnections!.push(bcast.authorId);
+        }
+        
         const impact = bcast.template.impact;
         let success = true;
         let resTxt = impact.description;
@@ -421,21 +468,38 @@ export class Agent {
           resTxt = `Protocol failed during execution: Patient's compliance was too low to sustain structural habit shift.`;
         }
 
+        // SDOH Real-World Adherence Decay Pipeline
+        let sdohMultiplier = 1.0;
+        let sdohReason = '';
+        
+        if (impact.newMeds.length > 0 && this.state.wealth < 40) {
+            sdohMultiplier *= 0.5; // Severe decay: patient cannot physically afford the copays, spacing out doses
+            sdohReason += `[SDOH Penalty: -50% Medication Efficacy due to Low Wealth Adherence Decay] `;
+        }
+        if (bcast.template.type === 'Lifestyle' && this.state.foodDesert) {
+            sdohMultiplier *= 0.3; // Impossible to buy high-quality organic produce natively
+            sdohReason += `[SDOH Penalty: -70% Lifestyle Efficacy due to strict Food Desert Geographic Constraint] `;
+        }
+        if (this.state.medicalCompliance === 'Low') {
+            sdohMultiplier *= 0.8; 
+        }
+
         if (success) {
-          this.state.baseHealth += impact.healthDelta;
-          this.state.stressLevel += impact.stressDelta;
-          this.state.vitals.bpSystolic += impact.bpDelta;
-          this.state.labs.a1c += impact.a1cDelta;
-          this.state.labs.cvHealth += impact.cvDelta;
-          this.state.labs.egfr += impact.egfrDelta;
+          const m = sdohMultiplier;
+          this.state.baseHealth += (impact.healthDelta * m);
+          this.state.stressLevel += (impact.stressDelta * ((m + 1)/2)); // Less physical stress shielding if non-adherent
+          this.state.vitals.bpSystolic += (impact.bpDelta * m);
+          this.state.labs.a1c += (impact.a1cDelta * m);
+          this.state.labs.cvHealth += (impact.cvDelta * m);
+          this.state.labs.egfr += (impact.egfrDelta * m);
           this.clampState();
           
           this.logEvent({
             tick: currentTick,
             type: 'Network Adoption',
-            description: `Transferred protocol: ${bcast.template.title} from ${bcast.authorName} (${bcast.template.source}). ${resTxt}`,
-            impactHealth: impact.healthDelta,
-            impactStress: impact.stressDelta,
+            description: `Transferred protocol: ${bcast.template.title} from ${bcast.authorName} (${bcast.template.source}). ${sdohReason}${resTxt}`,
+            impactHealth: impact.healthDelta * m,
+            impactStress: impact.stressDelta * m,
           });
         }
         

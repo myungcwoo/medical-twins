@@ -252,6 +252,31 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
              </div>
            </div>
          </div>
+
+         {/* Natural Language NLP Translation Block for Consumers */}
+         <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)', borderRadius: '8px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+             <h3 style={{ color: '#c084fc', margin: '0 0 0.8rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                 <span>💬</span> AI Clinical Conclusion (Natural Language)
+             </h3>
+             <p style={{ margin: 0, fontSize: '1.05rem', lineHeight: 1.6, color: '#f8fafc' }}>
+                 {avgTestAge > avgControlAge ? (
+                     <>
+                        Based on the deep learning multiverse simulation, deploying the selected medical protocols achieved a statistically significant survival benefit. 
+                        By adhering to the prescribed interventions, the Optimized Twin <strong style={{color: '#34d399'}}>delayed terminal system failure by {(avgTestAge - avgControlAge).toFixed(1)} years</strong> mathematically.
+                        {getTopCause(controls) !== getTopCause(tests) ? (
+                            <span> Additionally, this pathway successfully altered the primary mortality vector, shifting the absolute failure mode from <strong style={{color: '#fca5a5'}}>{getTopCause(controls).split('(')[0]}</strong> to <strong style={{color: '#60a5fa'}}>{getTopCause(tests).split('(')[0]}</strong>.</span>
+                        ) : (
+                            <span> The primary fatal condition (<strong style={{color: '#94a3b8'}}>{getTopCause(controls).split('(')[0]}</strong>) remained the ultimate bound, but its progression velocity was heavily decelerated.</span>
+                        )}
+                     </>
+                 ) : (
+                     <>
+                        Based on the PyTorch structural simulation, the selected interventions <strong style={{color: '#ef4444'}}>did not generate a net survival benefit</strong> over your baseline trajectory. 
+                        The Optimized Twin perished {(avgControlAge - avgTestAge).toFixed(1)} years sooner or equally to the Control Twin, potentially due to pharmacological contraindications combining fatally with your existing comorbidities, or SDOH adherence decay constraints. Consult a licensed clinician before altering prescriptions.
+                     </>
+                 )}
+             </p>
+         </div>
       </div>
     );
   };

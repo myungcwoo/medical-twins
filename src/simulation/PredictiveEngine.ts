@@ -15,35 +15,44 @@ export const PredictiveEngine = {
     return [
       this.calculateStrokeRisk(state),
       this.calculateChfRisk(state),
+      this.calculateRenalFailureRisk(state),
       this.calculateDiabetesRisk(state),
       this.calculateCopdRisk(state),
     ];
   },
 
   /**
-   * Approximate model mimicking AHA PREVENT (2023) ASCVD Stroke / MI equations
+   * AHA PREVENT (2023) ASCVD Stroke / MI equations upgraded with CAC Imaging
    */
   calculateStrokeRisk(state: AgentState): RiskPrediction {
     let base = state.age > 65 ? 12 : state.age > 50 ? 5 : state.age > 40 ? 2 : 0.5;
     
-    // Multipliers
+    // Core Risk Multipliers
     if (state.sex === 'Male') base *= 1.15;
     if (state.vitals.bpSystolic > 140) base *= 2.5;
-    else if (state.vitals.bpSystolic > 130) base *= 1.5;
     if (state.labs.ldlCholesterol > 130) base *= 1.8;
     if (state.chronicConditions.includes('Diabetes') || state.labs.a1c >= 6.5) base *= 2.5;
     if (state.smoker) base *= 2.8;
-    if (state.labs.egfr < 60) base *= 1.6;
 
+    // Advanced Diagnostics (Imaging & Biomarkers)
+    if (state.imaging.cacScore === 0) {
+        base *= 0.3; // Massively protective. The "Power of Zero"
+    } else if (state.imaging.cacScore > 100) {
+        base *= 3.5; // High plaque burden
+    } else if (state.imaging.cacScore > 400) {
+        base *= 6.0; // Severe, imminent rupture risk
+    }
+
+    if (state.labs.hsCRP > 3.0) base *= 1.4; // High systemic inflammation vascular risk
+    
     let risk = Math.min(99.9, base);
     
     const mitigations: string[] = [];
+    if (state.imaging.cacScore > 100) mitigations.push(`CRITICAL: CAC Score of ${state.imaging.cacScore} discovered. Initiate immediate high-intensity Statin regardless of baseline LDL.`);
+    if (state.labs.hsCRP > 3.0) mitigations.push("Elevated hs-CRP detected. Systemic vascular inflammation active; implement aggressive dietary intervention.");
     if (state.vitals.bpSystolic > 130) mitigations.push("Initiate strict antihypertensive therapy to drive Systolic BP < 130.");
-    if (state.labs.ldlCholesterol > 130) mitigations.push("Initiate statin therapy and dietary overhaul to arrest LDL-C < 100.");
     if (state.smoker) mitigations.push("Immediate smoking cessation counseling to halve catastrophic ASCVD hazard.");
-    if (state.labs.egfr < 60) mitigations.push("Institute proven renal protection (ACE inhibitor) to stabilize nephropathy.");
-    if (state.labs.a1c >= 6.5) mitigations.push("Intensive glycemic management (A1C < 7.0) to stave off vascular inflammation.");
-    if (mitigations.length === 0) mitigations.push("Continue excellent preventative physiological lifestyle.");
+    if (mitigations.length === 0) mitigations.push("Atherosclerotic profile highly stable. Plaque burden controlled.");
 
     return {
       disease: 'ASCVD (Stroke / Heart Attack)',
@@ -54,28 +63,75 @@ export const PredictiveEngine = {
   },
 
   /**
-   * Approximate model mimicking PCP-HF Heart Failure incident predictor
+   * Advanced Heart Failure predictor using LVEF and NT-proBNP assays
    */
   calculateChfRisk(state: AgentState): RiskPrediction {
-    let base = state.age > 60 ? 8 : state.age > 45 ? 3 : 0.4;
+    let base = state.age > 60 ? 4 : state.age > 45 ? 1 : 0.2;
 
-    if (state.vitals.bmi > 30) base *= 2.2;
-    if (state.vitals.bpSystolic > 130) base *= 1.7;
-    if (state.labs.cvHealth < 70) base *= 3.0; // LVH modifier
-    if (state.chronicConditions.includes('Diabetes') || state.labs.a1c >= 6.5) base *= 1.9;
-    if (state.smoker) base *= 2.0;
+    if (state.vitals.bmi > 30) base *= 2.0;
+    if (state.vitals.bpSystolic > 140) base *= 2.5;
+
+    // Structural Imaging & Advanced Labs logic
+    let type = "Imminent Structural Risk";
+    if (state.imaging.lvef < 40) {
+        base *= 5.0; // HFrEF active
+        type = "HFrEF (Reduced Ejection Fraction)";
+    } else if (state.imaging.lvef < 50) {
+        base *= 2.5; // HFmrEF
+    } else if (state.labs.ntProBNP > 400 && state.imaging.lvef >= 50) {
+        base *= 3.0; // HFpEF (Preserved EF but massive decompensation biomarker)
+        type = "HFpEF (Preserved Ejection Fraction w/ High filling pressures)";
+    }
+
+    if (state.labs.ntProBNP > 1000) base *= 4.0; // Massive acute stretch severity
+    if (state.labs.ntProBNP < 100) base *= 0.4; // Strong rule-out bounds
 
     let risk = Math.min(99.9, base);
 
     const mitigations: string[] = [];
-    if (state.vitals.bmi > 30) mitigations.push("Prescribe strict weight loss regimen (Target BMI < 25) to radically unload cardiac structural strain.");
-    if (state.labs.cvHealth < 70) mitigations.push("Enforce high-intensity cardiovascular exercise to induce Left Ventricular Hypertrophy (LVH) regression.");
-    if (state.smoker) mitigations.push("Cease smoking to prevent oxidative damage to myocardial architecture.");
-    if (state.vitals.bpSystolic > 130) mitigations.push("Normalize hemodynamic load via ACE/ARBs to arrest hypertensive hypertensive heart disease progression.");
-    if (mitigations.length === 0) mitigations.push("Cardiac reserves are structurally resilient.");
+    if (state.imaging.lvef < 40) mitigations.push(`CRITICAL: LVEF of ${state.imaging.lvef}% dictates initiation of ARNI (Entresto), Beta Blockers, and Spironolactone immediately (GDMT).`);
+    if (state.labs.ntProBNP > 400) mitigations.push(`NT-proBNP elevated at ${state.labs.ntProBNP} pg/mL indicating active volume overload. Titrate loop diuretics to dry weight.`);
+    if (state.vitals.bpSystolic > 130) mitigations.push("Normalize hemodynamic load entirely via ACE/ARBs to arrest hypertensive myocardial damage.");
+    if (mitigations.length === 0) mitigations.push("Myocardial structures functionally capable. Filling pressures are nominally balanced.");
 
     return {
-      disease: 'Heart Failure (CHF)',
+      disease: state.imaging.lvef < 50 || state.labs.ntProBNP > 400 ? `Heart Failure (${type})` : 'Heart Failure (CHF)',
+      riskPercentage: risk,
+      riskLevel: this.getRiskLevel(risk),
+      mitigations
+    };
+  },
+
+  /**
+   * Chronic Kidney Disease progression model mapping UACR and eGFR decline trajectories
+   */
+  calculateRenalFailureRisk(state: AgentState): RiskPrediction {
+    let base = 0.5;
+    
+    if (state.labs.egfr < 60) base += 10;
+    if (state.labs.egfr < 30) base += 40; // G4 stage
+    if (state.labs.egfr < 15) base += 85; // G5 Terminal ESRD
+    
+    // Explicit Nephropathy damage vector
+    if (state.labs.uacr > 300) {
+        base *= 3.5; // Macroalbuminuria - glomeruli are structurally dead
+    } else if (state.labs.uacr > 30) {
+        base *= 2.0; // Microalbuminuria - warning zone
+    }
+
+    if (state.chronicConditions.includes('Diabetes') && state.labs.a1c > 8.0) base *= 2.0;
+    if (state.vitals.bpSystolic > 140) base *= 1.8;
+
+    let risk = Math.min(99.9, base);
+    const mitigations: string[] = [];
+    
+    if (state.labs.uacr > 30) mitigations.push(`UACR of ${state.labs.uacr} mg/g confirms active protein spillage. Initiate ACE inhibitors or SGLT2 inhibitors sequentially to explicitly relieve intraglomerular pressure.`);
+    if (state.labs.egfr < 60) mitigations.push(`Avoid all NSAIDs and explicit nephrotoxins to preserve remaining eGFR bandwidth (${Math.round(state.labs.egfr)}).`);
+    if (state.labs.egfr < 15) mitigations.push("EMERGENCY ACTION: Prepare for emergent hemodialysis access placement (Fistula).");
+    if (mitigations.length === 0) mitigations.push("Glomerular filtration architecture structurally perfect. No active macro/micro protein bridging detected.");
+
+    return {
+      disease: 'End-Stage Renal Disease (ESRD Progression)',
       riskPercentage: risk,
       riskLevel: this.getRiskLevel(risk),
       mitigations

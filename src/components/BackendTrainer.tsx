@@ -64,7 +64,14 @@ export const BackendTrainer: FC = () => {
                     a1c: 4.5 + (Math.random() * 1.5),
                     ldlCholesterol: 80 + (Math.random() * 40),
                     egfr: 90 + (Math.random() * 20),
-                    cvHealth: 80 + (Math.random() * 20)
+                    cvHealth: 80 + (Math.random() * 20),
+                    ntProBNP: 50,
+                    hsCRP: 1.0,
+                    uacr: 10
+                },
+                imaging: {
+                    lvef: 60,
+                    cacScore: 0
                 }
             });
 
@@ -215,6 +222,45 @@ export const BackendTrainer: FC = () => {
                       )}
                   </div>
                </div>
+           </div>
+
+           {/* KNOWLEDGE REPOSITORY: ADVANCED DIAGNOSTICS MATRIX */}
+           <div style={{ marginTop: '2rem', display: 'grid', gap: '1rem' }}>
+              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1.2rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                 <h4 style={{ color: '#60a5fa', margin: '0 0 0.8rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span role="img" aria-label="brain">🧠</span> Predictor Reference Architecture (AHA / NEJM / JAMA)
+                 </h4>
+                 <p style={{ fontSize: '0.85rem', color: '#cbd5e1', marginBottom: '1rem', lineHeight: 1.5 }}>
+                    The `PredictiveEngine.ts` PyTorch-lite heuristics act heavily against the new `Imaging` and `Labs` constructs appended in Phase 7. Review the mapping below when building internal custom training payloads.
+                 </p>
+                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+                    
+                    <div style={{ background: 'rgba(0,0,0,0.4)', padding: '1rem', borderRadius: '6px' }}>
+                        <span style={{ color: '#f472b6', fontWeight: 'bold', fontSize: '0.9rem' }}>Atherosclerotic ASCVD Engine</span>
+                        <ul style={{ margin: '0.5rem 0 0 0', paddingLeft: '1.2rem', fontSize: '0.8rem', color: '#94a3b8' }}>
+                            <li><strong style={{ color: '#fff' }}>CAC Score (Imaging):</strong> The "Power of Zero" (0) slashes mortality array by 70%. Agatston values &gt; 100 multiply 10Y risk strictly by 3.5x.</li>
+                            <li><strong style={{ color: '#fff' }}>hs-CRP (Biomarker):</strong> Values &gt; 3.0 trigger systemic inflammation warnings, upgrading CAD plaque instability indices.</li>
+                        </ul>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.4)', padding: '1rem', borderRadius: '6px' }}>
+                        <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '0.9rem' }}>Heart Failure (CHF) Trajectories</span>
+                        <ul style={{ margin: '0.5rem 0 0 0', paddingLeft: '1.2rem', fontSize: '0.8rem', color: '#94a3b8' }}>
+                            <li><strong style={{ color: '#fff' }}>LVEF (Imaging):</strong> Classifies HFrEF (EF &lt; 40%) inducing a severe 5x Base Risk multiplicative modifier mandating ARNI (Entresto).</li>
+                            <li><strong style={{ color: '#fff' }}>NT-proBNP (Biomarker):</strong> Used critically to track fluid volume overload. Values &gt; 400 pg/mL with normal EF uncovers hidden HFpEF trajectories.</li>
+                        </ul>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.4)', padding: '1rem', borderRadius: '6px' }}>
+                        <span style={{ color: '#a855f7', fontWeight: 'bold', fontSize: '0.9rem' }}>Renal Collapse (CKD Progress Base)</span>
+                        <ul style={{ margin: '0.5rem 0 0 0', paddingLeft: '1.2rem', fontSize: '0.8rem', color: '#94a3b8' }}>
+                            <li><strong style={{ color: '#fff' }}>eGFR (Lab):</strong> Tracks filtration bandwidth. Stages G4 (&lt;30) and G5 (&lt;15) trigger emergency end-stage organ mitigations explicitly.</li>
+                            <li><strong style={{ color: '#fff' }}>UACR (Biomarker):</strong> Protein load &gt; 30 (Microalbuminuria) vs &gt; 300 (Macro) forces mandatory nephroprotective protocols.</li>
+                        </ul>
+                    </div>
+
+                 </div>
+              </div>
            </div>
         </div>
     );

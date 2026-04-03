@@ -24,10 +24,20 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
   const [exerciseRoutine, setExerciseRoutine] = useState<'None' | 'Moderate' | 'High'>('Moderate');
   const [smoker, setSmoker] = useState(false);
   
+  // SDOH
+  const [wealth, setWealth] = useState<number>(65);
+  const [foodDesert, setFoodDesert] = useState<boolean>(false);
+  const [medicalCompliance, setMedicalCompliance] = useState<'Low' | 'Moderate' | 'High'>('High');
+  
   // Basic Medicals
   const [bpSystolic, setBpSystolic] = useState<number>(120);
   const [bpDiastolic, setBpDiastolic] = useState<number>(80);
   const [bmi, setBmi] = useState<number>(24.0);
+  
+  // Advanced Imaging
+  const [cacScore, setCacScore] = useState<number>(0);
+  const [lvef, setLvef] = useState<number>(60);
+  
   const [selectedConditions, setSelectedConditions] = useState<Set<string>>(new Set());
 
   // Intervention Setup
@@ -88,16 +98,16 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
           baseHealth: baseHlth,
           stressLevel: stressLevel,
           dietQuality: dietQuality,
-          wealth: 65, // Middle Class
-          accessToCare: 80,
-          foodDesert: false,
+          wealth: wealth,
+          accessToCare: wealth > 50 ? 80 : 30, // Correlate access with wealth natively here
+          foodDesert: foodDesert,
           smoker: smoker,
           chronicConditions: Array.from(selectedConditions),
           familyHistory: [],
           surgicalHistory: [],
           medications: [],
           exerciseRoutine: exerciseRoutine,
-          medicalCompliance: "High", // We assume they are at least willing to take the interventions!
+          medicalCompliance: medicalCompliance,
           vitals: {
             bpSystolic: bpSystolic,
             bpDiastolic: bpDiastolic,
@@ -109,7 +119,14 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
             a1c: bmi > 30 ? 6.8 : (dietQuality < 30 ? 6.2 : 5.2),
             ldlCholesterol: dietQuality < 50 ? 140 : 100,
             egfr: 100 - (age * 0.1), 
-            cvHealth: Math.max(10, 100 - (age * 0.3) - (smoker ? 20 : 0) - (bpSystolic > 140 ? 15 : 0))
+            cvHealth: Math.max(10, 100 - (age * 0.3) - (smoker ? 20 : 0) - (bpSystolic > 140 ? 15 : 0)),
+            ntProBNP: lvef < 50 ? 800 : 40,
+            hsCRP: smoker ? 4.5 : 1.2,
+            uacr: 15
+          },
+          imaging: {
+            lvef: lvef,
+            cacScore: cacScore
           },
           memory: []
       };
@@ -243,6 +260,62 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
                     <option value="High">High (Serious Athlete)</option>
                 </select>
             </div>
+        </div>
+
+        {/* SOCIOECONOMIC BLOCK (SDOH) */}
+        <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+             <h3 style={{ color: '#3b82f6', margin: '0 0 1.2rem 0', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', paddingBottom: '0.5rem' }}>Real-World Determinants (SDOH)</h3>
+             <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '1.5rem', lineHeight: 1.4 }}>
+                 Interventions are only as effective as your ability to adopt them. Lack of wealth destroys adherence due to high copays, and "food deserts" prevent nutritional protocol success.
+             </p>
+
+             <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Wealth & Access: <strong>{wealth}/100</strong></label>
+                <input type="range" min="0" max="100" value={wealth} onChange={e => setWealth(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6' }} />
+                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.3rem' }}>Values &lt; 40 incur a devastating 50% non-adherence decay mathematically.</div>
+             </div>
+
+             <div style={{ marginBottom: '1.2rem' }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Personal Medical Compliance:</label>
+                <select value={medicalCompliance} onChange={e => setMedicalCompliance(e.target.value as any)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.3)', background: 'rgba(0,0,0,0.5)', color: 'white' }}>
+                    <option value="High">High (Follows Doctors Orders Strictly)</option>
+                    <option value="Moderate">Moderate (Sometimes forgets pills)</option>
+                    <option value="Low">Low (Refuses protocols / Deep skepticism)</option>
+                </select>
+             </div>
+
+             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(0, 0, 0, 0.3)', padding: '1rem', borderRadius: '8px', cursor: 'pointer', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                <input type="checkbox" checked={foodDesert} onChange={e => setFoodDesert(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#3b82f6' }} />
+                <span style={{ color: '#cbd5e1', fontWeight: 'bold' }}>I live in a Food Desert (No fresh grocery)</span>
+             </label>
+        </div>
+
+        {/* ADVANCED DIAGNOSTICS & IMAGING BLOCK */}
+        <div style={{ background: 'rgba(236, 72, 153, 0.05)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(236, 72, 153, 0.2)' }}>
+             <h3 style={{ color: '#ec4899', margin: '0 0 1.2rem 0', borderBottom: '1px solid rgba(236, 72, 153, 0.2)', paddingBottom: '0.5rem' }}>Advanced Diagnostic Imaging Panels</h3>
+             <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '1.5rem', lineHeight: 1.4 }}>
+                 Specify structural organ data if known. These are authoritative PyTorch modifiers that rapidly accelerate risk factors.
+             </p>
+
+             <div style={{ marginBottom: '1.2rem' }}>
+                <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>
+                    <span>Ejection Fraction (LVEF): <strong>{lvef}%</strong></span>
+                    <span style={{ fontSize: '0.75rem', color: lvef < 40 ? '#ef4444' : lvef < 50 ? '#f59e0b' : '#10b981' }}>
+                        {lvef < 40 ? 'HFrEF Failure' : lvef < 50 ? 'Borderline' : 'Normal'}
+                    </span>
+                </label>
+                <input type="range" min="15" max="75" value={lvef} onChange={e => setLvef(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#ec4899' }} />
+             </div>
+
+             <div style={{ marginBottom: '1.2rem' }}>
+                <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>
+                    <span>Coronary Artery Calcium (CAC): <strong>{cacScore}</strong></span>
+                    <span style={{ fontSize: '0.75rem', color: cacScore === 0 ? '#10b981' : cacScore > 400 ? '#ef4444' : cacScore > 100 ? '#f59e0b' : '#94a3b8' }}>
+                        {cacScore === 0 ? 'Zero Plaque' : cacScore > 400 ? 'Severe ASCVD' : 'Mild/Moderate'}
+                    </span>
+                </label>
+                <input type="range" step="25" min="0" max="1000" value={cacScore} onChange={e => setCacScore(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#a855f7' }} />
+             </div>
         </div>
 
         {/* VITALS BLOCK */}

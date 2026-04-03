@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import type { AgentState } from '../simulation/Agent';
 import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
@@ -8,6 +8,8 @@ import ForceGraph2D from 'react-force-graph-2d';
 interface Props {
   agents: AgentState[];
   onSelectAgent: (id: string) => void;
+  isRunning?: boolean;
+  isFastForwarding?: boolean;
 }
 
 const getHealthColor = (val: number) => {
@@ -22,9 +24,10 @@ const getStressColor = (val: number) => {
   return 'var(--health-crit)';
 };
 
-export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
+export const DashboardView: FC<Props> = ({ agents, onSelectAgent, isRunning, isFastForwarding }) => {
   const [page, setPage] = useState(1);
   const [subTab, setSubTab] = useState<'overview' | 'database'>('overview');
+  const [hoverNode, setHoverNode] = useState<any>(null);
   const [apiKey, setApiKey] = useState(LLMEngine.apiKey || '');
   const [provider, setProvider] = useState<any>(LLMEngine.provider);
   const [targetModel, setTargetModel] = useState<string>(LLMEngine.activeModel || 'gemini-2.5-flash');
@@ -68,11 +71,42 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
 
   const total = agents.length;
   // High-Performance Physics Memoization
-  // By permanently isolating the topological Link objects, the `react-force-graph` D3 engine natively detects 
-  // that the grid structure has zero changes, and effortlessly paints dynamic node adjustments without any bouncy re-heating!
-  const memoLinks = useMemo(() => {
-    return agents.filter(a => a.pairedTwinId).map(a => ({ source: a.id, target: a.pairedTwinId! }));
-  }, []); // Static bounds
+  // We strictly isolate both nodes and links into a single immutable reference.
+  const graphRef = useRef<any>(null);
+  const staticNodes = useMemo(() => {
+     return agents.map(a => ({ id: a.id, health: a.baseHealth, isDead: a.isDead }));
+  }, [agents.length]);
+
+  // Draw topological paths dynamically based exclusively on exact peer-to-peer clinical adoptions!
+  const liveLinks = useMemo(() => {
+      const explicitTwinLinks = agents.filter(a => a.pairedTwinId).map(a => ({ source: a.id, target: a.pairedTwinId! }));
+      
+      if (explicitTwinLinks.length > 0) return explicitTwinLinks;
+
+      // Map dynamic communication histories
+      return agents.flatMap(a => (a.networkConnections || []).map(targetId => ({ source: a.id, target: targetId })));
+  }, [agents, KnowledgeBase.totalInteractions]);
+
+  const liveGraphData = useMemo(() => {
+      return { nodes: staticNodes, links: liveLinks };
+  }, [staticNodes, liveLinks]);
+
+  // Silently mutate the underlying D3 node references so we don't break gravity layout constraints.
+  // We explicitly trigger a canvas redraw using d3ReheatSimulation to reflect color/size changes.
+  useEffect(() => {
+      staticNodes.forEach((node: any) => {
+          const liveAgent = agents.find(a => a.id === node.id);
+          if (liveAgent) {
+              node.health = liveAgent.baseHealth;
+              node.isDead = liveAgent.isDead;
+          }
+      });
+      // Gently wake the simulation to trigger nodeColor and nodeVal recalculations, 
+      // but conditionally limit firing rate to avoid WebGL context collapsing (Black Screen).
+      if (graphRef.current && Math.random() < 0.2) {
+         graphRef.current.d3ReheatSimulation();
+      }
+  }, [agents, liveGraphData]);
 
   const active = agents.filter(a => !a.isDead).length;
   const survivalRate = total > 0 ? ((active / total) * 100).toFixed(1) : '0.0';
@@ -179,23 +213,100 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
        <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
           {/* Live Force Graph Block */}
           <div style={{ flexShrink: 0, width: '280px', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(139, 92, 246, 0.3)', boxShadow: '0 0 40px rgba(139, 92, 246, 0.15)', position: 'relative', background: '#000' }}>
-             <ForceGraph2D 
-                width={280}
-                height={280}
-                backgroundColor="#000000"
-                graphData={{
-                    nodes: agents.map(a => ({ id: a.id, health: a.baseHealth, isDead: a.isDead })),
-                    links: memoLinks
-                }}
-                nodeColor={(node: any) => node.isDead ? 'rgba(239, 68, 68, 0.5)' : '#60a5fa'}
-                nodeVal={(node: any) => Math.max(1, node.health / 10)}
-                nodeRelSize={4}
-                enableNodeDrag={false}
-                enableZoomInteraction={false}
-                enablePanInteraction={false}
-                linkColor={() => 'rgba(139, 92, 246, 0.4)'}
-             />
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1.5rem 1rem', background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)' }}>
+             {(isRunning || isFastForwarding) ? (
+                 <div style={{ width: '280px', height: '280px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.9)' }}>
+                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid rgba(139, 92, 246, 0.2)', borderTopColor: '#8b5cf6', animation: 'spin 1s linear infinite' }}></div>
+                     <div style={{ color: '#8b5cf6', fontWeight: 'bold', marginTop: '1.5rem', fontSize: '1rem', letterSpacing: '0.05em' }}>COMPUTING DATA</div>
+                     <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.5rem', textAlign: 'center', padding: '0 1rem' }}>
+                         Topology mapping suspended.<br/>Pause simulation to render.
+                     </div>
+                 </div>
+             ) : (
+                 <ForceGraph2D 
+                    ref={graphRef}
+                    width={280}
+                    height={280}
+                    backgroundColor="#000000"
+                    graphData={liveGraphData}
+                    // Interactive visual node sizing (significantly smaller for navigation)
+                    nodeVal={(node: any) => Math.max(0.5, (node.health || 50) / 40)}
+                    nodeRelSize={3}
+                    
+                    // Hover dynamics: Highlight the hovered node and its physical connections
+                    nodeColor={(node: any) => {
+                        if (hoverNode) {
+                            if (node === hoverNode) return '#fbbf24'; // Active hover (gold)
+                            
+                            // Check if link exists between hoverNode and this node
+                            const isConnected = liveGraphData.links.some((l: any) => 
+                                (l.source.id === node.id && l.target.id === hoverNode.id) || 
+                                (l.target.id === node.id && l.source.id === hoverNode.id) ||
+                                (l.source === node.id && l.target === hoverNode.id) || 
+                                (l.target === node.id && l.source === hoverNode.id)
+                            );
+                            
+                            if (isConnected) return '#f472b6'; // Linked agents (pink highlight)
+                            return 'rgba(255, 255, 255, 0.05)'; // Dim all non-related nodes heavily
+                        }
+                        return node.isDead ? 'rgba(239, 68, 68, 0.4)' : '#3b82f6';
+                    }}
+                    
+                    // Edge highlighting
+                    linkColor={(link: any) => {
+                        if (hoverNode) {
+                            const isLinkActive = (link.source.id === hoverNode.id || link.target.id === hoverNode.id) ||
+                                                 (link.source === hoverNode.id || link.target === hoverNode.id);
+                            return isLinkActive ? 'rgba(244, 114, 182, 0.8)' : 'rgba(255, 255, 255, 0.02)';
+                        }
+                        return 'rgba(139, 92, 246, 0.2)';
+                    }}
+                    linkWidth={(link: any) => {
+                        if (hoverNode) {
+                            const isLinkActive = (link.source.id === hoverNode.id || link.target.id === hoverNode.id) ||
+                                                 (link.source === hoverNode.id || link.target === hoverNode.id);
+                            return isLinkActive ? 2 : 1;
+                        }
+                        return 1;
+                    }}
+                    
+                    // Rich interactive tooltips
+                    nodeLabel={(node: any) => {
+                        const live = agents.find(a => a.id === node.id);
+                        if (!live) return '';
+                        return `
+                          <div style="background: rgba(15, 23, 42, 0.95); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3); font-family: Inter, sans-serif; pointer-events: none; backdrop-filter: blur(4px);">
+                            <div style="color: #60a5fa; font-weight: bold; font-size: 0.9rem; margin-bottom: 4px;">${live.name}</div>
+                            <div style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase;">${live.role}</div>
+                            <div style="margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8rem;">
+                                <div><span style="color: #94a3b8">Health:</span> <span style="color: ${getHealthColor(live.baseHealth)}">${live.baseHealth.toFixed(1)}</span></div>
+                                <div><span style="color: #94a3b8">Network:</span> <span style="color: white">${(live.networkConnections || []).length} connections</span></div>
+                            </div>
+                            ${live.isDead ? '<div style="color: #ef4444; font-size: 0.7rem; margin-top: 4px; font-weight: bold;">TERMINATED</div>' : ''}
+                          </div>
+                        `;
+                    }}
+                    
+                    // Allow users to drill down by clicking
+                    onNodeHover={(node) => setHoverNode(node)}
+                    onNodeClick={(node) => {
+                       onSelectAgent(node.id);
+                       // Auto scroll up to the timeline viewer implicitly mapped
+                       window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    
+                    onEngineStop={() => {
+                        if (liveGraphData && liveGraphData.nodes) {
+                            liveGraphData.nodes.forEach((node: any) => {
+                                if (node.x !== undefined && node.y !== undefined) {
+                                    node.fx = node.x;
+                                    node.fy = node.y;
+                                }
+                            });
+                        }
+                    }}
+                 />
+             )}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1.5rem 1rem', background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)', pointerEvents: 'none' }}>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>Knowledge Dispersion Graph</div>
             </div>
           </div>

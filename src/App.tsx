@@ -14,9 +14,11 @@ import { TrainingDashboard } from './components/TrainingDashboard';
 import { BackendTrainer } from './components/BackendTrainer';
 import { ConsumerWizard } from './components/ConsumerWizard';
 import { FAQView } from './components/FAQView';
+import { DevDocumentation } from './components/DevDocumentation';
 import heroBg from './assets/hero_bg.png';
 import { DatabaseEngine } from './simulation/DatabaseEngine';
 import { InferenceEngine } from './simulation/InferenceEngine';
+import { Pharmacokinetics, type PhysicsModel } from './simulation/Pharmacokinetics';
 
 // Helpers extracted to DashboardView component
 
@@ -32,7 +34,7 @@ function App() {
   const [isCustomRunning, setIsCustomRunning] = useState(false);
   const [isCustomEnded, setIsCustomEnded] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'timeline' | 'explanation' | 'faq' | 'ingestion' | 'network' | 'report' | 'custom-trial' | 'training' | 'backend-train' | 'consumer-wizard'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'timeline' | 'explanation' | 'faq' | 'ingestion' | 'network' | 'report' | 'custom-trial' | 'training' | 'backend-train' | 'consumer-wizard' | 'dev-docs'>('dashboard');
   const [selectedId, setSelectedId] = useState<string>('');
   
   // Fast Forward State
@@ -40,6 +42,12 @@ function App() {
   const [autoResume, setAutoResume] = useState<boolean>(true);
   const [isFastForwarding, setIsFastForwarding] = useState<boolean>(false);
   const [isCustomFastForwarding, setIsCustomFastForwarding] = useState<boolean>(false);
+  
+  // Mathematical Combination Engine Mode
+  const [physicsMode, setPhysicsMode] = useState<PhysicsModel>('Linear');
+  
+  // Mobile UI States
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const hydrator = async () => {
@@ -143,32 +151,46 @@ function App() {
     setCustomTicks(customEngineRef.current.currentTick);
 
     // Pre-emptively apply the explicitly selected protocols natively across ALL Intervention clones
+    // Pre-emptively apply the explicitly selected protocols natively across ALL Intervention clones using the Mathematical Engine
     customEngineRef.current.agents.filter(a => a.state.comparativeGroup === 'Intervention').forEach(interventionAgent => {
-      selectedProtocols.forEach((idea: any) => {
-        interventionAgent.state.history.push({ 
+      
+      const impactsToCalculate = selectedProtocols.map(p => p.impact);
+      const protocolIds = selectedProtocols.map(p => p.id);
+      
+      const netCalculatedImpact = Pharmacokinetics.calculateNetImpact(
+          impactsToCalculate, 
+          physicsMode, 
+          interventionAgent.state.medications,
+          protocolIds
+      );
+
+      interventionAgent.state.history.push({ 
           tick: customEngineRef.current!.currentTick, 
           type: 'Intervention', 
-          description: `User Directed Optimization: Executed protocol checklist integration [${idea.title}].`,
-          impactHealth: idea.impact.healthDelta || 0,
-          impactStress: idea.impact.stressDelta || 0
-        });
-        
-        interventionAgent.state.baseHealth += (idea.impact.healthDelta || 0);
-        interventionAgent.state.stressLevel += (idea.impact.stressDelta || 0);
-        interventionAgent.state.vitals.bpSystolic += (idea.impact.bpDelta || 0);
-        interventionAgent.state.labs.a1c += (idea.impact.a1cDelta || 0);
-        interventionAgent.state.labs.cvHealth += (idea.impact.cvDelta || 0);
-        interventionAgent.state.labs.egfr += (idea.impact.egfrDelta || 0);
-        
-        idea.impact.newMeds?.forEach((med: string) => {
-          if (!interventionAgent.state.medications.includes(med)) interventionAgent.state.medications.push(med);
-        });
-        if (!interventionAgent.state.memory.includes(idea.id)) {
-            interventionAgent.state.memory.push(idea.id);
-        }
+          description: `User Directed Optimization Physics Sweep: [${selectedProtocols.map(p => p.title).join(', ')}] -> ${netCalculatedImpact.description}`,
+          impactHealth: netCalculatedImpact.healthDelta,
+          impactStress: netCalculatedImpact.stressDelta
       });
+      
+      interventionAgent.state.baseHealth += netCalculatedImpact.healthDelta;
+      interventionAgent.state.stressLevel += netCalculatedImpact.stressDelta;
+      interventionAgent.state.vitals.bpSystolic += netCalculatedImpact.bpDelta;
+      interventionAgent.state.labs.a1c += netCalculatedImpact.a1cDelta;
+      interventionAgent.state.labs.cvHealth += netCalculatedImpact.cvDelta;
+      interventionAgent.state.labs.egfr += netCalculatedImpact.egfrDelta;
+      
+      netCalculatedImpact.newMeds.forEach((med: string) => {
+          if (!interventionAgent.state.medications.includes(med)) interventionAgent.state.medications.push(med);
+      });
+      
+      protocolIds.forEach((id: string) => {
+          if (!interventionAgent.state.memory.includes(id)) {
+              interventionAgent.state.memory.push(id);
+          }
+      });
+      
       // Safety bounds check
-      interventionAgent.state.baseHealth = Math.min(100, interventionAgent.state.baseHealth);
+      interventionAgent.state.baseHealth = Math.max(10, Math.min(100, interventionAgent.state.baseHealth));
     });
 
     setCustomTwins([...customEngineRef.current.getAgents()]);
@@ -293,8 +315,16 @@ function App() {
   return (
     <div className="layout-wrapper">
       
+      {/* Mobile Hamburger Overlay Interceptor */}
+      {isMobileMenuOpen && (
+        <div 
+          className="mobile-overlay" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* 1. Collapsible Vertical Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <img 
             src="/logo.png" 
@@ -309,20 +339,23 @@ function App() {
         
         <nav className="sidebar-nav">
           <div className="nav-group-title">Primary Workspaces</div>
-          <button className={`sidebar-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')} style={{ color: '#3b82f6', fontWeight: 'bold' }}>⚡ Command Center</button>
-          <button className={`sidebar-btn ${activeTab === 'consumer-wizard' ? 'active' : ''}`} onClick={() => setActiveTab('consumer-wizard')} style={{ color: '#f472b6', fontWeight: 'bold' }}>🔮 Simulate Me</button>
+          <button className={`sidebar-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => { setActiveTab('dashboard'); setIsMobileMenuOpen(false); }} style={{ color: activeTab === 'dashboard' ? '#93c5fd' : '#3b82f6', fontWeight: 'bold' }}>⚡ Command Center</button>
+          <button className={`sidebar-btn ${activeTab === 'consumer-wizard' ? 'active' : ''}`} onClick={() => { setActiveTab('consumer-wizard'); setIsMobileMenuOpen(false); }} style={{ color: activeTab === 'consumer-wizard' ? '#fbcfe8' : '#f472b6', fontWeight: 'bold' }}>🔮 Simulate Me</button>
           
           <div className="nav-group-title" style={{ marginTop: '1rem' }}>Data & Logs</div>
-          {isEnded && <button className={`sidebar-btn ${activeTab === 'report' ? 'active' : ''}`} onClick={() => setActiveTab('report')} style={{ color: '#ef4444', fontWeight: 'bold' }}>📊 Terminated Report</button>}
-          <button className={`sidebar-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => setActiveTab('training')} style={{ color: '#f59e0b', fontWeight: 'bold' }}>💉 RWD Training</button>
-          <button className={`sidebar-btn ${activeTab === 'ingestion' ? 'active' : ''}`} onClick={() => setActiveTab('ingestion')}>🧬 Add Twin (JSON)</button>
-          <button className={`sidebar-btn ${activeTab === 'explanation' ? 'active' : ''}`} onClick={() => setActiveTab('explanation')}>📖 How It Works</button>
-          <button className={`sidebar-btn ${activeTab === 'faq' ? 'active' : ''}`} onClick={() => setActiveTab('faq')} style={{ color: '#60a5fa' }}>❔ Read FAQ</button>
+          {isEnded && <button className={`sidebar-btn ${activeTab === 'report' ? 'active' : ''}`} onClick={() => { setActiveTab('report'); setIsMobileMenuOpen(false); }} style={{ color: activeTab === 'report' ? '#fca5a5' : '#ef4444', fontWeight: 'bold' }}>📊 Terminated Report</button>}
+          <button className={`sidebar-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => { setActiveTab('training'); setIsMobileMenuOpen(false); }} style={{ color: activeTab === 'training' ? '#fcd34d' : '#f59e0b', fontWeight: 'bold' }}>💉 RWD Training</button>
+          <button className={`sidebar-btn ${activeTab === 'ingestion' ? 'active' : ''}`} onClick={() => { setActiveTab('ingestion'); setIsMobileMenuOpen(false); }}>🧬 Add Twin (JSON)</button>
+          <button className={`sidebar-btn ${activeTab === 'explanation' ? 'active' : ''}`} onClick={() => { setActiveTab('explanation'); setIsMobileMenuOpen(false); }}>📖 How It Works</button>
+          <button className={`sidebar-btn ${activeTab === 'faq' ? 'active' : ''}`} onClick={() => { setActiveTab('faq'); setIsMobileMenuOpen(false); }} style={{ color: activeTab === 'faq' ? '#93c5fd' : '#60a5fa' }}>❔ Read FAQ</button>
         </nav>
 
         <div className="sidebar-footer">
           {import.meta.env.DEV && (
-            <button className={`sidebar-btn dev-btn ${activeTab === 'backend-train' ? 'active' : ''}`} onClick={() => setActiveTab('backend-train')} style={{ color: '#ec4899', fontWeight: 'bold' }}>⚙️ ML Diagnostics</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <button className={`sidebar-btn dev-btn ${activeTab === 'dev-docs' ? 'active' : ''}`} onClick={() => { setActiveTab('dev-docs'); setIsMobileMenuOpen(false); }} style={{ color: '#ec4899', fontWeight: 'bold' }}>📚 Arch Docs</button>
+              <button className={`sidebar-btn dev-btn ${activeTab === 'backend-train' ? 'active' : ''}`} onClick={() => { setActiveTab('backend-train'); setIsMobileMenuOpen(false); }} style={{ color: '#ec4899', fontWeight: 'bold' }}>⚙️ DL Trajectories</button>
+            </div>
           )}
         </div>
       </aside>
@@ -331,6 +364,16 @@ function App() {
       <div className="main-content-area">
         
         <header className="top-island">
+            
+            {/* Mobile Hamburger Button */}
+            <button 
+                className="mobile-menu-btn" 
+                onClick={() => setIsMobileMenuOpen(true)}
+                aria-label="Open Menu"
+            >
+                ☰
+            </button>
+
             <div className="island-controls">
               <div className="tick-counter" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <span>Global Clock: Week {ticks} {ticks > 0 && `(Year ${(ticks/52).toFixed(1)})`}</span>
@@ -342,6 +385,22 @@ function App() {
                   <button onClick={() => setIsRunning(!isRunning)} className={`action-btn ${isRunning ? 'running' : ''}`}>
                     {isRunning ? '⏸ Pause' : '▶ Start'}
                   </button>
+
+                  {/* Mathematical Combination Physics Selector */}
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(59, 130, 246, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#93c5fd', fontWeight: 'bold' }}>Model</span>
+                      <select 
+                          value={physicsMode} 
+                          onChange={(e) => setPhysicsMode(e.target.value as PhysicsModel)}
+                          style={{ background: 'transparent', color: 'white', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 'bold' }}
+                          title="Select the mathematical ruleset for computing stacked clinical combination therapies."
+                      >
+                          <option value="Linear" style={{color: 'black'}}>Linear Addition</option>
+                          <option value="Bliss" style={{color: 'black'}}>Bliss Independence</option>
+                          <option value="Asymptotic" style={{color: 'black'}}>Diminishing Returns (Asymptotic)</option>
+                          <option value="Matrix" style={{color: 'black'}}>Mechanistic Graph Antagonism</option>
+                      </select>
+                  </div>
                   
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <select 
@@ -381,7 +440,7 @@ function App() {
                     onClick={() => {
                       setIsRunning(false);
                       setIsEnded(true);
-                      setActiveTab('report');
+                      // Removed setActiveTab('report') to preserve current context view per user request
                     }}
                     className="end-btn"
                   >
@@ -395,6 +454,11 @@ function App() {
                   <div style={{ padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5', fontWeight: 'bold', borderRadius: '4px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
                     Terminated
                   </div>
+                  {activeTab !== 'report' && (
+                      <button onClick={() => setActiveTab('report')} style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', animation: 'pulseGlow 2s infinite' }}>
+                          View Terminated Report
+                      </button>
+                  )}
                   <button onClick={handleReset} className="reset-btn">Reset</button>
                   <button onClick={handleSaveSimulation} className="save-btn">Save Data</button>
                 </div>
@@ -403,6 +467,7 @@ function App() {
         </header>
 
       <main id="global-scroll-container" className="main-content" style={{ padding: activeTab === 'dashboard' ? '1rem 0' : '1rem 1rem 2rem 1rem' }}>
+        {activeTab === 'dev-docs' && <DevDocumentation />}
         {activeTab === 'backend-train' && import.meta.env.DEV && <BackendTrainer />}
         {activeTab === 'report' && isEnded && (
             <div>
@@ -422,7 +487,16 @@ function App() {
              )}
           </div>
         )}
-        {activeTab === 'ingestion' && <div style={{ height: 'calc(100vh - 200px)', overflowY: 'auto', paddingRight: '1rem' }}><IngestionView onStartCustomTrial={handleStartCustomTrial} /></div>}
+        {activeTab === 'ingestion' && (
+          <div id="ingestion-scroll-container" style={{ display: 'flex', flexDirection: 'column', gap: '3rem', padding: '0.5rem 0.5rem 2rem 0.5rem', height: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+             <IngestionView onStartCustomTrial={handleStartCustomTrial} />
+             {customTwins.length > 0 && (
+                <div id="simulate-me-dashboard"> {/* Reusing ID for scroll targeting */}
+                   <CustomTwinDashboard customTwins={customTwins} customTicks={customTicks} isCustomRunning={isCustomRunning} isCustomEnded={isCustomEnded} isCustomFastForwarding={isCustomFastForwarding} onFastForward={handleCustomFastForward} onTogglePlay={() => setIsCustomRunning(!isCustomRunning)} onEndTrial={() => { setIsCustomRunning(false); setIsCustomEnded(true); }} />
+                </div>
+             )}
+          </div>
+        )}
         {activeTab === 'dashboard' && (
            <>
              {selectedId && <TimelineView agents={agents} selectedId={selectedId} onSelectAgent={setSelectedId} />}
@@ -433,7 +507,7 @@ function App() {
                 </div>
                 
                 <div style={{ overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '1.5rem 1rem', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
-                    <DashboardView agents={agents} onSelectAgent={setSelectedId} />
+                    <DashboardView agents={agents} onSelectAgent={setSelectedId} isRunning={isRunning} isFastForwarding={isFastForwarding} />
                 </div>
 
              </div>
