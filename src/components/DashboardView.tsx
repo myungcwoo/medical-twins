@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import type { AgentState } from '../simulation/Agent';
 import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
 import { LLMEngine } from '../simulation/LLMEngine';
-import avatarImg from '../assets/avatar.png';
+import ForceGraph2D from 'react-force-graph-2d';
 
 interface Props {
   agents: AgentState[];
@@ -67,6 +67,13 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
   }, [agents.length, page, itemsPerPage]);
 
   const total = agents.length;
+  // High-Performance Physics Memoization
+  // By permanently isolating the topological Link objects, the `react-force-graph` D3 engine natively detects 
+  // that the grid structure has zero changes, and effortlessly paints dynamic node adjustments without any bouncy re-heating!
+  const memoLinks = useMemo(() => {
+    return agents.filter(a => a.pairedTwinId).map(a => ({ source: a.id, target: a.pairedTwinId! }));
+  }, []); // Static bounds
+
   const active = agents.filter(a => !a.isDead).length;
   const survivalRate = total > 0 ? ((active / total) * 100).toFixed(1) : '0.0';
   
@@ -170,11 +177,26 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent }) => {
 
        {/* Analytics Banner */}
        <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
-          {/* Voxel Avatar Block */}
-          <div style={{ flexShrink: 0, width: '280px', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(34, 211, 238, 0.3)', boxShadow: '0 0 40px rgba(34, 211, 238, 0.15)', position: 'relative' }}>
-            <img src={avatarImg} alt="Digital Twin Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          {/* Live Force Graph Block */}
+          <div style={{ flexShrink: 0, width: '280px', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(139, 92, 246, 0.3)', boxShadow: '0 0 40px rgba(139, 92, 246, 0.15)', position: 'relative', background: '#000' }}>
+             <ForceGraph2D 
+                width={280}
+                height={280}
+                backgroundColor="#000000"
+                graphData={{
+                    nodes: agents.map(a => ({ id: a.id, health: a.baseHealth, isDead: a.isDead })),
+                    links: memoLinks
+                }}
+                nodeColor={(node: any) => node.isDead ? 'rgba(239, 68, 68, 0.5)' : '#60a5fa'}
+                nodeVal={(node: any) => Math.max(1, node.health / 10)}
+                nodeRelSize={4}
+                enableNodeDrag={false}
+                enableZoomInteraction={false}
+                enablePanInteraction={false}
+                linkColor={() => 'rgba(139, 92, 246, 0.4)'}
+             />
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1.5rem 1rem', background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)' }}>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>Digital Patient Twin</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>Knowledge Dispersion Graph</div>
             </div>
           </div>
           

@@ -10,7 +10,7 @@ interface Props {
   onSelectAgent: (id: string) => void;
 }
 
-export const TimelineView: FC<Props> = ({ agents, selectedId }) => {
+export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) => {
   const selected = agents.find(a => a.id === selectedId) || agents[0];
   const pair = selected?.pairedTwinId ? agents.find(a => a.id === selected.pairedTwinId) : null;
 
@@ -76,10 +76,42 @@ export const TimelineView: FC<Props> = ({ agents, selectedId }) => {
   }
 
   return (
-    <div className="timeline-container">
-
+    <div className="timeline-container" style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 5000,
+        backgroundColor: 'rgba(0,0,0,0.85)',
+        backdropFilter: 'blur(10px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem'
+    }}>
       
-      <div className="timeline-content glass-panel" style={selected?.isDead ? { border: '1px solid rgba(239, 68, 68, 0.4)' } : {}}>
+      <div className="timeline-content glass-panel" style={{ 
+          width: '100%', 
+          maxWidth: '1400px', 
+          maxHeight: '90vh', 
+          overflowY: 'auto',
+          position: 'relative',
+          padding: '2rem',
+          ...(selected?.isDead ? { border: '1px solid rgba(239, 68, 68, 0.4)' } : {})
+      }}>
+        <button onClick={() => onSelectAgent('')} style={{
+             position: 'absolute',
+             top: '1.5rem',
+             right: '1.5rem',
+             background: 'rgba(255,255,255,0.1)',
+             border: 'none',
+             color: 'white',
+             width: '40px',
+             height: '40px',
+             borderRadius: '50%',
+             cursor: 'pointer',
+             fontSize: '1.2rem',
+             zIndex: 10
+         }}>✕</button>
+
         {selected ? (
           <>
             <div className="timeline-header">
@@ -128,11 +160,10 @@ export const TimelineView: FC<Props> = ({ agents, selectedId }) => {
                 <span style={{color: selected.exerciseRoutine === 'High' ? 'var(--health-good)' : selected.exerciseRoutine === 'None' ? 'var(--health-crit)' : '#fcd34d'}}><strong>Exercise:</strong> {selected.exerciseRoutine}</span>
               </div>
 
-              {/* Comparative Trajectory Chart */}
               {chartData.length > 0 && (
-                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '1.5rem', marginTop: '1.5rem' }}>
-                  <h3 style={{ margin: '0 0 1rem 0', color: '#e2e8f0', fontSize: '1.1rem' }}>Overall Biological Output Trajectory</h3>
-                  <div style={{ width: '100%', height: 300 }}>
+                <div style={{ background: 'rgba(0,0,0,0.4)', padding: '2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '2rem', marginTop: '2rem', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.5)' }}>
+                  <h3 style={{ margin: '0 0 1.5rem 0', color: '#e2e8f0', fontSize: '1.3rem' }}>Deep-Dive Biological Output Trajectory</h3>
+                  <div style={{ width: '100%', height: 400 }}>
                     <ResponsiveContainer>
                       <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />

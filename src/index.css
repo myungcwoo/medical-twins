@@ -609,3 +609,115 @@ body::before {
 .text-content li strong {
   color: var(--text-main);
 }
+
+/* ========================================================
+   MOBILE & PWA RESPONSIVENESS OVERRIDES
+   ======================================================== */
+@media (max-width: 768px) {
+  /* 1. App Shell Re-Orientation to Column */
+  .layout-wrapper {
+    flex-direction: column;
+  }
+
+  /* 2. Transform Sidebar into a Bottom App Bar */
+  .sidebar {
+    width: 100vw;
+    height: 75px;
+    padding: 0.5rem 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    border-right: none;
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.6);
+  }
+
+  .sidebar-header {
+    display: none; /* Hide huge logo logic on bottom mobile */
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: 0 0.5rem;
+    overflow-x: auto;
+    gap: 0.8rem;
+    padding-bottom: 0.5rem; /* custom scrollbar clearance */
+  }
+
+  .nav-group-title {
+    display: none; /* Hide static text labels */
+  }
+
+  .sidebar-btn {
+    white-space: nowrap;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.95rem; /* Keep text, standard swipeable nav */
+  }
+
+  .sidebar-footer {
+    display: none; /* Hide Dev tabs on mobile phones */
+  }
+
+  /* 3. Adjust Main Content Safe Area */
+  .main-content-area {
+    padding-top: 140px; /* Mega height for Top Island controls */
+    padding-bottom: 85px; /* Bottom Nav clearance */
+  }
+
+  /* 4. Top Island Relocation and Elasticity */
+  .top-island {
+    top: 0;
+    right: 0;
+    left: 0;
+    width: 100vw;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    padding: 0.8rem 1rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .island-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+  
+  .tick-counter {
+    width: 100%;
+    text-align: center;
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+  }
+
+  /* 5. Fluid Grid Scaling */
+  .stat-card-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .consumer-wizard-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+  
+  .glass-panel {
+    padding: 1rem;
+  }
+
+  .agent-card {
+    min-width: 100%;
+  }
+
+  .sim-view-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

@@ -13,6 +13,7 @@ import { CustomTwinDashboard } from './components/CustomTwinDashboard';
 import { TrainingDashboard } from './components/TrainingDashboard';
 import { BackendTrainer } from './components/BackendTrainer';
 import { ConsumerWizard } from './components/ConsumerWizard';
+import { FAQView } from './components/FAQView';
 import heroBg from './assets/hero_bg.png';
 import { DatabaseEngine } from './simulation/DatabaseEngine';
 import { InferenceEngine } from './simulation/InferenceEngine';
@@ -31,7 +32,7 @@ function App() {
   const [isCustomRunning, setIsCustomRunning] = useState(false);
   const [isCustomEnded, setIsCustomEnded] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'timeline' | 'explanation' | 'ingestion' | 'network' | 'report' | 'custom-trial' | 'training' | 'backend-train' | 'consumer-wizard'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'timeline' | 'explanation' | 'faq' | 'ingestion' | 'network' | 'report' | 'custom-trial' | 'training' | 'backend-train' | 'consumer-wizard'>('dashboard');
   const [selectedId, setSelectedId] = useState<string>('');
   
   // Fast Forward State
@@ -316,6 +317,7 @@ function App() {
           <button className={`sidebar-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => setActiveTab('training')} style={{ color: '#f59e0b', fontWeight: 'bold' }}>💉 RWD Training</button>
           <button className={`sidebar-btn ${activeTab === 'ingestion' ? 'active' : ''}`} onClick={() => setActiveTab('ingestion')}>🧬 Add Twin (JSON)</button>
           <button className={`sidebar-btn ${activeTab === 'explanation' ? 'active' : ''}`} onClick={() => setActiveTab('explanation')}>📖 How It Works</button>
+          <button className={`sidebar-btn ${activeTab === 'faq' ? 'active' : ''}`} onClick={() => setActiveTab('faq')} style={{ color: '#60a5fa' }}>❔ Read FAQ</button>
         </nav>
 
         <div className="sidebar-footer">
@@ -407,6 +409,7 @@ function App() {
                 <SimulationReport agents={agents} ticks={ticks} />
             </div>
         )}
+        {activeTab === 'faq' && <div><FAQView /></div>}
         {activeTab === 'explanation' && <div><Explanation /></div>}
         {activeTab === 'training' && <TrainingDashboard />}
         {activeTab === 'consumer-wizard' && (
@@ -421,31 +424,20 @@ function App() {
         )}
         {activeTab === 'ingestion' && <div style={{ height: 'calc(100vh - 200px)', overflowY: 'auto', paddingRight: '1rem' }}><IngestionView onStartCustomTrial={handleStartCustomTrial} /></div>}
         {activeTab === 'dashboard' && (
-           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1.2fr) minmax(400px, 2fr) minmax(350px, 1.5fr)', gap: '1.5rem', width: '100%', height: 'calc(100vh - 200px)' }}>
-              
-              <div style={{ overflowY: 'auto', background: 'rgba(0,0,0,0.15)', borderRadius: '12px', padding: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <NetworkFeed ticks={ticks} />
-              </div>
-              
-              <div style={{ overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '1.5rem 1rem', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
-                  <DashboardView agents={agents} onSelectAgent={setSelectedId} />
-              </div>
+           <>
+             {selectedId && <TimelineView agents={agents} selectedId={selectedId} onSelectAgent={setSelectedId} />}
+             <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) minmax(400px, 2.5fr)', gap: '1.5rem', width: '100%', height: 'calc(100vh - 200px)' }}>
+                
+                <div style={{ overflowY: 'auto', background: 'rgba(0,0,0,0.15)', borderRadius: '12px', padding: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <NetworkFeed ticks={ticks} />
+                </div>
+                
+                <div style={{ overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '1.5rem 1rem', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
+                    <DashboardView agents={agents} onSelectAgent={setSelectedId} />
+                </div>
 
-              <div style={{ overflowY: 'auto', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
-                  {selectedId ? (
-                     <TimelineView agents={agents} selectedId={selectedId} onSelectAgent={setSelectedId} />
-                  ) : (
-                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
-                        <div>
-                          <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>📊</div>
-                          <h3>Trajectory Analytics Pipeline</h3>
-                          <p>Click on any digital patient twin within the active simulation arena to physically extract them into detailed graph telemetry.</p>
-                        </div>
-                     </div>
-                  )}
-              </div>
-              
-           </div>
+             </div>
+           </>
         )}
       </main>
       </div>

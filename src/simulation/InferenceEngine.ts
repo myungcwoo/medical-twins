@@ -14,7 +14,7 @@ export class InferenceEngine {
         if (this.isInitialized) return;
         try {
             // Load the PyTorch exported ONNX weights directly from the Vite public folder
-            this.session = await ort.InferenceSession.create('/medical_twin_model.onnx', {
+            this.session = await ort.InferenceSession.create(`/medical_twin_model.onnx?v=${Date.now()}`, {
                 executionProviders: ['wasm'] // Use WebAssembly for fast CPU execution
             });
             this.isInitialized = true;
