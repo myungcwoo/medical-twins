@@ -15,6 +15,7 @@ import { BackendTrainer } from './components/BackendTrainer';
 import { ConsumerWizard } from './components/ConsumerWizard';
 import { FAQView } from './components/FAQView';
 import { DevDocumentation } from './components/DevDocumentation';
+import { LiteratureBoard } from './components/LiteratureBoard';
 import heroBg from './assets/hero_bg.png';
 import { DatabaseEngine } from './simulation/DatabaseEngine';
 import { InferenceEngine } from './simulation/InferenceEngine';
@@ -34,7 +35,7 @@ function App() {
   const [isCustomRunning, setIsCustomRunning] = useState(false);
   const [isCustomEnded, setIsCustomEnded] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'timeline' | 'explanation' | 'faq' | 'ingestion' | 'network' | 'report' | 'custom-trial' | 'training' | 'backend-train' | 'consumer-wizard' | 'dev-docs'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'timeline' | 'explanation' | 'faq' | 'ingestion' | 'network' | 'report' | 'custom-trial' | 'training' | 'backend-train' | 'consumer-wizard' | 'dev-docs' | 'literature'>('dashboard');
   const [selectedId, setSelectedId] = useState<string>('');
   
   // Fast Forward State
@@ -343,6 +344,8 @@ function App() {
           <button className={`sidebar-btn ${activeTab === 'consumer-wizard' ? 'active' : ''}`} onClick={() => { setActiveTab('consumer-wizard'); setIsMobileMenuOpen(false); }} style={{ color: activeTab === 'consumer-wizard' ? '#fbcfe8' : '#f472b6', fontWeight: 'bold' }}>🔮 Simulate Me</button>
           
           <div className="nav-group-title" style={{ marginTop: '1rem' }}>Data & Logs</div>
+          <button className={`sidebar-btn ${activeTab === 'literature' ? 'active' : ''}`} onClick={() => { setActiveTab('literature'); setIsMobileMenuOpen(false); }} style={{ color: activeTab === 'literature' ? '#a78bfa' : '#8b5cf6', fontWeight: 'bold' }}>📚 Clinical Evidence</button>
+          
           {isEnded && <button className={`sidebar-btn ${activeTab === 'report' ? 'active' : ''}`} onClick={() => { setActiveTab('report'); setIsMobileMenuOpen(false); }} style={{ color: activeTab === 'report' ? '#fca5a5' : '#ef4444', fontWeight: 'bold' }}>📊 Terminated Report</button>}
           <button className={`sidebar-btn ${activeTab === 'training' ? 'active' : ''}`} onClick={() => { setActiveTab('training'); setIsMobileMenuOpen(false); }} style={{ color: activeTab === 'training' ? '#fcd34d' : '#f59e0b', fontWeight: 'bold' }}>💉 RWD Training</button>
           <button className={`sidebar-btn ${activeTab === 'ingestion' ? 'active' : ''}`} onClick={() => { setActiveTab('ingestion'); setIsMobileMenuOpen(false); }}>🧬 Add Twin (JSON)</button>
@@ -476,6 +479,7 @@ function App() {
         )}
         {activeTab === 'faq' && <div><FAQView /></div>}
         {activeTab === 'explanation' && <div><Explanation /></div>}
+        {activeTab === 'literature' && <LiteratureBoard />}
         {activeTab === 'training' && <TrainingDashboard />}
         {activeTab === 'consumer-wizard' && (
           <div id="wizard-scroll-container" style={{ display: 'flex', flexDirection: 'column', gap: '3rem', padding: '0.5rem 0.5rem 2rem 0.5rem' }}>
@@ -514,6 +518,22 @@ function App() {
            </>
         )}
       </main>
+      
+      {/* Persistent Legal Disclaimer Footer */}
+      <footer style={{
+        background: 'rgba(15, 23, 42, 0.95)',
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+        padding: '0.8rem 1.5rem',
+        textAlign: 'center',
+        fontSize: '0.75rem',
+        color: '#64748b',
+        zIndex: 100,
+        position: 'relative',
+        flexShrink: 0,
+        lineHeight: 1.4
+      }}>
+        <strong>LEGAL DISCLAIMER:</strong> The Medical Digital Twins Sandbox is an experimental mathematical simulation platform designed exclusively for conceptual research and academic visualization. The synthetic physiological trajectories, AI-generated protocols, and cohort predictions produced by this software <strong>DO NOT</strong> constitute formal medical advice, diagnosis, or certified clinical treatment plans. Always consult a licensed healthcare professional or attending physician before making any decisions regarding real-world medical conditions, prescriptions, or health behaviors.
+      </footer>
       </div>
     </div>
   );

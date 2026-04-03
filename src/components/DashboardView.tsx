@@ -232,6 +232,14 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent, isRunning, isF
                     nodeVal={(node: any) => Math.max(0.5, (node.health || 50) / 40)}
                     nodeRelSize={3}
                     
+                    // Artificially increase the invisible click/hover boundary for micro-nodes
+                    nodePointerAreaPaint={(node: any, color: any, ctx: any) => {
+                        ctx.fillStyle = color;
+                        ctx.beginPath();
+                        ctx.arc(node.x, node.y, 8, 0, 2 * Math.PI, false);
+                        ctx.fill();
+                    }}
+                    
                     // Hover dynamics: Highlight the hovered node and its physical connections
                     nodeColor={(node: any) => {
                         if (hoverNode) {

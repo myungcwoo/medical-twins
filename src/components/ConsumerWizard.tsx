@@ -207,7 +207,7 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
   }
 
   return (
-    <div className="glass-panel" style={{ padding: '2.5rem', maxWidth: '800px', margin: '0 auto', animation: 'fadeIn 0.5s ease-out' }}>
+    <div className="glass-panel" style={{ padding: '1.5rem 1rem', maxWidth: '800px', margin: '0 auto', animation: 'fadeIn 0.5s ease-out' }}>
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
         <h2 style={{ color: '#f472b6', margin: '0 0 0.5rem 0', fontSize: '2.4rem', fontFamily: 'system-ui, sans-serif' }}>
           🔮 Simulate Me!
@@ -217,7 +217,7 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '2rem', marginBottom: '2.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '2.5rem' }}>
         
         {/* LIFESTYLE BLOCK */}
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>

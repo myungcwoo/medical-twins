@@ -15,6 +15,32 @@ export class PathologyEngine {
     // Non-linear comorbidity compounding: Each existing chronic condition amplifies all new baseline acquisition risks by +15% exponentially.
     const comorbidityMultiplier = Math.pow(1.15, state.chronicConditions.length);
     
+    // PubMed Empirical Hazard Ratios (HR) Modifiers
+    const hasSGLT2 = state.medications.includes('SGLT2_Inhibitor');
+    const hasGLP1 = state.medications.includes('GLP1_Agonist');
+    
+    // Evaluate Adverse Effects FIRST (If severe side effect triggers, patient immediately drops drug via non-compliance)
+    if (hasSGLT2 && Math.random() < 0.005) { // 0.5% Annual DKA / Urogenital Infection Risk (EMPA-REG)
+        agent.logEvent({ tick: currentTick, type: 'Adverse Drug Event', description: 'Suffered Life-Threatening Euglycemic Diabetic Ketoacidosis from SGLT2 Inhibitor. Stopping medication immediately.', impactHealth: -25, impactStress: 40 });
+        state.medications = state.medications.filter(m => m !== 'SGLT2_Inhibitor');
+        state.medicalCompliance = 'Low';
+    }
+    if (hasGLP1 && Math.random() < 0.006) { // 0.6% Severe Gastroparesis / Ileus Risk
+        agent.logEvent({ tick: currentTick, type: 'Adverse Drug Event', description: 'Developed severe Gastroparesis (Gastric Paralysis) secondary to GLP-1 Agonists. Abandoning protocol.', impactHealth: -15, impactStress: 30 });
+        state.medications = state.medications.filter(m => m !== 'GLP1_Agonist');
+        state.medicalCompliance = 'Low';
+    }
+
+    // Socioeconomic Determinants of Health (SDOH) Non-Adherence
+    // High-cost drugs fail aggressively in low-wealth or food-desert environments
+    if ((hasSGLT2 || hasGLP1) && (state.wealth < 40 || state.foodDesert)) {
+        if (Math.random() < 0.80) { // 80% discontinuation rate for low wealth
+            agent.logEvent({ tick: currentTick, type: 'Protocol Abandoned', description: 'Agent discontinued GLP-1 / SGLT2 interventions due to prohibitive copay costs and socioeconomic non-adherence.', impactHealth: -2, impactStress: 15 });
+            state.medications = state.medications.filter(m => m !== 'SGLT2_Inhibitor' && m !== 'GLP1_Agonist');
+            state.medicalCompliance = 'Low';
+        }
+    }
+
     const getCompoundRisk = (condition: string, defaultVal: number) => {
         return TrainingEngine.getEmpiricalWeight(condition, defaultVal) * comorbidityMultiplier;
     };
@@ -27,6 +53,9 @@ export class PathologyEngine {
       if (state.labs.a1c > 8.0) risk *= 2.0;
       if (state.vitals.bpSystolic > 140) risk *= 1.5;
       if (state.age > 60) risk *= 1.2;
+      
+      // EMPA-KIDNEY Trial HR
+      if (hasSGLT2) risk *= 0.63; 
 
       if (Math.random() < risk) {
         state.chronicConditions.push('CKD');
@@ -52,6 +81,9 @@ export class PathologyEngine {
 
       if (state.age > 65) risk *= 1.5;
       if (state.vitals.bmi > 30) risk *= 1.5;
+      
+      // DAPA-HF / EMPA-REG Trial HR
+      if (hasSGLT2) risk *= 0.65;
 
       if (Math.random() < risk) {
         state.chronicConditions.push('CHF');
@@ -92,6 +124,9 @@ export class PathologyEngine {
       const bmiMultiplier = 1 + (Math.floor(excessBMI / 5) * 0.49);
       risk *= bmiMultiplier;
 
+      // SELECT Trial Secondary Prevention
+      if (hasGLP1) risk *= 0.80;
+
       if (Math.random() < risk) {
         state.chronicConditions.push('Hypertension');
         agent.logEvent({
@@ -126,6 +161,9 @@ export class PathologyEngine {
     if (state.chronicConditions.includes('High Cholesterol') && !state.chronicConditions.includes('CAD')) {
       let risk = getCompoundRisk('CAD', 0.02);
       if (state.vitals.bmi > 30) risk *= 1.5;
+      
+      // SELECT Trial Primary Cardiovascular Prevention
+      if (hasGLP1) risk *= 0.80;
       
       if (Math.random() < risk) {
         state.chronicConditions.push('CAD');

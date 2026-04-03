@@ -16,7 +16,7 @@ interface Props {
 
 export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, isCustomEnded, onTogglePlay, onEndTrial, customTicks, isCustomFastForwarding, onFastForward }) => {
   const [ffYears, setFfYears] = useState<number>(5);
-  const [chartMode, setChartMode] = useState<'Health' | 'BP' | 'A1c' | 'Stress'>('Health');
+  const [chartMode, setChartMode] = useState<'Health' | 'BP' | 'A1c' | 'Stress' | 'Survival'>('Survival');
 
   // Safety trigger just in case the tab mounts early
   if (customTwins.length === 0) {
@@ -29,6 +29,8 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
 
   const getCohortData = () => {
     const dataMap = new Map<number, any>();
+    const totalControl = customTwins.filter(a => a.comparativeGroup === 'Control').length || 1;
+    const totalOpt = customTwins.filter(a => a.comparativeGroup === 'Intervention').length || 1;
     
     customTwins.forEach(agent => {
        const isControl = agent.comparativeGroup === 'Control';
@@ -79,6 +81,10 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
         return {
             age: entry.age,
             tick: entry.tick,
+            
+            cSurv: Number(((entry.cH.length / totalControl) * 100).toFixed(1)),
+            oSurv: Number(((entry.oH.length / totalOpt) * 100).toFixed(1)),
+
             cH_mean: cH.mean ? Math.round(cH.mean) : null,
             cH_range: cH.range ? [Math.round(cH.range[0]), Math.round(cH.range[1])] : null,
             oH_mean: oH.mean ? Math.round(oH.mean) : null,
@@ -113,9 +119,9 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
     // Sub-render physical grid map
     const renderCohortGrid = (cohort: AgentState[], title: string, color: string) => {
         return (
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '1.5rem', overflowX: 'auto' }}>
                 <h4 style={{ color, margin: '0 0 0.5rem 0' }}>{title} ({cohort.length} Agents)</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', background: 'rgba(0,0,0,0.5)', padding: '0.8rem', borderRadius: '6px', border: `1px solid ${color}33` }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', background: 'rgba(0,0,0,0.5)', padding: '0.8rem', borderRadius: '6px', border: `1px solid ${color}33`, minWidth: 'min-content' }}>
                     {cohort.map((agent, agentIdx) => {
                         // Scan physical event history bounds
                         const pathologyEvents = agent.history.filter(h => h.type === 'Pathology Acquired');
@@ -167,7 +173,7 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
                Visualizing timeline divergence per agent. Each row represents a single Patient's chronological lifespan. Colors indicate cumulative physical decay determined mechanically by sequence gradients.
             </p>
-            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px' }}>
                 <div style={{display:'flex', alignItems:'center', gap:'0.4rem'}}><div style={{width:'14px',height:'14px',background:'#10b981', borderRadius:'2px'}}/> Stable Baseline</div>
                 <div style={{display:'flex', alignItems:'center', gap:'0.4rem'}}><div style={{width:'14px',height:'14px',background:'#fbbf24', borderRadius:'2px'}}/> Single Pathology</div>
                 <div style={{display:'flex', alignItems:'center', gap:'0.4rem'}}><div style={{width:'14px',height:'14px',background:'#ef4444', borderRadius:'2px'}}/> Poly-Morbid Condition</div>
@@ -227,7 +233,7 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
             The Optimized AI pathway resulted in a <strong style={{color: healthNum >= 0 ? '#34d399' : '#ef4444'}}>{healthNum > 0 ? '+' : ''}{healthDelta} Mean Base Health</strong> shift and a <strong style={{color: parseFloat(stressDelta) <= 0 ? '#34d399' : '#ef4444'}}>{stressDelta} Mean Base Stress</strong> differential across {tests.length} identical starting clones compared to the {controls.length} unoptimized clones. Deep Learning inference calculated every individual tick boundary.
          </p>
          
-         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
+         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginTop: '1.5rem' }}>
            <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '4px', borderLeft: '3px solid #fca5a5' }}>
              <h4 style={{ color: '#fca5a5', margin: '0 0 1rem 0' }}>Control Cohort Probability</h4>
              <div style={{ color: '#e2e8f0', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -290,12 +296,14 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
         borderRadius: '8px',
         marginBottom: '2rem',
         display: 'flex',
+        flexWrap: 'wrap',
+        gap: '1.5rem',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-            <h2 style={{ color: '#3b82f6', margin: 0 }}>Isolated Synthetic Deep Learning Trial</h2>
+        <div style={{ flex: '1 1 300px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+             <h2 style={{ color: '#3b82f6', margin: 0 }}>Isolated Synthetic Deep Learning Trial</h2>
             <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#e2e8f0', background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
               Simulation Week: {customTicks} {customTicks > 0 && `(Year ${(customTicks/52).toFixed(1)})`}
             </span>
@@ -304,9 +312,9 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
             This sub-environment explicitly houses your ingested Custom Cohort. To establish rigorous Multiverse Statistical Probability (removing single-agent luck), the sandbox automatically spun up {customTwins.length / 2} Control clones and {customTwins.length / 2} Optimized clones running identical chronological simulations. 
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', alignItems: 'center', width: '100%' }}>
           {!isCustomEnded && (
-              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '0.3rem 0.5rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ display: 'flex', flex: '1 1 auto', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', padding: '0.3rem 0.5rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <select value={ffYears} onChange={e => setFfYears(Number(e.target.value))} style={{ background: 'transparent', color: 'white', border: 'none', outline: 'none', cursor: 'pointer', marginRight: '0.5rem', fontWeight: 'bold' }}>
                       <option value={1} style={{background:'#1e293b'}}>1 Year</option>
                       <option value={5} style={{background:'#1e293b'}}>5 Years</option>
@@ -335,7 +343,7 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
                   cursor: 'pointer',
                   boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
                   transition: 'background 0.2s',
-                  minWidth: '220px'
+                  flex: '1 1 200px'
                 }}
               >
                 {isCustomRunning ? '⏸ Pause Custom Trial' : '▶ Start Custom Trial'}
@@ -377,8 +385,8 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
                   <h3 style={{ margin: '0 0 0.5rem 0', color: '#e2e8f0', fontSize: '1.2rem' }}>Multiverse Cohort Biometric Degradation ({customTwins.length} Simulated Trajectories)</h3>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Plotting identical baseline patients diverging through standard progression against the AI-generated preventative protocol stack.</p>
                </div>
-               <div style={{ display: 'flex', gap: '0.4rem', background: 'rgba(255,255,255,0.05)', padding: '0.4rem', borderRadius: '6px' }}>
-                  {['Health', 'BP', 'A1c', 'Stress'].map(mode => (
+               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', background: 'rgba(255,255,255,0.05)', padding: '0.4rem', borderRadius: '6px' }}>
+                  {['Health', 'BP', 'A1c', 'Stress', 'Survival'].map(mode => (
                      <button
                         key={mode}
                         onClick={() => setChartMode(mode as any)}
@@ -420,6 +428,26 @@ export const CustomTwinDashboard: FC<Props> = ({ customTwins, isCustomRunning, i
                        dMeanC = "cS_mean"; dRangeC = "cS_range";
                        dMeanO = "oS_mean"; dRangeO = "oS_range";
                        domain = [0, 100];
+                   }
+                   
+                   if (chartMode === 'Survival') {
+                       return (
+                           <ResponsiveContainer width="100%" height={450}>
+                             <ComposedChart data={getCohortData()} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                               <XAxis dataKey="age" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} type="number" domain={['dataMin', 'dataMax']} tickFormatter={val => Math.floor(val).toString()} />
+                               <YAxis domain={[0, 100]} stroke="#94a3b8" tick={{ fill: '#94a3b8' }} label={{ value: 'Survival (%)', angle: -90, position: 'insideLeft', fill: '#94a3b8', style: { textAnchor: 'middle' } }} />
+                               <Tooltip 
+                                   contentStyle={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }} 
+                                   labelFormatter={(label) => `Patient Age: ${Math.floor(Number(label))}`}
+                               />
+                               <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                               
+                               <Line type="stepAfter" dataKey="cSurv" name="Control Survival %" stroke="#f59e0b" strokeWidth={3} dot={false} isAnimationActive={false} />
+                               <Line type="stepAfter" dataKey="oSurv" name="Optimized Survival %" stroke="#10b981" strokeWidth={3} dot={false} isAnimationActive={false} />
+                             </ComposedChart>
+                           </ResponsiveContainer>
+                       );
                    }
 
                    return (

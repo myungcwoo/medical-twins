@@ -13,7 +13,8 @@ export class Pharmacokinetics {
     // Source: Chou & Talalay, 1984, "Quantitative analysis of dose-effect relationships"
     private static readonly INTERACTION_MATRIX: Record<string, Record<string, number>> = {
         'Warfarin': { 'Vitamin K': -1.0 }, // Complete Neutralization
-        'SGLT2_Inhibitor': { 'l1_keto': -0.8 }, // Extreme keto + SGLT2 creates catastrophic ketoacidosis risk
+        'SGLT2_Inhibitor': { 'l1_keto': -0.8, 'GLP1_Agonist': 0.3 }, // Extreme keto + SGLT2 creates catastrophic ketoacidosis risk. GLP1 + SGLT2 creates supreme cardiorenal synergy.
+        'GLP1_Agonist': { 'SGLT2_Inhibitor': 0.3 },
         'Metformin': { 'Insulin': 0.2 }, // Minor synergy
     };
 

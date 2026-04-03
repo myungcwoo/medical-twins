@@ -1,6 +1,6 @@
 import type { Agent } from './Agent';
 
-export type IdeaSource = 'JAMA' | 'NEJM' | 'Nature' | 'CDC' | 'WHO' | 'AHA' | 'NKF' | 'ADA' | 'WebMD' | 'Reddit' | 'Personal';
+export type IdeaSource = 'JAMA' | 'NEJM' | 'Nature' | 'CDC' | 'WHO' | 'AHA' | 'NKF' | 'ADA' | 'WebMD' | 'Reddit' | 'Personal' | 'PubMed';
 export type IdeaType = 'Clinical' | 'Lifestyle';
 
 export interface IdeaImpact {
@@ -72,6 +72,14 @@ export class KnowledgeBase {
       title: 'High-Intensity Statin Therapy',
       impact: { healthDelta: 4, stressDelta: 0, bpDelta: 0, a1cDelta: 0, cvDelta: 10, egfrDelta: 0, newMeds: ['Rosuvastatin'], description: 'Crushed LDL lipids to < 70 mg/dL, halting ASCVD progression.' },
       targetConditions: ['Hyperlipidemia', 'Diabetes']
+    },
+    {
+      id: 'c4_glp1',
+      source: 'NEJM',
+      type: 'Clinical',
+      title: 'GLP-1 Receptor Agonist (Semaglutide)',
+      impact: { healthDelta: 10, stressDelta: 0, bpDelta: -6, a1cDelta: -1.2, cvDelta: 20, egfrDelta: 0, newMeds: ['GLP1_Agonist'], description: 'Aggressively dropped BMI and reduced composite cardiovascular risk by 20% (HR 0.80) per SELECT Trial guidelines.' },
+      targetConditions: ['Obesity', 'Hypertension', 'Diabetes', 'CAD']
     }
   ];
 
