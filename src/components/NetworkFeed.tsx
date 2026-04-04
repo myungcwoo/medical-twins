@@ -1,7 +1,9 @@
 import type { FC } from 'react';
 import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
+import { useSimulationStore } from '../store/useSimulationStore';
 
-export const NetworkFeed: FC<{ ticks: number }> = ({ ticks }) => {
+export const NetworkFeed: FC = () => {
+  const { ticks } = useSimulationStore();
   // We strictly create a new array to .reverse() to prevent mutating the global singleton organically
   const events = [...KnowledgeBase.globalFeed].reverse();
   const broadcasts = [...KnowledgeBase.broadcasts];

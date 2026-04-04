@@ -1,15 +1,15 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { FC } from 'react';
-import type { AgentState } from '../simulation/Agent';
+
 import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
 import { LLMEngine } from '../simulation/LLMEngine';
+import { StatCard } from './ui/StatCard';
+import { ProgressBar } from './ui/ProgressBar';
 import ForceGraph2D from 'react-force-graph-2d';
+import { useSimulationStore } from '../store/useSimulationStore';
 
 interface Props {
-  agents: AgentState[];
   onSelectAgent: (id: string) => void;
-  isRunning?: boolean;
-  isFastForwarding?: boolean;
 }
 
 const getHealthColor = (val: number) => {
@@ -24,7 +24,8 @@ const getStressColor = (val: number) => {
   return 'var(--health-crit)';
 };
 
-export const DashboardView: FC<Props> = ({ agents, onSelectAgent, isRunning, isFastForwarding }) => {
+export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
+  const { agents, isRunning, isFastForwarding } = useSimulationStore();
   const [page, setPage] = useState(1);
   const [subTab, setSubTab] = useState<'overview' | 'database'>('overview');
   const [hoverNode, setHoverNode] = useState<any>(null);
@@ -150,16 +151,7 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent, isRunning, isF
                         setLlmEnabled(newState);
                         LLMEngine.setEnabled(newState);
                     }}
-                    style={{
-                        background: llmEnabled ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-                        color: llmEnabled ? '#fca5a5' : '#34d399',
-                        border: `1px solid ${llmEnabled ? '#fca5a5' : '#34d399'}`,
-                        padding: '0.5rem 1rem',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        whiteSpace: 'nowrap'
-                    }}
+                    className={`btn ${llmEnabled ? 'btn-danger' : 'btn-success'}`}
                  >
                     {llmEnabled ? 'Disable LLM Sandbox' : 'Enable LLM Sandbox'}
                  </button>
@@ -168,9 +160,10 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent, isRunning, isF
           
           <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <select 
+                className="input-field"
                 value={provider} 
                 onChange={(e) => setProvider(e.target.value)}
-                style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.6rem', borderRadius: '4px', fontSize: '0.95rem', outline: 'none', flex: 1, minWidth: '150px' }}
+                style={{ flex: 1, minWidth: '150px' }}
               >
                 <option value="OpenAI">OpenAI (GPT-4o)</option>
                 <option value="Gemini">Google Gemini</option>
@@ -178,16 +171,14 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent, isRunning, isF
               </select>
 
               <input 
+                className="input-field"
                 type="password" 
                 value={apiKey} 
                 onChange={e => setApiKey(e.target.value)} 
                 placeholder="Paste raw API token..." 
-                style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.6rem', borderRadius: '4px', flex: 2, minWidth: '200px', fontSize: '0.95rem' }} 
+                style={{ flex: 2, minWidth: '200px' }} 
               />
-              <button 
-                onClick={handleSaveKey} 
-                style={{ background: '#10b981', color: 'white', padding: '0.6rem 1rem', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem', whiteSpace: 'nowrap' }}
-              >
+              <button onClick={handleSaveKey} className="btn btn-success" style={{ whiteSpace: 'nowrap' }}>
                 Save
               </button>
           </div>
@@ -195,15 +186,15 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent, isRunning, isF
           {/* Dynamic Model Sub-Selection */}
           {provider === 'Gemini' && (
               <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <button onClick={handleFetchModels} style={{ background: 'var(--panel-bg)', color: '#3b82f6', border: '1px solid currentColor', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                  <button onClick={handleFetchModels} className="btn btn-outline" style={{ padding: '0.6rem 1rem', fontSize: '0.85rem' }}>
                      Scan Authorized Models
                   </button>
                   {availableModels.length > 0 ? (
-                      <select value={targetModel} onChange={e => setTargetModel(e.target.value)} style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '4px', flex: 1, minWidth: '200px' }}>
+                      <select className="input-field" value={targetModel} onChange={e => setTargetModel(e.target.value)} style={{ flex: 1, minWidth: '200px' }}>
                           {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
                       </select>
                   ) : (
-                      <input type="text" value={targetModel} onChange={e => setTargetModel(e.target.value)} placeholder="Manual Override: e.g. gemini-2.5-flash" style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '4px', flex: 1, minWidth: '200px' }} />
+                      <input className="input-field" type="text" value={targetModel} onChange={e => setTargetModel(e.target.value)} placeholder="Manual Override: e.g. gemini-2.5-flash" style={{ flex: 1, minWidth: '200px' }} />
                   )}
               </div>
           )}
@@ -320,22 +311,26 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent, isRunning, isF
           </div>
           
           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', alignContent: 'start' }}>
-            <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #facc15' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Active Twins</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#facc15' }}>{active} <span style={{fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal'}}>/ {total}</span></div>
-            </div>
-            <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: `4px solid ${active > (total*0.5) ? '#10b981' : '#ef4444'}` }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Survival Rate</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: '800', color: active > (total*0.5) ? '#10b981' : '#ef4444' }}>{survivalRate}%</div>
-            </div>
-            <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #a78bfa' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Network Interactions</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#a78bfa' }}>{totalInteractions}</div>
-            </div>
-            <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: `4px solid ${getHealthColor(parseFloat(avgHealth))}` }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Avg Baseline Health</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: '800', color: getHealthColor(parseFloat(avgHealth)) }}>{avgHealth}%</div>
-            </div>
+            <StatCard 
+              label="Active Twins" 
+              value={<>{active} <span style={{fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal'}}>/ {total}</span></>} 
+              color="#facc15" 
+            />
+            <StatCard 
+              label="Survival Rate" 
+              value={`${survivalRate}%`} 
+              color={active > (total*0.5) ? '#10b981' : '#ef4444'} 
+            />
+            <StatCard 
+              label="Network Interactions" 
+              value={totalInteractions} 
+              color="#a78bfa" 
+            />
+            <StatCard 
+              label="Avg Baseline Health" 
+              value={`${avgHealth}%`} 
+              color={getHealthColor(parseFloat(avgHealth))} 
+            />
           </div>
        </div>
        </>
@@ -376,36 +371,10 @@ export const DashboardView: FC<Props> = ({ agents, onSelectAgent, isRunning, isF
                   )}
                 </div>
 
-                <div className="stats" style={{opacity: agent.isDead ? 0.4 : 1}}>
-                  <div className="stat-row">
-                    <div className="stat-label-row">
-                      <span>Health</span>
-                      <span>{Math.round(agent.baseHealth)}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${agent.baseHealth}%`, backgroundColor: getHealthColor(agent.baseHealth) }} />
-                    </div>
-                  </div>
-
-                  <div className="stat-row">
-                    <div className="stat-label-row">
-                      <span>Stress</span>
-                      <span>{Math.round(agent.stressLevel)}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${agent.stressLevel}%`, backgroundColor: getStressColor(agent.stressLevel) }} />
-                    </div>
-                  </div>
-
-                  <div className="stat-row">
-                    <div className="stat-label-row">
-                      <span>CV Health</span>
-                      <span>{Math.round(agent.labs.cvHealth)}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${agent.labs.cvHealth}%`, backgroundColor: 'var(--accent-color)' }} />
-                    </div>
-                  </div>
+                <div className="stats" style={{opacity: agent.isDead ? 0.4 : 1, display: 'flex', flexDirection: 'column', gap: '0.8rem'}}>
+                  <ProgressBar label="Health" value={agent.baseHealth} color={getHealthColor(agent.baseHealth)} />
+                  <ProgressBar label="Stress" value={agent.stressLevel} color={getStressColor(agent.stressLevel)} />
+                  <ProgressBar label="CV Health" value={agent.labs.cvHealth} color="var(--accent-color)" />
                 </div>
 
                 <div className="events-log" style={{opacity: agent.isDead ? 0.5 : 1}}>

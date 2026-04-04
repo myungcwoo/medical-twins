@@ -10,7 +10,7 @@ export class SimulationEngine {
   isRunning: boolean = false;
 
   constructor(initialData: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>[]) {
-    this.agents = initialData.map(d => new Agent(d));
+    this.agents = initialData.map(d => new Agent(JSON.parse(JSON.stringify(d))));
   }
 
   tick() {

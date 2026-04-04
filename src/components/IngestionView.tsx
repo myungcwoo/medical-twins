@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import type { FC } from 'react';
-import type { AgentState } from '../simulation/Agent';
-import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
 
-interface Props {
-  onStartCustomTrial: (agent: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>, protocols: any[]) => void;
-}
+import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
+import { useSimulationStore } from '../store/useSimulationStore';
 
 const TEMPLATE_HEALTHY = JSON.stringify({
   name: "New Healthy Patient",
@@ -114,7 +111,8 @@ const TEMPLATE_FHIR_EPIC = JSON.stringify({
   ]
 }, null, 2);
 
-export const IngestionView: FC<Props> = ({ onStartCustomTrial }) => {
+export const IngestionView: FC = () => {
+  const { handleStartCustomTrial: onStartCustomTrial } = useSimulationStore();
   const [jsonText, setJsonText] = useState(TEMPLATE_HEALTHY);
   const [errorMsg, setErrorMsg] = useState('');
   
@@ -197,7 +195,7 @@ export const IngestionView: FC<Props> = ({ onStartCustomTrial }) => {
 
   if (step === 2) {
     return (
-      <div className="ingestion-container glass-panel" style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>
+      <div className="ingestion-container glass-panel" style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto 2rem auto' }}>
         <h2 style={{ color: '#a78bfa', marginBottom: '0.5rem' }}>Step 2: Curate AI Interventions</h2>
         <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
           The active global simulation has empirically discovered the following highly effective medical interventions organically. 
@@ -241,16 +239,13 @@ export const IngestionView: FC<Props> = ({ onStartCustomTrial }) => {
           )}
         </div>
         
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button onClick={() => setStep(1)} className="tab-btn" style={{ flex: 1, padding: '1rem' }}>Back to Parser</button>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+          <button onClick={() => setStep(1)} className="btn btn-outline" style={{ flex: 1, padding: '1rem' }}>Back to Parser</button>
           <button 
             disabled={availableProtocols.length === 0}
             onClick={handleLaunch}
-            style={{
-              flex: 2, padding: '1.2rem', background: availableProtocols.length === 0 ? '#374151' : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
-              color: availableProtocols.length === 0 ? '#9ca3af' : 'white', fontWeight: 'bold', fontSize: '1.1rem', border: 'none', borderRadius: '8px', 
-              cursor: availableProtocols.length === 0 ? 'not-allowed' : 'pointer'
-            }}
+            className="btn btn-primary"
+            style={{ flex: 2, padding: '1.2rem', fontSize: '1.1rem', background: availableProtocols.length === 0 ? '#374151' : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)' }}
           >
             🚀 Launch Isolated A/B Trial
           </button>
@@ -260,20 +255,20 @@ export const IngestionView: FC<Props> = ({ onStartCustomTrial }) => {
   }
 
   return (
-    <div className="ingestion-container glass-panel" style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>
+    <div className="ingestion-container glass-panel" style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto 2rem auto' }}>
       <h2 style={{ color: '#a78bfa', marginBottom: '0.5rem' }}>Step 1: Upload Digital Twin</h2>
       <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
         Inject custom patient data (JSON or FHIR-mapped objects) to begin the generation of a specialized Synthetic A/B Trial sequence tightly decoupled from the main population.
       </p>
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-        <button className="tab-btn" onClick={() => setJsonText(TEMPLATE_HEALTHY)} style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', border: '1px solid currentColor', fontSize: '0.9rem' }}>
+        <button className="btn btn-outline" onClick={() => setJsonText(TEMPLATE_HEALTHY)} style={{ color: '#10b981', borderColor: 'currentColor', fontSize: '0.9rem' }}>
           📄 Load Healthy Protocol Template
         </button>
-        <button className="tab-btn" onClick={() => setJsonText(TEMPLATE_CRITICAL)} style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: '1px solid currentColor', fontSize: '0.9rem' }}>
+        <button className="btn btn-outline" onClick={() => setJsonText(TEMPLATE_CRITICAL)} style={{ color: '#ef4444', borderColor: 'currentColor', fontSize: '0.9rem' }}>
           📄 Load Critical Path Template
         </button>
-        <button className="tab-btn" onClick={() => setJsonText(TEMPLATE_FHIR_EPIC)} style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid currentColor', fontSize: '0.9rem' }}>
+        <button className="btn btn-outline" onClick={() => setJsonText(TEMPLATE_FHIR_EPIC)} style={{ color: '#60a5fa', borderColor: 'currentColor', fontSize: '0.9rem' }}>
           🏥 Load Demo FHIR R4 Bundle (EHR)
         </button>
       </div>
@@ -305,19 +300,8 @@ export const IngestionView: FC<Props> = ({ onStartCustomTrial }) => {
 
       <button 
         onClick={handleProcessJSON}
-        style={{
-          marginTop: '1.5rem',
-          width: '100%',
-          padding: '1.2rem',
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-          color: 'white',
-          fontWeight: 'bold',
-          fontSize: '1.1rem',
-          border: 'none',
-          borderRadius: '8px',
-          cursor: 'pointer',
-          boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
-        }}
+        className="btn btn-success"
+        style={{ marginTop: '1.5rem', width: '100%', padding: '1.2rem', fontSize: '1.1rem' }}
       >
         Verify Patient & Proceed to Interventions ➔
       </button>

@@ -2,17 +2,16 @@ import { useState } from 'react';
 import type { FC } from 'react';
 import type { AgentState } from '../simulation/Agent';
 import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
-
-interface Props {
-  onStartCustomTrial: (agent: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>, protocols: any[]) => void;
-}
+import { useSimulationStore } from '../store/useSimulationStore';
+import { RangeSlider } from './ui/RangeSlider';
 
 const COMMON_CONDITIONS = [
   'Diabetes', 'Hypertension', 'Hyperlipidemia', 'COPD', 'Asthma', 
   'CHF', 'CKD', 'Depression', 'Anxiety', 'Atrial Fibrillation'
 ];
 
-export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
+export const ConsumerWizard: FC = () => {
+  const { handleStartCustomTrial: onStartCustomTrial } = useSimulationStore();
   const [step, setStep] = useState<1 | 2>(1);
   
   // Demographics / Lifestyle
@@ -182,22 +181,15 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
           )}
         </div>
         
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button onClick={() => setStep(1)} style={{ padding: '1rem', background: 'transparent', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+          <button onClick={() => setStep(1)} className="btn btn-outline" style={{ padding: '1rem' }}>
             ← Back
           </button>
           <button 
             disabled={availableProtocols.length === 0}
             onClick={handleLaunch}
-            style={{
-              flex: 1, padding: '1.2rem', background: availableProtocols.length === 0 ? '#374151' : 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
-              color: availableProtocols.length === 0 ? '#9ca3af' : 'white', fontWeight: 'bold', fontSize: '1.2rem', border: 'none', borderRadius: '8px', 
-              cursor: availableProtocols.length === 0 ? 'not-allowed' : 'pointer',
-              boxShadow: availableProtocols.length > 0 ? '0 4px 15px rgba(236, 72, 153, 0.4)' : 'none',
-              transition: 'transform 0.1s'
-            }}
-            onMouseDown={e => availableProtocols.length > 0 && (e.currentTarget.style.transform = 'scale(0.98)')}
-            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+            className="btn btn-primary"
+            style={{ flex: 1, padding: '1.2rem', fontSize: '1.2rem' }}
           >
             🔮 Look Into My Future
           </button>
@@ -207,7 +199,7 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
   }
 
   return (
-    <div className="glass-panel" style={{ padding: '1.5rem 1rem', maxWidth: '800px', margin: '0 auto', animation: 'fadeIn 0.5s ease-out' }}>
+    <div className="glass-panel" style={{ padding: '1.5rem 1rem', maxWidth: '800px', margin: '0 auto 2rem auto', animation: 'fadeIn 0.5s ease-out' }}>
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
         <h2 style={{ color: '#f472b6', margin: '0 0 0.5rem 0', fontSize: '2.4rem', fontFamily: 'system-ui, sans-serif' }}>
           🔮 Simulate Me!
@@ -225,13 +217,18 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
             
             <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Name your Clone:</label>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'white' }} />
+                <input className="input-field" type="text" value={name} onChange={e => setName(e.target.value)} />
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
                 <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Age: <strong>{age}</strong></label>
-                    <input type="range" min="18" max="90" value={age} onChange={e => setAge(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#f472b6' }} />
+                    <RangeSlider 
+                        label={<>Age: <strong>{age}</strong></>}
+                        min={18} max={90} value={age} 
+                        onChange={setAge} 
+                        accentColor="#f472b6" 
+                        containerStyle={{ marginBottom: 0 }}
+                    />
                 </div>
                 <div style={{ flex: 1 }}>
                     <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Sex:</label>
@@ -242,15 +239,19 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
                 </div>
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Daily Stress Level: <strong>{stressLevel}/100</strong></label>
-                <input type="range" min="0" max="100" value={stressLevel} onChange={e => setStressLevel(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#f472b6' }} />
-            </div>
+            <RangeSlider 
+                label={<>Daily Stress Level: <strong>{stressLevel}/100</strong></>}
+                min={0} max={100} value={stressLevel} 
+                onChange={setStressLevel} 
+                accentColor="#f472b6" 
+            />
 
-            <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Diet Quality (100 = Perfect!): <strong>{dietQuality}</strong></label>
-                <input type="range" min="0" max="100" value={dietQuality} onChange={e => setDietQuality(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#10b981' }} />
-            </div>
+            <RangeSlider 
+                label={<>Diet Quality (100 = Perfect!): <strong>{dietQuality}</strong></>}
+                min={0} max={100} value={dietQuality} 
+                onChange={setDietQuality} 
+                accentColor="#10b981" 
+            />
             
             <div style={{ marginBottom: '0.5rem' }}>
                 <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Exercise Routine:</label>
@@ -269,11 +270,13 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
                  Interventions are only as effective as your ability to adopt them. Lack of wealth destroys adherence due to high copays, and "food deserts" prevent nutritional protocol success.
              </p>
 
-             <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Wealth & Access: <strong>{wealth}/100</strong></label>
-                <input type="range" min="0" max="100" value={wealth} onChange={e => setWealth(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6' }} />
-                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.3rem' }}>Values &lt; 40 incur a devastating 50% non-adherence decay mathematically.</div>
-             </div>
+             <RangeSlider 
+                label={<>Wealth & Access: <strong>{wealth}/100</strong></>}
+                min={0} max={100} value={wealth} 
+                onChange={setWealth} 
+                accentColor="#3b82f6" 
+                footer="Values &lt; 40 incur a devastating 50% non-adherence decay mathematically."
+             />
 
              <div style={{ marginBottom: '1.2rem' }}>
                 <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Personal Medical Compliance:</label>
@@ -297,25 +300,21 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
                  Specify structural organ data if known. These are authoritative PyTorch modifiers that rapidly accelerate risk factors.
              </p>
 
-             <div style={{ marginBottom: '1.2rem' }}>
-                <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>
-                    <span>Ejection Fraction (LVEF): <strong>{lvef}%</strong></span>
-                    <span style={{ fontSize: '0.75rem', color: lvef < 40 ? '#ef4444' : lvef < 50 ? '#f59e0b' : '#10b981' }}>
-                        {lvef < 40 ? 'HFrEF Failure' : lvef < 50 ? 'Borderline' : 'Normal'}
-                    </span>
-                </label>
-                <input type="range" min="15" max="75" value={lvef} onChange={e => setLvef(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#ec4899' }} />
-             </div>
+             <RangeSlider 
+                label={<>Ejection Fraction (LVEF): <strong>{lvef}%</strong></>}
+                rightLabel={<span style={{ fontSize: '0.75rem', color: lvef < 40 ? '#ef4444' : lvef < 50 ? '#f59e0b' : '#10b981' }}>{lvef < 40 ? 'HFrEF Failure' : lvef < 50 ? 'Borderline' : 'Normal'}</span>}
+                min={15} max={75} value={lvef} 
+                onChange={setLvef} 
+                accentColor="#ec4899" 
+             />
 
-             <div style={{ marginBottom: '1.2rem' }}>
-                <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>
-                    <span>Coronary Artery Calcium (CAC): <strong>{cacScore}</strong></span>
-                    <span style={{ fontSize: '0.75rem', color: cacScore === 0 ? '#10b981' : cacScore > 400 ? '#ef4444' : cacScore > 100 ? '#f59e0b' : '#94a3b8' }}>
-                        {cacScore === 0 ? 'Zero Plaque' : cacScore > 400 ? 'Severe ASCVD' : 'Mild/Moderate'}
-                    </span>
-                </label>
-                <input type="range" step="25" min="0" max="1000" value={cacScore} onChange={e => setCacScore(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#a855f7' }} />
-             </div>
+             <RangeSlider 
+                label={<>Coronary Artery Calcium (CAC): <strong>{cacScore}</strong></>}
+                rightLabel={<span style={{ fontSize: '0.75rem', color: cacScore === 0 ? '#10b981' : cacScore > 400 ? '#ef4444' : cacScore > 100 ? '#f59e0b' : '#94a3b8' }}>{cacScore === 0 ? 'Zero Plaque' : cacScore > 400 ? 'Severe ASCVD' : 'Mild/Moderate'}</span>}
+                min={0} max={1000} step={25} value={cacScore} 
+                onChange={setCacScore} 
+                accentColor="#a855f7" 
+             />
         </div>
 
         {/* VITALS BLOCK */}
@@ -327,24 +326,38 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
 
              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.2rem' }}>
                 <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Systolic BP (Top): <strong>{bpSystolic}</strong></label>
-                    <input type="range" min="90" max="200" value={bpSystolic} onChange={e => setBpSystolic(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6' }} />
+                    <RangeSlider 
+                        label={<>Systolic BP (Top): <strong>{bpSystolic}</strong></>}
+                        min={90} max={200} value={bpSystolic} 
+                        onChange={setBpSystolic} 
+                        accentColor="#3b82f6" 
+                        containerStyle={{ marginBottom: 0 }}
+                    />
                 </div>
                 <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Diastolic (Bottom): <strong>{bpDiastolic}</strong></label>
-                    <input type="range" min="50" max="130" value={bpDiastolic} onChange={e => setBpDiastolic(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#3b82f6' }} />
+                    <RangeSlider 
+                        label={<>Diastolic (Bottom): <strong>{bpDiastolic}</strong></>}
+                        min={50} max={130} value={bpDiastolic} 
+                        onChange={setBpDiastolic} 
+                        accentColor="#3b82f6" 
+                        containerStyle={{ marginBottom: 0 }}
+                    />
                 </div>
              </div>
 
-             <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Body Mass Index (BMI): <strong>{bmi.toFixed(1)}</strong></label>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b', marginBottom: '0.2rem' }}>
-                    <span>Underweight (18)</span>
-                    <span>Average (24)</span>
-                    <span>Obese (30+)</span>
-                </div>
-                <input type="range" min="15" max="45" step="0.5" value={bmi} onChange={e => setBmi(parseFloat(e.target.value))} style={{ width: '100%', accentColor: '#a78bfa' }} />
-             </div>
+             <RangeSlider 
+                label={<>Body Mass Index (BMI): <strong>{bmi.toFixed(1)}</strong></>}
+                min={15} max={45} step={0.5} value={bmi} 
+                onChange={setBmi} 
+                accentColor="#a78bfa" 
+                footer={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
+                      <span>Underweight (18)</span>
+                      <span>Average (24)</span>
+                      <span>Obese (30+)</span>
+                  </div>
+                }
+             />
 
              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: '8px', cursor: 'pointer', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                 <input type="checkbox" checked={smoker} onChange={e => setSmoker(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#ef4444' }} />
@@ -370,21 +383,8 @@ export const ConsumerWizard: FC<Props> = ({ onStartCustomTrial }) => {
 
       <button 
         onClick={handleNextStep}
-        style={{
-          width: '100%',
-          padding: '1.2rem',
-          background: 'linear-gradient(135deg, #f472b6 0%, #ec4899 100%)',
-          color: 'white',
-          fontWeight: 'bold',
-          fontSize: '1.2rem',
-          border: 'none',
-          borderRadius: '8px',
-          cursor: 'pointer',
-          boxShadow: '0 4px 15px rgba(236, 72, 153, 0.3)',
-          transition: 'transform 0.1s'
-        }}
-        onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
-        onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+        className="btn btn-primary"
+        style={{ width: '100%', padding: '1.2rem', fontSize: '1.2rem', background: 'linear-gradient(135deg, #f472b6 0%, #ec4899 100%)' }}
       >
         Clone Me & Continue ➔
       </button>

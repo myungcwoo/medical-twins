@@ -7,6 +7,29 @@ export class PathologyEngine {
    * Evaluates clinical disease acquisition probabilities strictly once per year (52 ticks).
    * Maps empirical CDC/AHA Relative Risk (RR) and baseline incidence formulas against the Twin's current biometric profile.
    */
+  /**
+   * Evaluates the compounding multiorgan damage cycle on each tick.
+   */
+  public static evaluateMultifactorialDamage(agent: Agent) {
+    const { state } = agent;
+
+    if (state.labs.a1c > 7.0) state.labs.egfr -= 0.02 * (state.labs.a1c - 7.0); 
+    if (state.vitals.bpSystolic > 140) state.labs.egfr -= 0.02;
+    
+    if (state.labs.egfr < 60) {
+      state.vitals.bpSystolic += 0.1; 
+      state.labs.cvHealth -= 0.02; 
+    }
+
+    if (state.labs.ldlCholesterol > 130 || state.vitals.bpSystolic > 140) {
+      state.labs.cvHealth -= 0.05;
+    }
+  }
+
+  /**
+   * Evaluates clinical disease acquisition probabilities strictly once per year (52 ticks).
+   * Maps empirical CDC/AHA Relative Risk (RR) and baseline incidence formulas against the Twin's current biometric profile.
+   */
   public static evaluateAnnualRisk(agent: Agent, currentTick: number) {
     if (currentTick % 52 !== 0 && currentTick !== 1) return; // Process annually
 

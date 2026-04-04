@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
-import type { AgentState } from '../simulation/Agent';
+
 import { PredictiveEngine } from '../simulation/PredictiveEngine';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { FC } from 'react';
 
+import { useSimulationStore } from '../store/useSimulationStore';
+
 interface Props {
-  agents: AgentState[];
   selectedId: string;
   onSelectAgent: (id: string) => void;
 }
 
-export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) => {
+export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
+  const { agents } = useSimulationStore();
   const selected = agents.find(a => a.id === selectedId) || agents[0];
   const pair = selected?.pairedTwinId ? agents.find(a => a.id === selected.pairedTwinId) : null;
 
@@ -149,20 +151,22 @@ export const TimelineView: FC<Props> = ({ agents, selectedId, onSelectAgent }) =
                 </div>
               )}
 
-              <div className="timeline-stats">
-                <span>Age: {Math.floor(selected.age)}</span>
-                <span>Sex: {selected.sex}</span>
-                <span className="stat-health" style={{color: selected.isDead ? '#ef4444' : 'var(--health-good)'}}>Health: {Math.round(selected.baseHealth)}%</span>
-                <span className="stat-stress">Stress: {Math.round(selected.stressLevel)}%</span>
-              </div>
+              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '1.5rem' }}>
+                <div className="timeline-stats" style={{ margin: 0 }}>
+                  <span>Age: {Math.floor(selected.age)}</span>
+                  <span>Sex: {selected.sex}</span>
+                  <span className="stat-health" style={{color: selected.isDead ? '#ef4444' : 'var(--health-good)'}}>Health: {Math.round(selected.baseHealth)}%</span>
+                  <span className="stat-stress">Stress: {Math.round(selected.stressLevel)}%</span>
+                </div>
 
-              <div className="timeline-stats" style={{marginTop: '0.8rem', fontSize: '0.9rem', color: 'var(--text-muted)'}}>
-                <span><strong>Family Hx:</strong> {selected.familyHistory.length > 0 ? selected.familyHistory.join(', ') : 'None'}</span>
-                <span><strong>Surgeries:</strong> {selected.surgicalHistory.length > 0 ? selected.surgicalHistory.join(', ') : 'None'}</span>
-                <span><strong>Meds:</strong> {selected.medications.length > 0 ? selected.medications.join(', ') : 'None'}</span>
-                <span><strong>Smoker:</strong> {selected.smoker ? 'Yes' : 'No'}</span>
-                <span style={{color: selected.medicalCompliance === 'High' ? 'var(--health-good)' : selected.medicalCompliance === 'Low' ? 'var(--health-crit)' : '#fcd34d'}}><strong>Compliance:</strong> {selected.medicalCompliance}</span>
-                <span style={{color: selected.exerciseRoutine === 'High' ? 'var(--health-good)' : selected.exerciseRoutine === 'None' ? 'var(--health-crit)' : '#fcd34d'}}><strong>Exercise:</strong> {selected.exerciseRoutine}</span>
+                <div className="timeline-stats" style={{marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-muted)'}}>
+                  <span><strong>Family Hx:</strong> {selected.familyHistory.length > 0 ? selected.familyHistory.join(', ') : 'None'}</span>
+                  <span><strong>Surgeries:</strong> {selected.surgicalHistory.length > 0 ? selected.surgicalHistory.join(', ') : 'None'}</span>
+                  <span><strong>Meds:</strong> {selected.medications.length > 0 ? selected.medications.join(', ') : 'None'}</span>
+                  <span><strong>Smoker:</strong> {selected.smoker ? 'Yes' : 'No'}</span>
+                  <span style={{color: selected.medicalCompliance === 'High' ? 'var(--health-good)' : selected.medicalCompliance === 'Low' ? 'var(--health-crit)' : '#fcd34d'}}><strong>Compliance:</strong> {selected.medicalCompliance}</span>
+                  <span style={{color: selected.exerciseRoutine === 'High' ? 'var(--health-good)' : selected.exerciseRoutine === 'None' ? 'var(--health-crit)' : '#fcd34d'}}><strong>Exercise:</strong> {selected.exerciseRoutine}</span>
+                </div>
               </div>
 
               {chartData.length > 0 && (

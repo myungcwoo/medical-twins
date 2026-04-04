@@ -22,7 +22,10 @@ export const PredictiveEngine = {
   },
 
   /**
-   * AHA PREVENT (2023) ASCVD Stroke / MI equations upgraded with CAC Imaging
+   * AHA PREVENT (2023) ASCVD Stroke / MI Equations
+   * ----------------------------------------------
+   * Calculates annualized likelihood of massive atherosclerotic ruptures.
+   * Leverages Coronary Artery Calcium (CAC) imaging as the apex multiplier (e.g., "The Power of Zero").
    */
   calculateStrokeRisk(state: AgentState): RiskPrediction {
     let base = state.age > 65 ? 12 : state.age > 50 ? 5 : state.age > 40 ? 2 : 0.5;
@@ -63,7 +66,10 @@ export const PredictiveEngine = {
   },
 
   /**
-   * Advanced Heart Failure predictor using LVEF and NT-proBNP assays
+   * Advanced Heart Failure (CHF) Predictor
+   * --------------------------------------
+   * Differentiates between HFrEF (Ejection Fraction < 40) vs HFpEF (Preserved EF but high NT-proBNP).
+   * Models myocardial stretch explicitly via NT-proBNP biomarker assays.
    */
   calculateChfRisk(state: AgentState): RiskPrediction {
     let base = state.age > 60 ? 4 : state.age > 45 ? 1 : 0.2;

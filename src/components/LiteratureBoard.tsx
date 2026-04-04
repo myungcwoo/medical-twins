@@ -1,50 +1,7 @@
 import { useState, type FC } from 'react';
 import { KnowledgeBase, type IdeaTemplate } from '../simulation/KnowledgeNetwork';
 
-const STATIC_LITERATURE_DB = [
-    {
-        id: 'LIT-001',
-        title: "SELECT Trial: Semaglutide Effects on Cardiovascular Outcomes in People With Overweight or Obesity",
-        source: "New England Journal of Medicine (NEJM)",
-        year: 2023,
-        intervention: "GLP-1 Receptor Agonists",
-        phenotype: "Obesity + Cardiovascular Disease Risk",
-        hazardRatio: 0.80,
-        findings: "Demonstrated a 20% relative risk reduction (HR 0.80) in major adverse cardiovascular events (death, myocardial infarction, stroke) compared to placebo over a mean follow-up of 39.8 months.",
-        mathMapping: "Multiplies baseline CAD and Hypertension acquisition probabilities by 0.80. Deducts 15% from total Base Health decay.",
-        adverseEffects: [
-            { risk: "Severe", type: "Gastroparesis / Neuromuscular Gastric Failure", probability: "0.2% Annual" },
-            { risk: "Moderate", type: "Cholelithiasis (Gallstones)", probability: "1.5% Annual" }
-        ]
-    },
-    {
-        id: 'LIT-002',
-        title: "DAPA-HF & EMPA-REG OUTCOME: SGLT2 Inhibitors in Patients with Heart Failure and CKD",
-        source: "The Lancet / JAMA Cardiology",
-        year: 2021,
-        intervention: "SGLT2 Inhibitors (Flozins)",
-        phenotype: "Congestive Heart Failure / Chronic Kidney Disease",
-        hazardRatio: 0.65,
-        findings: "Aggressive reduction in heart failure hospitalization and cardiovascular death (Hazard ratio 0.65). Exceptionally protective mechanism preserving Nephron function and eGFR trajectory independently of diabetic status.",
-        mathMapping: "Applies a massive 0.65 (35% risk reduction) probability multiplier to CHF and CKD fatal exacerbation thresholds. Offsets baseline exponential Gompertz age decay.",
-        adverseEffects: [
-            { risk: "Life-Threatening", type: "Euglycemic Diabetic Ketoacidosis (DKA)", probability: "0.1% Annual" },
-            { risk: "Severe", type: "Fournier's Gangrene / Severe Urogenital Infection", probability: "0.05% Annual" }
-        ]
-    },
-    {
-        id: 'LIT-003',
-        title: "Meta-Analysis: Socioeconomic Determinants in Long-Term Pharmacological Adherence",
-        source: "American Heart Association (AHA) Journals",
-        year: 2022,
-        intervention: "Systemic Protocol Adherence Drops",
-        phenotype: "Low SDOH / 'Food Deserts'",
-        hazardRatio: 2.15,
-        findings: "Patients prescribed highly efficacious modern treatments (GLP-1/SGLT2) exhibit an 80% discontinuation rate within 12 months if their wealth access indices fall below sustainable copay thresholds.",
-        mathMapping: "Agents with a 'Wealth' score < 40 and 'Food Desert = True' will auto-reject these medications exactly 12 ticks (weeks) post-intervention.",
-        adverseEffects: []
-    }
-];
+import { STATIC_LITERATURE_DB } from '../data/ClinicalLiteratureDB';
 
 export const LiteratureBoard: FC = () => {
     const [isRefreshing, setIsRefreshing] = useState(false);

@@ -1,6 +1,7 @@
+import { STATIC_LITERATURE_DB } from '../data/ClinicalLiteratureDB';
 import type { Agent } from './Agent';
 
-export type IdeaSource = 'JAMA' | 'NEJM' | 'Nature' | 'CDC' | 'WHO' | 'AHA' | 'NKF' | 'ADA' | 'WebMD' | 'Reddit' | 'Personal' | 'PubMed';
+export type IdeaSource = 'JAMA' | 'NEJM' | 'Nature' | 'CDC' | 'WHO' | 'AHA' | 'NKF' | 'ADA' | 'WebMD' | 'Reddit' | 'Personal' | 'PubMed' | 'Chest' | 'Am J Psychiatry' | 'AHA Journals' | 'The Lancet';
 export type IdeaType = 'Clinical' | 'Lifestyle';
 
 export interface IdeaImpact {
@@ -48,7 +49,7 @@ export class KnowledgeBase {
   public static globalFeed: NetworkEvent[] = [];
   public static totalInteractions: number = 0;
 
-  public static readonly CLINICAL_IDEAS: IdeaTemplate[] = [
+  public static CLINICAL_IDEAS: IdeaTemplate[] = [
     {
       id: 'c1_sglt2',
       source: 'NEJM',
@@ -80,7 +81,24 @@ export class KnowledgeBase {
       title: 'GLP-1 Receptor Agonist (Semaglutide)',
       impact: { healthDelta: 10, stressDelta: 0, bpDelta: -6, a1cDelta: -1.2, cvDelta: 20, egfrDelta: 0, newMeds: ['GLP1_Agonist'], description: 'Aggressively dropped BMI and reduced composite cardiovascular risk by 20% (HR 0.80) per SELECT Trial guidelines.' },
       targetConditions: ['Obesity', 'Hypertension', 'Diabetes', 'CAD']
-    }
+    },
+    ...STATIC_LITERATURE_DB.map(trial => ({
+      id: trial.id,
+      source: trial.source as IdeaSource,
+      type: 'Clinical' as IdeaType,
+      title: trial.intervention,
+      impact: {
+        healthDelta: trial.impact.healthDelta,
+        stressDelta: trial.impact.stressDelta,
+        bpDelta: trial.impact.bpDelta,
+        a1cDelta: trial.impact.a1cDelta,
+        cvDelta: trial.impact.cvDelta,
+        egfrDelta: trial.impact.egfrDelta,
+        newMeds: [trial.intervention],
+        description: trial.findings + " " + trial.mathMapping
+      },
+      targetConditions: trial.targetConditions
+    }))
   ];
 
   public static readonly LIFESTYLE_IDEAS: IdeaTemplate[] = [

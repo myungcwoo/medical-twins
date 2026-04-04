@@ -1,58 +1,65 @@
 # 🧬 Clinical AI Studio: Generative Medical Digital Twins
 
-An advanced, end-to-end framework built to simulate the longitudinal biological decay of massive digital patient cohorts. Blending **Generative AI** with autonomous **Deep Learning**, the Clinical AI Studio acts as an Edge-Compute powerhouse—generating, visualizing, and treating hypothetical chronic diseases inside the browser natively.
+An advanced, edge-compute open-source framework designed to simulate the longitudinal biological decay and interventional recovery of massive digital patient cohorts. By blending **Generative RAG AI** with deterministic **Deep Learning** pipelines, the Clinical AI Studio generates, visualizes, and treats hypothetical chronic diseases entirely within the browser securely.
 
-![Architecture Layout](/hero_bg.png)
-
----
-
-## ⚡ Core Architecture
-
-The architecture maps four distinct computing layers seamlessly into a single environment without requiring expensive persistence cloud layers.
-
-### 1. Edge Inference (WASM / ONNX)
-- The raw mathematical framework of disease progression is built on a custom PyTorch **TransformerPredictor**. 
-- Using standard `onnx` graph pipelines, the backend `.pt` tensor weights are instantly bridged across WebAssembly natively to the client (`InferenceEngine.ts`). 
-- When an agent physically logs a tick of its lifetime, it bypasses static math for real, client-side, multi-layer Neural Network prediction targeting `[Stroke, CHF, Diabetes, COPD]` likelihoods!
-
-### 2. Autonomous Knowledge Layer (LLM + RAG)
-- Agents autonomously query networked LLMs to ask for protocol interventions designed to counter their trajectory.
-- We constructed a massive **RAG (Retrieval-Augmented Generation)** prompt forcing the LLM to ground *every* intervention into authoritative AHA and CDC documentation, eliminating medical hallucinations. 
-- Integrated a live **PubMed REST Scraper** connecting to the NIH servers, acting as a fallback data hook if LLM API keys are disabled.
-
-### 3. Asynchronous Backbone (IndexedDB)
-- Massive grid simulations require extreme persistence memory.
-- Using native, deeply integrated `IndexedDB` queues, the massive array blocks (`Agent[]`) snapshot recursively. 
-- You can physically close the active browser tab, reboot, and the UI will `Initialize()` WASM and instantly hydrate your exact mathematical week seamlessly—no Supabase or Firebase required.
-
-### 4. Cohort Heatmap UI
-- Using `recharts` and deeply reactive state flows, the UI projects side-by-side multiverses. 
-- Enter the **Simulate Me** tool to drop your own biometric data in, and visually witness an AI protocol group vastly outlive a standard cohort inside an auto-scaling chronologic Pathological Heatmap!
+![Overview](/hero_bg.png)
 
 ---
 
-## 🚀 Getting Started
+## ⚡ Core Mathematical Architecture
+
+The simulation is anchored by four deeply intertwined inference boundaries to guarantee clinical fidelity, decoupling massive statistical workloads from the UI thread using an asynchronous architecture.
+
+### 1. High-Performance Deterministic Orchestration (Web Workers & Zustand)
+- The application offloads all physiological chronologic ticking (`SimulationEngine`) into a detached **Web Worker** (`simulation.worker.ts`). Event loops calculate the multidimensional math for 1,000+ digital twins at 60 FPS without ever blocking the React UI thread.
+- Inter-Process Communication (IPC) is bridged via a strict **Zustand global store**, allowing granular slice-based re-renders instead of monolithic prop-drilling.
+- The React layer utilizes an **Atomic UI Component Architecture** (`<StatCard>`, `<RangeSlider>`) to maintain structural purity while visualizing real-time deeply isolated state variables (e.g., eGFR decline, CAC scoring, NT-proBNP fluctuations).
+- Core biological regressions are entirely isolated and deterministically locked via **Vitest** test harnesses.
+
+### 2. Pharmacokinetics & Synergy Matrices
+Biological systems cannot scale therapies linearly indefinitely. We utilize advanced quantitative systems pharmacology limits:
+- **Bliss Independence Model**: Computes multidrug overlapping likelihoods (`P(A U B) = P(A) + P(B) - P(A)P(B)`) ensuring physiological bounds.
+- **Asymptotic/Michaelis-Menten Curves**: Models receptor saturation using `E_max * (1 - e^(-k * dose))` physics for diminishing returns.
+- **AHA PREVENT Forecasts**: Injects deterministic multipliers for Atherosclerotic Cardiovascular Disease (ASCVD) tied to live imaging benchmarks.
+
+### 3. Edge Inference (WASM / ONNX)
+- The raw framework of disease progression is continuously benchmarked against a custom PyTorch **TransformerPredictor**. 
+- Using standard `onnx` graph pipelines, the backend `.pt` tensor weights natively bridge across WebAssembly to the client (`InferenceEngine.ts`). 
+- When an agent physically logs a lifetime 'Tick', the Edge Engine natively leverages Multi-Layer Perceptrons targeting `[Stroke, CHF, Diabetes, COPD]` likelihoods locally.
+
+### 4. Autonomous Knowledge Generation (LLM RAG)
+- Built-in **Agentic Researcher Nodes** dynamically ping networking LLMs to devise new intervention protocols.
+- We constructed a massive **RAG (Retrieval-Augmented Generation) Vector Instruction** forcing every synthesized intervention to structurally anchor upon real, identifiable guidelines (AHA, CDC, WHO, NEJM, JAMA).
+- **Graceful Degradation:** A custom native Python REST API PubMed Scraper serves as a strict fallback if LLM constraints fail.
+
+---
+
+## 🚀 Development & Orchestration
 
 ### 1. Booting the Frontend Simulation
-The core application runs locally via Vite.
+The core application runs locally via Vite and completely isolates its local IndexedDB to guarantee persistence.
+
 ```bash
 npm install
 npm run dev
 ```
-Navigate to `http://localhost:5173`. You can immediately jump into the `Command Center` or `Simulate Me` tabs.
+Navigate to `http://localhost:5173`. Jump directly into the `Dashboard`, view the `Algorithmic Whitepaper`, or upload specific JSON data structures into the `Data Ingestion` tab.
 
-### 2. Booting the Deep Learning Server
-If you want to re-train the neural network weights from new JSON populations, you must boot the backend REST API:
+### 2. Booting the PyTorch Model Server
+To re-train the neural network weights from new `.json` population arrays, boot the backend API:
+
 ```bash
 cd model_training
 
-# Ensure you have torch and onnx pipelines
+# Provision virtual environments and dependencies
 pip install torch fastapi uvicorn onnx onnxscript onnxruntime requests
 
-# Boot the API
+# Boot the Training API
 uvicorn api:app --reload
 ```
-Once this starts, the frontend's **ML Diagnostics / PyTorch DEV** footer tab will establish a handshake, letting you visually inject 100-Agent timelines right into PyTorch backpropagation. 
+Once deployed, the `ML Diagnostics / PyTorch DEV` tab on the frontend natively hooks into this backend, visualizing real-time Loss gradients and Tensor weights backpropagating over standard HTTP/REST.
+
+---
 
 ## ⚖️ Legal Disclaimer
-*This application is composed entirely as an architectural and mathematical experiment. It is firmly NOT intended for medical advice, prediction, or authentic diagnosis. It is NOT HIPAA compliant and must never interpret real Patient Health Information (PHI).*
+*This repository is composed entirely as a high-performance architectural and mathematical framework experiment. It is firmly NOT intended for medical advice, prediction, or authentic diagnosis. It is NOT HIPAA/HITECH compliant and must never intercept, process, or interpret Real Patient Health Information (PHI).*

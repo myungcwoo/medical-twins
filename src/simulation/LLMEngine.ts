@@ -4,27 +4,31 @@ import type { Agent } from './Agent';
 export type Provider = 'OpenAI' | 'Claude' | 'Gemini';
 
 export class LLMEngine {
-  public static provider: Provider = (localStorage.getItem('llm_provider') as Provider) || 'OpenAI';
-  public static apiKey: string | null = localStorage.getItem('llm_key');
-  public static activeModel: string = localStorage.getItem('llm_model') || 'gemini-2.5-flash';
-  public static isEnabled: boolean = localStorage.getItem('llm_enabled') !== 'false';
+  public static provider: Provider = (typeof localStorage !== 'undefined' ? localStorage.getItem('llm_provider') as Provider : null) || 'OpenAI';
+  public static apiKey: string | null = typeof localStorage !== 'undefined' ? localStorage.getItem('llm_key') : null;
+  public static activeModel: string = (typeof localStorage !== 'undefined' ? localStorage.getItem('llm_model') : null) || 'gemini-2.5-flash';
+  public static isEnabled: boolean = (typeof localStorage !== 'undefined' ? localStorage.getItem('llm_enabled') : null) !== 'false';
   public static isGenerating = false;
   public static lastGenerationTick = 0;
 
   public static setEnabled(state: boolean) {
       this.isEnabled = state;
-      localStorage.setItem('llm_enabled', state.toString());
+      if (typeof localStorage !== 'undefined') localStorage.setItem('llm_enabled', state.toString());
   }
 
   public static setCredentials(provider: Provider, key: string, modelStr?: string) {
     this.provider = provider;
     this.apiKey = key;
-    if (modelStr) {
-        this.activeModel = modelStr;
-        localStorage.setItem('llm_model', modelStr);
+    if (typeof localStorage !== 'undefined') {
+        if (modelStr) {
+            this.activeModel = modelStr;
+            localStorage.setItem('llm_model', modelStr);
+        }
+        localStorage.setItem('llm_provider', provider);
+        localStorage.setItem('llm_key', key);
+    } else {
+        if (modelStr) this.activeModel = modelStr;
     }
-    localStorage.setItem('llm_provider', provider);
-    localStorage.setItem('llm_key', key);
   }
 
   public static async generateProtocolAsync(author: Agent, currentTick: number) {

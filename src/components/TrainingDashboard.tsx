@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FC } from 'react';
-import { TrainingEngine, type RawClaim, type RawLab } from '../simulation/TrainingEngine';
+import { TrainingEngine } from '../simulation/TrainingEngine';
+import type { RawClaim, RawLab } from '../types';
 
 export const TrainingDashboard: FC = () => {
   const [modelWeights, setModelWeights] = useState<any>(TrainingEngine.currentTrainedModel);

@@ -1,13 +1,11 @@
 import type { FC } from 'react';
-import type { AgentState } from '../simulation/Agent';
+
 import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
 
-interface Props {
-  agents: AgentState[];
-  ticks: number;
-}
+import { useSimulationStore } from '../store/useSimulationStore';
 
-export const SimulationReport: FC<Props> = ({ agents, ticks }) => {
+export const SimulationReport: FC = () => {
+  const { agents, ticks } = useSimulationStore();
   // --- 1. Top Level Epidemiology ---
   const total = agents.length;
   const alive = agents.filter(a => !a.isDead);

@@ -5,7 +5,8 @@ export type PhysicsModel = 'Linear' | 'Bliss' | 'Asymptotic' | 'Matrix';
 /**
  * Pharmacokinetics & Biological Combination Engine
  * -----------------------------------------------
- * Evaluates the net physiological impact of stacking multiple interventions, solving the flaw of perpetual linear growth.
+ * Evaluates the net physiological impact of stacking multiple interventions, solving the fundamental flaw 
+ * of perpetual linear growth in biological simulations. Applies probabilistic (Bliss) and terminal (Asymptotic) mathematical bounding.
  */
 export class Pharmacokinetics {
     
@@ -58,7 +59,7 @@ export class Pharmacokinetics {
             case 'Bliss':
                 // Bliss Independence Model (Probabilistic Non-Overlapping Pathways)
                 // Represents likelihood union: P(A U B) = P(A) + P(B) - P(A)P(B)
-                // Squeezes multidrug impact into tight bounded physiological limits.
+                // Squeezes multidrug impact into tight bounded physiological limits, preventing infinite therapeutic scaling.
                 const fractions = impacts.map(i => Math.min(1.0, Math.max(0, Math.abs((i.healthDelta || 0) / 100))));
                 if (fractions.length > 0) {
                     let blissTotal = fractions[0];
@@ -72,7 +73,9 @@ export class Pharmacokinetics {
 
             case 'Asymptotic':
                 // Terminal Diminishing Returns (Logarithmic/Asymptotic Curve)
-                // Source: Michaelis-Menten kinetics derivations
+                // Source: Derived from Michaelis-Menten kinetics.
+                // Formula: E = E_max * (1 - e^(-k * dose))
+                // Models physiological tolerance where receptors saturate, offering zero marginal benefit against escalating dosages.
                 const rawSum = aggregate.healthDelta;
                 if (rawSum > 0) {
                     const eMax = 20.0;

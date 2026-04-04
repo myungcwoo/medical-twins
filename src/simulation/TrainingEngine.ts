@@ -1,25 +1,5 @@
-export interface RawClaim {
-  patientId: string;
-  date: string; // ISO date string (e.g. "2021-04-15")
-  icd10: string[];
-  ndc: string[];
-}
+import type { RawClaim, RawLab, TrainedWeight } from '../types';
 
-export interface RawLab {
-  patientId: string;
-  date: string;
-  loinc: string;
-  value: number;
-}
-
-interface TrainedWeight {
-  condition: string;
-  sourcePopulation: number;
-  totalExposureYears: number;
-  observedIncidenceRate: number; // Annualized probability
-  cdcBaseline: number;
-  hazardDifferential: number; // x times multiplier compared to CDC
-}
 
 export class TrainingEngine {
   static currentTrainedModel: Record<string, TrainedWeight> = {};
@@ -45,17 +25,25 @@ export class TrainingEngine {
   };
 
   static initialize() {
-    const localWeights = localStorage.getItem('abm_trained_weights');
-    if (localWeights) {
-      try {
-        this.currentTrainedModel = JSON.parse(localWeights);
-      } catch (e) {
-        console.error("Failed to parse local ABM weights", e);
+    if (typeof localStorage !== 'undefined') {
+      const localWeights = localStorage.getItem('abm_trained_weights');
+      if (localWeights) {
+        try {
+          this.currentTrainedModel = JSON.parse(localWeights);
+        } catch (e) {
+          console.error("Failed to parse local ABM weights", e);
+        }
       }
     }
   }
 
-  // Purely Mathematical Client-Side ETL Pipeline
+  /**
+   * Purely Mathematical Client-Side ETL Pipeline
+   * 
+   * Transforms massive arrays of static JSON medical claims into chronological incidence arrays.
+   * By sorting on dates, it computes the 180-Day 'Baseline' threshold. 
+   * Any pathology occurring after 180 Days is flagged as an 'Acquired Conversion', which populates the poisson incidence denominators.
+   */
   static processDisparateData(claims: RawClaim[], labs: RawLab[] = []): Record<string, TrainedWeight> {
     const targets = Object.keys(this.icd10Dictionary);
     const analysisMap: Record<string, { atRisk: number, totalYears: number, conversions: number }> = {};
@@ -136,6 +124,7 @@ export class TrainingEngine {
 
     const newWeights: Record<string, TrainedWeight> = {};
 
+    // Step 3: Compute Expected Base Literature Values
     // Standard theoretical base literature (AHA/CDC) roughly annualized across generic adults
     const cdcBaselines: Record<string, number> = {
       'Hypertension': 0.04,
@@ -174,14 +163,14 @@ export class TrainingEngine {
     });
 
     this.currentTrainedModel = { ...this.currentTrainedModel, ...newWeights };
-    localStorage.setItem('abm_trained_weights', JSON.stringify(this.currentTrainedModel));
+    if (typeof localStorage !== 'undefined') localStorage.setItem('abm_trained_weights', JSON.stringify(this.currentTrainedModel));
     
     return this.currentTrainedModel;
   }
 
   static wipeModel() {
     this.currentTrainedModel = {};
-    localStorage.removeItem('abm_trained_weights');
+    if (typeof localStorage !== 'undefined') localStorage.removeItem('abm_trained_weights');
   }
 
   static getEmpiricalWeight(condition: string, cdcFallback: number): number {
