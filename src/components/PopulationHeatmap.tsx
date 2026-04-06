@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import type { AgentState } from '../simulation/Agent';
+import type { AgentState } from '../types/Simulation.types';
 
 interface Props {
   agents: AgentState[];

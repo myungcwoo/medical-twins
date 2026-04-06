@@ -1,5 +1,5 @@
 import * as ort from 'onnxruntime-web';
-import type { AgentState } from './Agent';
+import type {  AgentState  } from '../types/Simulation.types';
 import { MetaTuner } from './MetaTuner';
 
 export class InferenceEngine {

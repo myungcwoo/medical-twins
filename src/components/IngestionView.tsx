@@ -3,7 +3,7 @@ import type { FC } from 'react';
 
 import { KnowledgeBase, type IdeaTemplate } from '../simulation/KnowledgeNetwork';
 import { useSimulationStore } from '../store/useSimulationStore';
-import type { AgentState } from '../simulation/Agent';
+import type { AgentState } from '../types/Simulation.types';
 
 type DetailedProtocol = IdeaTemplate & {
     adoptions?: number;

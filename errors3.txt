@@ -1,0 +1,2 @@
+src/components/BackendTrainer.tsx(3,22): error TS2305: Module '"../simulation/Agent"' has no exported member 'AgentRole'.
+src/components/BackendTrainer.tsx(3,38): error TS2305: Module '"../simulation/Agent"' has no exported member 'Sex'.

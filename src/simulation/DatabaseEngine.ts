@@ -1,5 +1,5 @@
 import { set, get, keys, clear } from 'idb-keyval';
-import type { AgentState } from './Agent';
+import type {  AgentState  } from '../types/Simulation.types';
 
 export interface SimulationSnapshot {
   id: string; 

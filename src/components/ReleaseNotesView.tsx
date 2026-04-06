@@ -11,8 +11,25 @@ export const ReleaseNotesView: React.FC = () => {
       <div className="view-content" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
         <div className="card" style={{ padding: '2rem' }}>
-          <h2 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>v1.7.0 (Phase 7: Conversational Data Science Integration)</h2>
+          <h2 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>v1.7.1 (Phase 8.1: Architectural Hardening & Abstractions)</h2>
           <span className="tag" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', marginBottom: '1.5rem', display: 'inline-block' }}>Current Stable</span>
+          
+          <h3 style={{ marginTop: '1rem', color: '#94a3b8' }}>Major Features:</h3>
+          <ul style={{ marginLeft: '1.5rem', marginTop: '0.5rem', color: '#e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <li><strong>Simulation Types Matrix:</strong> Ripped out raw data interfaces from <code style={{color: '#f472b6'}}>Agent.ts</code> and centralized them into a universally accessible <code style={{color: '#f472b6'}}>src/types/Simulation.types.ts</code> matrix.</li>
+            <li><strong>LLM Adapter Strategy:</strong> Extracted massive HTTP endpoints out of <code style={{color: '#f472b6'}}>LLMEngine.ts</code> into isolated, scalable Adapters (<code style={{color: '#f472b6'}}>OpenAIAdapter</code>, <code style={{color: '#f472b6'}}>GeminiAdapter</code>, <code style={{color: '#f472b6'}}>ClaudeAdapter</code>).</li>
+            <li><strong>UI De-bloating:</strong> Sliced massive Recharts mathematical rendering logic out of main timeline components into localized wrappers.</li>
+          </ul>
+
+          <h3 style={{ marginTop: '1rem', color: '#94a3b8' }}>Minor Improvements:</h3>
+          <ul style={{ marginLeft: '1.5rem', marginTop: '0.5rem', color: '#e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+             <li>Globally patched and resolved strict TypeScript implicit `any` and unexported module parameters.</li>
+          </ul>
+        </div>
+
+        <div className="card" style={{ padding: '2rem' }}>
+          <h2 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>v1.7.0 (Phase 7: Conversational Data Science Integration)</h2>
+          <span className="tag" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6', marginBottom: '1.5rem', display: 'inline-block' }}>Stable</span>
           
           <h3 style={{ marginTop: '1rem', color: '#94a3b8' }}>Major Features:</h3>
           <ul style={{ marginLeft: '1.5rem', marginTop: '0.5rem', color: '#e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

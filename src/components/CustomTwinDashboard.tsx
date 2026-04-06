@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { useState } from 'react';
-import type { AgentState } from '../simulation/Agent';
+import type { AgentState } from '../types/Simulation.types';
 
 import { PopulationHeatmap } from './PopulationHeatmap';
 import { SurvivalComposedChart } from './charts/SurvivalComposedChart';

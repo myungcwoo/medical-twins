@@ -1,5 +1,6 @@
 import { Agent } from './Agent';
-import type { AgentState } from './Agent';
+
+import type {  AgentState  } from '../types/Simulation.types';
 import { runGlobalEvents } from './Events';
 import { LLMEngine } from './LLMEngine';
 import { KnowledgeBase } from './KnowledgeNetwork';

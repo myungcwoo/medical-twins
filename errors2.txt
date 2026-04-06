@@ -1,0 +1,34 @@
+src/components/3d/HolographicTorso.tsx(5,15): error TS2459: Module '"../../simulation/Agent"' declares 'AgentState' locally, but it is not exported.
+src/components/BackendTrainer.tsx(3,22): error TS2305: Module '"../simulation/Agent"' has no exported member 'AgentRole'.
+src/components/BackendTrainer.tsx(3,38): error TS2305: Module '"../simulation/Agent"' has no exported member 'Sex'.
+src/components/ConsumerWizard.tsx(3,15): error TS2459: Module '"../simulation/Agent"' declares 'AgentState' locally, but it is not exported.
+src/components/CustomTwinDashboard.tsx(3,15): error TS2459: Module '"../simulation/Agent"' declares 'AgentState' locally, but it is not exported.
+src/components/CustomTwinDashboard.tsx(49,39): error TS7006: Parameter 'snap' implicitly has an 'any' type.
+src/components/CustomTwinDashboard.tsx(158,69): error TS7006: Parameter 'h' implicitly has an 'any' type.
+src/components/CustomTwinDashboard.tsx(158,115): error TS7006: Parameter 'h' implicitly has an 'any' type.
+src/components/CustomTwinDashboard.tsx(398,43): error TS7006: Parameter 'event' implicitly has an 'any' type.
+src/components/CustomTwinDashboard.tsx(398,50): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+src/components/DashboardView.tsx(92,67): error TS7006: Parameter 'targetId' implicitly has an 'any' type.
+src/components/DashboardView.tsx(303,48): error TS7006: Parameter 'cond' implicitly has an 'any' type.
+src/components/DashboardView.tsx(321,60): error TS7006: Parameter 'ev' implicitly has an 'any' type.
+src/components/DashboardView.tsx(321,64): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/components/IngestionView.tsx(6,15): error TS2459: Module '"../simulation/Agent"' declares 'AgentState' locally, but it is not exported.
+src/components/PopulationHeatmap.tsx(2,15): error TS2459: Module '"../simulation/Agent"' declares 'AgentState' locally, but it is not exported.
+src/components/PopulationHeatmap.tsx(16,50): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/components/PopulationHeatmap.tsx(57,52): error TS7006: Parameter 'h' implicitly has an 'any' type.
+src/components/PopulationHeatmap.tsx(84,63): error TS7006: Parameter 'h' implicitly has an 'any' type.
+src/components/PopulationHeatmap.tsx(85,94): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/ui/AnalyticsChatView.tsx(3,15): error TS2459: Module '"../../simulation/Agent"' declares 'AgentState' locally, but it is not exported.
+src/components/ui/AnalyticsChatView.tsx(116,51): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/components/ui/AnalyticsChatView.tsx(117,58): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/components/ui/KnowledgeGraphCanvas.tsx(3,15): error TS2459: Module '"../../simulation/Agent"' declares 'AgentState' locally, but it is not exported.
+src/simulation/BiologicalDecayEngine.ts(1,16): error TS2305: Module '"../types/Simulation.types"' has no exported member 'Agent'.
+src/simulation/ClinicalPathways.ts(1,16): error TS2305: Module '"../types/Simulation.types"' has no exported member 'Agent'.
+src/simulation/ClinicalPathways.ts(142,78): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/simulation/ClinicalPathways.ts(150,82): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/simulation/ClinicalPathways.ts(158,82): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/simulation/KnowledgeNetwork.ts(2,16): error TS2305: Module '"../types/Simulation.types"' has no exported member 'Agent'.
+src/simulation/LLMEngine.ts(2,16): error TS2305: Module '"../types/Simulation.types"' has no exported member 'Agent'.
+src/simulation/NetworkAdoptionEngine.ts(1,16): error TS2305: Module '"../types/Simulation.types"' has no exported member 'Agent'.
+src/simulation/PharmacotherapyEngine.ts(1,16): error TS2305: Module '"../types/Simulation.types"' has no exported member 'Agent'.
+src/store/useSimulationStore.ts(2,15): error TS2459: Module '"../simulation/Agent"' declares 'AgentState' locally, but it is not exported.

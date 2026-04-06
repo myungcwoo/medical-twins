@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FC } from 'react';
-import type { AgentState } from '../simulation/Agent';
+import type { AgentState } from '../types/Simulation.types';
 import { KnowledgeBase, type IdeaTemplate } from '../simulation/KnowledgeNetwork';
 import { useSimulationStore } from '../store/useSimulationStore';
 import { RangeSlider } from './ui/RangeSlider';

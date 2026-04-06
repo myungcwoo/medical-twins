@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import type { AgentState } from '../../simulation/Agent';
+import type { AgentState } from '../../types/Simulation.types';
 import { KnowledgeBase } from '../../simulation/KnowledgeNetwork';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

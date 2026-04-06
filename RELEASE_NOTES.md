@@ -4,6 +4,17 @@ This document chronicles the historical deployment phases of the Clinical AI Stu
 
 ---
 
+## v1.7.1 (Phase 8.1: Architectural Hardening & Abstractions)
+* **Status:** Stable
+* **Major Features:**
+  - **Simulation Types Matrix:** Ripped out 80+ lines of raw data interfaces from `Agent.ts` and centralized them into a universally accessible `src/types/Simulation.types.ts`, breaking circular dependencies.
+  - **LLM Adapter Strategy:** Extracted the massive HTTP endpoints out of `LLMEngine.ts` into isolated, scalable Adapters (`OpenAIAdapter`, `GeminiAdapter`, and `ClaudeAdapter`). The core LLM engine now operates simply as an orchestrated contextual router.
+  - **UI De-bloating:** Successfully sliced away 150+ lines of raw `Recharts` JSX rendering logic from `TimelineView.tsx` into a highly encapsulated `<ComparativeLineChart />` wrapper.
+* **Minor Improvements:**
+  - Globally patched and resolved over 30 strict TypeScript linter warnings that were previously causing generic silent compilation failures during Webpack/Vite rollups.
+
+---
+
 ## v1.7.0 (Phase 7: Conversational Data Science Integration)
 * **Status:** Stable
 * **Major Features:**

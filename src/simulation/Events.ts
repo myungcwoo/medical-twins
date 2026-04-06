@@ -1,4 +1,5 @@
 import { Agent } from './Agent';
+
 import { ClinicalPathways } from './ClinicalPathways';
 
 export function runGlobalEvents(agent: Agent, currentTick: number) {

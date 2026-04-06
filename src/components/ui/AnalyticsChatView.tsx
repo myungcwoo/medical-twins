@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { LLMEngine, type AnalyticsConfig } from '../../simulation/LLMEngine';
-import type { AgentState } from '../../simulation/Agent';
+import type { AgentState } from '../../types/Simulation.types';
 import { useSimulationStore } from '../../store/useSimulationStore';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,

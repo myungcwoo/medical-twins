@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Sphere, Box, MeshTransmissionMaterial, Float } from '@react-three/drei';
 import * as THREE from 'three';
-import type { AgentState } from '../../simulation/Agent';
+import type { AgentState } from '../../types/Simulation.types';
 
 interface OrganProps {
   agent: AgentState;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FC } from 'react';
-import { Agent, type AgentRole, type Sex } from '../simulation/Agent';
+import { Agent } from '../simulation/Agent';
+import type { AgentRole, Sex } from '../types/Simulation.types';
 
 export const BackendTrainer: FC = () => {
     const [apiUrl, setApiUrl] = useState('http://localhost:8000/train');

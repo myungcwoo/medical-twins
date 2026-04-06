@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { AgentState } from '../simulation/Agent';
+import type { AgentState } from '../types/Simulation.types';
 import type { PhysicsModel } from '../simulation/Pharmacokinetics';
 
 export const simulationWorker = new Worker(new URL('../workers/simulation.worker.ts', import.meta.url), { type: 'module' });
