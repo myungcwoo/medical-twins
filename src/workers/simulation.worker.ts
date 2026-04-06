@@ -1,6 +1,7 @@
 import { SimulationEngine } from '../simulation/Engine';
 import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
 import { DatabaseEngine } from '../simulation/DatabaseEngine';
+import { LLMEngine } from '../simulation/LLMEngine';
 
 let engine: SimulationEngine | null = null;
 let customEngine: SimulationEngine | null = null;
@@ -19,9 +20,20 @@ self.onmessage = async (e: MessageEvent) => {
       }
       self.postMessage({ type: 'ENGINE_READY', payload: {
         agents: engine.getAgents(),
-        ticks: engine.currentTick
+        ticks: engine.currentTick,
+        globalFeed: KnowledgeBase.globalFeed,
+        broadcasts: KnowledgeBase.broadcasts,
+        totalInteractions: KnowledgeBase.totalInteractions
       }});
       break;
+    }
+
+    case 'SYNC_LLM': {
+        LLMEngine.provider = payload.provider;
+        LLMEngine.apiKey = payload.apiKey;
+        if (payload.modelStr) LLMEngine.activeModel = payload.modelStr;
+        LLMEngine.isEnabled = payload.isEnabled;
+        break;
     }
     
     case 'TICK': {
@@ -29,7 +41,10 @@ self.onmessage = async (e: MessageEvent) => {
       engine.tick();
       self.postMessage({ type: 'TICK_COMPLETE', payload: {
         agents: engine.getAgents(),
-        ticks: engine.currentTick
+        ticks: engine.currentTick,
+        globalFeed: KnowledgeBase.globalFeed,
+        broadcasts: KnowledgeBase.broadcasts,
+        totalInteractions: KnowledgeBase.totalInteractions
       }});
       break;
     }
@@ -139,7 +154,10 @@ self.onmessage = async (e: MessageEvent) => {
             
             self.postMessage({ type: 'REWIND_COMPLETE', payload: {
                 agents: engine.getAgents(),
-                ticks: engine.currentTick
+                ticks: engine.currentTick,
+                globalFeed: KnowledgeBase.globalFeed,
+                broadcasts: KnowledgeBase.broadcasts,
+                totalInteractions: KnowledgeBase.totalInteractions
             }});
         } else {
             console.error(`[Worker] Rewind failed. Temporal Tick ${targetTick} missing.`);

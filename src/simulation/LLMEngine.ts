@@ -129,7 +129,9 @@ export class LLMEngine {
 
       // Push into the actual Twin simulation architecture
       KnowledgeBase.broadcast(author, template, currentTick);
-      toast.success(`New Protocol Acquired via ${this.provider}: ${template.title}`, { icon: '🧬', id: 'llm-success' });
+      if (typeof window !== 'undefined') {
+          toast.success(`New Protocol Acquired via ${this.provider}: ${template.title}`, { icon: '🧬', id: 'llm-success' });
+      }
 
     } catch (error) {
       console.warn("LLM Generation Failed:", error);
@@ -143,7 +145,9 @@ export class LLMEngine {
           description: `Auth or Payload Error: ${error instanceof Error ? error.message : String(error)}`
         }
       }, currentTick);
-      toast.error(`LLM Generative Matrix Failed: ${this.provider} Error`, { id: 'llm-err' });
+      if (typeof window !== 'undefined') {
+          toast.error(`LLM Generative Matrix Failed: ${this.provider} Error`, { id: 'llm-err' });
+      }
     } finally {
       this.isGenerating = false;
     }

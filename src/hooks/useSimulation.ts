@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useSimulationStore, simulationWorker } from '../store/useSimulationStore';
 import { InferenceEngine } from '../simulation/InferenceEngine';
 import { DatabaseEngine } from '../simulation/DatabaseEngine';
+import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
 import { initialAgents } from '../simulation/InitialData';
 
 export function useSimulationLifecycle() {
@@ -27,6 +28,11 @@ export function useSimulationLifecycle() {
         case 'TICK_COMPLETE':
           setAgents(payload.agents);
           setTicks(payload.ticks);
+          if (payload.globalFeed) {
+             KnowledgeBase.globalFeed = payload.globalFeed;
+             KnowledgeBase.broadcasts = payload.broadcasts;
+             KnowledgeBase.totalInteractions = payload.totalInteractions;
+          }
           
           if (type === 'FAST_FORWARD_COMPLETE') {
               useSimulationStore.setState({ isFastForwarding: false });
@@ -65,6 +71,13 @@ export function useSimulationLifecycle() {
   useEffect(() => {
     const hydrator = async () => {
       await InferenceEngine.initialize();
+      
+      const provider = localStorage.getItem('llm_provider') || 'OpenAI';
+      const apiKey = localStorage.getItem('llm_key') || null;
+      const modelStr = localStorage.getItem('llm_model') || null;
+      const isEnabled = localStorage.getItem('llm_enabled') !== 'false';
+      simulationWorker.postMessage({ type: 'SYNC_LLM', payload: { provider, apiKey, modelStr, isEnabled } });
+
       const persisted = await DatabaseEngine.loadSnapshot();
       if (persisted && persisted.agents && persisted.agents.length > 0) {
           simulationWorker.postMessage({ type: 'INIT_ENGINE', payload: { initialAgents: persisted.agents, ticks: persisted.ticks } });
