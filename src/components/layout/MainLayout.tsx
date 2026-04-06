@@ -1,5 +1,6 @@
 import type { FC, ReactNode } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { useSimulationStore } from '../../store/useSimulationStore';
 
 // Reusing inline SVGs for layout icons
@@ -31,7 +32,7 @@ export const MainLayout: FC<MainLayoutProps> = ({
 
   return (
     <div className="layout-wrapper">
-      
+      <Toaster position="top-right" toastOptions={{ style: { background: '#1e293b', color: '#fff', border: '1px solid #3b82f6' } }} />
       {/* Mobile Menu Overlay */}
       <div 
         className={`mobile-overlay ${isMobileMenuOpen ? 'open' : ''}`}

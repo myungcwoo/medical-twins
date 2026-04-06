@@ -19,8 +19,12 @@ This is our primary production deployment. It is an advanced Agent-Based Modelin
 
 ## 🧠 Edge Inference & Machine Learning
 
-### How do you predict if an agent gets sick?
-Originally, the platform used hardcoded heuristic fallbacks (e.g., standard math: *if stress > 80, subtract health*). We aggressively upgraded this to a purely data-driven model. The backend features a PyTorch **TransformerPredictor** that ingests the sequential time-series biometric data (Blood Pressure, Age, Stress, HR, Labs) of the agents. It uses multi-head attention to map longitudinal degradation and outputs precise probability risks for critical events like ASCVD (Strokes), Congestive Heart Failure, Type 2 Diabetes, and COPD.
+### How do you predict if an agent gets sick or dies?
+The biological simulation relies on three explicitly decoupled mathematical models:
+1. **Gompertz-Makeham Mortality Law**: Natural age decay is governed by complex compound exponential decay distributions. There is no artificial "age limit" hardcoded; death curves mimic actuarial tables natively.
+2. **Markov Chain Disease Progression**: Chronic illnesses maintain chronologic causality. Acute events like a Minor Stroke will permanently elevate the topological probabilities of a secondary major cardiovascular event indefinitely, rejecting standard independent randomization.
+3. **Polypharmacy Toxicity:** Agents tracking more than 5 concurrent pharmaceutical protocols—especially those with Geriatric or Renal Impairment variables—dynamically trip extreme pharmacological toxicity thresholds (`Bliss Independence`).
+4. **PyTorch ONNX Models**: Secondary biometric predictions (A1c, Stress) are filtered through a localized Edge-compute Multi-Layer Perceptron neural network.
 
 ### Do I need the Python server active to run the simulation?
 **No!** We actively deployed Edge Computation logic. The Python backend compiles the trained PyTorch neural tensor into an `.onnx` (Open Neural Network Exchange) file. 
@@ -37,9 +41,8 @@ The application securely requests an intervention protocol from an LLM (like Goo
 ### How do you prevent the AI from generating dangerous or hallucinatory medical advice?
 We enforce a strict **RAG (Retrieval-Augmented Generation) Architecture**. The LLM prompt is heavily shielded. We enforce strict instructions that the AI *must* cross-reference and synthesize its protocols utilizing standard guidelines from authoritative groups exclusively, such as the *American Heart Association (AHA)*, the *WHO*, and the *CDC*.
 
-### What is the PubMed Harvester?
-To further ground the Knowledge Base, the Python `/model_training` backend contains a live web scraper hook directly mapping to the NIH PubMed servers. It can actively query real-world published FDA clinical trials and inject the authoritative abstracts back into the local Network feed, bridging the gap between theoretical generative algorithms and peer-reviewed reality.
-
+### How are new Clinical Trials generated into the Literature Board?
+To expand the Knowledge Base legitimately, we natively deployed a Browser-side LLM JSON Generator inside `LLMEngine.ts`. There is absolutely no external Python backend or proxy server required. Users simply click "Force Sync Literature", and the engine prompts the active generative model (e.g. Gemini 1.5, GPT-4o) using strict zero-shot constraints to hallucinate a medically rigorous, peer-reviewed clinical trial, complete with synthetic Hazard Ratios. This JSON is instantly rendered and mapped to the patient cohort natively.
 ---
 
 ## 💾 App State & Architecture

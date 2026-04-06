@@ -85,5 +85,29 @@ export class PharmacotherapyEngine {
           agent.state.medications.push('Sertraline');
           agent.logEvent({ tick: currentTick, type: 'Physician Intervention', description: 'CDSS Core: Prescribed Sertraline (SSRI) neutralizing baseline clinical anxiety constraints autonomously.', impactHealth: 2, impactStress: -15 });
       }
+
+      // 5. POLYPHARMACY TOXICITY (Beer's Criteria / Renal Clearance Constraints)
+      if (agent.state.medications.length >= 5) {
+          const isGeriatric = agent.state.age >= 65;
+          const isRenalImpaired = agent.state.labs.egfr < 45;
+          
+          if (isGeriatric || isRenalImpaired) {
+              // Calculate a compounding toxicity risk
+              const excessMeds = agent.state.medications.length - 4;
+              const toxicityProbability = 0.02 * excessMeds; // 2% per extra med
+              
+              if (Math.random() < toxicityProbability) {
+                  // Induce an Adverse Drug Event (ADE) from polypharmacy
+                  const severity = isRenalImpaired ? -8 : -4;
+                  agent.logEvent({ 
+                      tick: currentTick, 
+                      type: 'Adverse Drug Event', 
+                      description: `Polypharmacy Toxicity: Compromised metabolic clearance (Age/eGFR) resulted in compounded systemic toxicity from managing ${agent.state.medications.length} simultaneous active prescriptions.`, 
+                      impactHealth: severity, 
+                      impactStress: 15 
+                  });
+              }
+          }
+      }
   }
 }

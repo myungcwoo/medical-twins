@@ -1,5 +1,6 @@
 import { KnowledgeBase, type IdeaTemplate, type IdeaSource } from './KnowledgeNetwork';
 import type { Agent } from './Agent';
+import toast from 'react-hot-toast';
 
 export type Provider = 'OpenAI' | 'Claude' | 'Gemini';
 
@@ -197,6 +198,7 @@ export class LLMEngine {
 
       // Push into the actual Twin simulation architecture
       KnowledgeBase.broadcast(author, template, currentTick);
+      toast.success(`New Protocol Acquired via ${this.provider}: ${template.title}`, { icon: '🧬', id: 'llm-success' });
 
     } catch (error) {
       console.warn("LLM Generation Failed:", error);
@@ -210,8 +212,86 @@ export class LLMEngine {
           description: `Auth or Payload Error: ${error instanceof Error ? error.message : String(error)}`
         }
       }, currentTick);
+      toast.error(`LLM Generative Matrix Failed: ${this.provider} Error`, { id: 'llm-err' });
     } finally {
       this.isGenerating = false;
+    }
+  }
+
+  public static async generateTrialAsync(): Promise<any> {
+    if (!this.isEnabled || !this.apiKey) throw new Error("LLM Engine is disabled or missing valid API Key.");
+
+    const prompt = `
+      You are a Clinical Guidelines AI generating a novel but highly scientifically plausible landmark medical trial.
+      Return ONLY a JSON object that matches the following structure exactly (NO markdown code blocks, just raw JSON):
+      {
+        "id": "LIT-GEN-XYZ",
+        "title": "String (e.g. ALPHA Trial: Novel intervention for advanced CAD)",
+        "source": "String (e.g. NEJM, JAMA, Lancet)",
+        "year": "Number (2024 or 2025)",
+        "intervention": "String",
+        "phenotype": "String (e.g. High Risk CAD)",
+        "hazardRatio": "Number (0.4 to 0.95)",
+        "findings": "String (A 1 sentence clinical finding)",
+        "mathMapping": "String (Explanation of how it impacts the simulated math)",
+        "adverseEffects": [
+            { "risk": "Moderate", "type": "String", "probability": "String (e.g. 1.2% Annual)" }
+        ],
+        "impact": { "healthDelta": "Number", "stressDelta": "Number", "bpDelta": "Number", "a1cDelta": "Number", "cvDelta": "Number", "egfrDelta": "Number" },
+        "targetConditions": ["String array of conditions"]
+      }
+    `;
+
+    try {
+      let rawPayload = '';
+
+      if (this.provider === 'OpenAI') {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiKey}` },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'system', content: 'Return strict JSON only.' }, { role: 'user', content: prompt }],
+            temperature: 0.9
+          })
+        });
+        if (!res.ok) throw new Error(`OpenAI error: ${await res.text()}`);
+        const data = await res.json();
+        rawPayload = data.choices[0].message.content.trim();
+      } else if (this.provider === 'Gemini') {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.activeModel}:generateContent?key=${this.apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.9 }
+          })
+        });
+        if (!res.ok) throw new Error(`Gemini Error: ${await res.text()}`);
+        const data = await res.json();
+        rawPayload = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "{}";
+      } else if (this.provider === 'Claude') {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': this.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerously-allow-browser': 'true' },
+          body: JSON.stringify({
+            model: 'claude-3-haiku-20240307',
+            max_tokens: 500,
+            system: "Return strict JSON.",
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+        if (!res.ok) throw new Error(`Claude Error: ${await res.text()}`);
+        const data = await res.json();
+        rawPayload = data.content?.[0]?.text?.trim();
+      }
+
+      const filtered = rawPayload.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(filtered);
+
+    } catch (e) {
+      console.warn("Trial Generation failed", e);
+      throw e;
     }
   }
 }

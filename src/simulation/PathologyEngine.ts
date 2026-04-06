@@ -199,6 +199,50 @@ export class PathologyEngine {
         });
       }
     }
+    
+    // 6.5 CAD -> Myocardial Infarction (Heart Attack)
+    if (state.chronicConditions.includes('CAD') && !state.history.some(h => h.type === 'Myocardial Infarction')) {
+      let risk = getCompoundRisk('MI', 0.03); // High baseline risk for established CAD
+      if (state.vitals.bpSystolic > 150) risk *= 2.0;
+      if (state.smoker) risk *= 1.8;
+      
+      if (Math.random() < risk) {
+        state.chronicConditions.push('Post-MI Syndrome');
+        agent.logEvent({
+          tick: currentTick,
+          type: 'Myocardial Infarction',
+          description: 'Sustained a major Myocardial Infarction due to occlusive CAD, causing irreversible myocardial scarring.',
+          impactHealth: -25,
+          impactStress: 40
+        });
+        
+        // Immediate cascaded consequence
+        if (!state.chronicConditions.includes('CHF')) {
+            state.chronicConditions.push('CHF');
+            agent.logEvent({
+              tick: currentTick,
+              type: 'Pathology Acquired',
+              description: 'Ischemic damage precipitated rapid-onset Congestive Heart Failure.',
+              impactHealth: -10,
+              impactStress: 20
+            });
+        }
+      }
+    }
+
+    // 6.6 CKD -> End Stage Renal Disease (ESRD)
+    if (state.chronicConditions.includes('CKD') && state.labs.egfr < 30) {
+      if (Math.random() < getCompoundRisk('ESRD', 0.05)) {
+        state.chronicConditions.push('ESRD');
+        agent.logEvent({
+          tick: currentTick,
+          type: 'Pathology Acquired',
+          description: 'Chronic Kidney Disease progressed to critical End Stage Renal Disease. Dialysis baseline required.',
+          impactHealth: -20,
+          impactStress: 35
+        });
+      }
+    }
 
     // 7. General Psychiatric Profiles (Depression, Anxiety)
     if (!state.chronicConditions.includes('Depression') && Math.random() < getCompoundRisk('Depression', 0.06)) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Explanation } from './components/Explanation';
 import { TimelineView } from './components/TimelineView';
 import { IngestionView } from './components/IngestionView';
@@ -24,6 +24,16 @@ function App() {
 
   const [selectedId, setSelectedId] = useState<string>('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSelectAgent = (id: string) => {
+    setSelectedId(id);
+    if (id) {
+      navigate('/timeline');
+    } else {
+      navigate('/dashboard');
+    }
+  };
 
   useEffect(() => {
     // Force strict Vite hot-reloading for the Nano Banana background
@@ -39,8 +49,8 @@ function App() {
       setIsMobileMenuOpen={setIsMobileMenuOpen}
     >
       <Routes>
-        <Route path="/dashboard" element={<DashboardView onSelectAgent={setSelectedId} />} />
-        <Route path="/timeline" element={<TimelineView selectedId={selectedId} onSelectAgent={setSelectedId} />} />
+        <Route path="/dashboard" element={<DashboardView onSelectAgent={handleSelectAgent} />} />
+        <Route path="/timeline" element={<TimelineView selectedId={selectedId} onSelectAgent={handleSelectAgent} />} />
         <Route path="/explanation" element={<Explanation />} />
         <Route path="/algorithms" element={<AlgorithmExplanationView />} />
         <Route path="/faq" element={<FAQView />} />

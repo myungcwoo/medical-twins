@@ -265,9 +265,8 @@ export class Agent {
   }
 
   public clampState() {
-    // Hard Biological Age Ceiling
+    // Allow the Gompertz-Makeham physics to dictate natural mortality organically without linear hard ceiling.
     let maxBaseHlth = 100;
-    if (this.state.age > 65) maxBaseHlth = 100 - (this.state.age - 65) * 1.5; // e.g. at 85, max potential health is 70
     maxBaseHlth = Math.max(10, maxBaseHlth); // Absolute floor to the ceiling
     
     this.state.baseHealth = Math.max(0, Math.min(maxBaseHlth, this.state.baseHealth));

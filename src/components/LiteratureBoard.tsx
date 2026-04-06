@@ -1,5 +1,7 @@
 import { useState, type FC } from 'react';
 import { KnowledgeBase, type IdeaTemplate } from '../simulation/KnowledgeNetwork';
+import { LLMEngine } from '../simulation/LLMEngine';
+import toast from 'react-hot-toast';
 
 import { STATIC_LITERATURE_DB } from '../data/ClinicalLiteratureDB';
 
@@ -15,10 +17,15 @@ export const LiteratureBoard: FC = () => {
         setErrorMsg('');
         
         try {
-            const response = await fetch('http://127.0.0.1:8000/harvest_literature');
-            const newTrial = await response.json();
+            if (!LLMEngine.isEnabled || !LLMEngine.apiKey) {
+                throw new Error("LLM Engine is not authorized! Please enable it securely in the Command Center.");
+            }
+
+            toast.loading("Modeling theoretical clinical trial...", { id: 'trial-sync' });
             
-            if (newTrial.id) {
+            const newTrial = await LLMEngine.generateTrialAsync();
+            
+            if (newTrial.id && newTrial.title) {
                 // Dynamically prepend the new live literature object to the render stack
                 setLiteratureDB(prev => [newTrial, ...prev]);
                 setLastSync(new Date().toLocaleTimeString());
@@ -26,20 +33,23 @@ export const LiteratureBoard: FC = () => {
                 // INJECT INTO BIOLOGICAL SIMULATOR
                 const parsedProtocol: IdeaTemplate = {
                     id: newTrial.id,
-                    source: 'PubMed',
+                    source: newTrial.source || 'PubMed',
                     type: 'Clinical',
-                    title: newTrial.intervention,
-                    impact: newTrial.impact,
-                    targetConditions: newTrial.targetConditions
+                    title: newTrial.intervention || newTrial.title,
+                    impact: newTrial.impact || { healthDelta: 0, stressDelta: 0, bpDelta: 0, a1cDelta: 0, cvDelta: 0, egfrDelta: 0 },
+                    targetConditions: newTrial.targetConditions || []
                 };
                 KnowledgeBase.CLINICAL_IDEAS.push(parsedProtocol);
+                toast.success(`Successfully minted and deployed ${newTrial.id}`, { id: 'trial-sync' });
                 
             } else {
-                setErrorMsg('Parsed invalid schema from PubMed E-utilities.');
+                throw new Error("Parsed invalid schema from the AI Model Engine.");
             }
         } catch (e) {
-            console.error("Backend Harvest Error:", e);
-            setErrorMsg('FastAPI Python backend offline. Could not contact NCBI.');
+            console.error("Generative Engine Error:", e);
+            const errText = e instanceof Error ? e.message : "Could not synthesize structured trial logic.";
+            setErrorMsg(errText);
+            toast.error(errText, { id: 'trial-sync' });
         } finally {
             setIsRefreshing(false);
         }
@@ -84,7 +94,7 @@ export const LiteratureBoard: FC = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 {errorMsg && (
-                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#fca5a5', padding: '1rem', borderRadius: '8px' }}>
+                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#fca5a5', padding: '1rem', borderRadius: '8px', animation: 'fadeIn 0.3s ease-out' }}>
                         ⚠️ {errorMsg}
                     </div>
                 )}
@@ -128,7 +138,7 @@ export const LiteratureBoard: FC = () => {
                                             <div style={{ color: '#fca5a5', fontWeight: 'bold', marginBottom: '0.3rem' }}>{ae.type}</div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                                                 <span style={{ color: 'var(--text-muted)' }}>Severity: <span style={{ color: '#e2e8f0' }}>{ae.risk}</span></span>
-                                                <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{ae.probability}</span>
+                                                <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{String(ae.probability)}</span>
                                             </div>
                                         </div>
                                     ))}

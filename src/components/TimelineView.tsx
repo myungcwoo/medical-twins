@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import type { FC } from 'react';
 
 import { useSimulationStore } from '../store/useSimulationStore';
+import { STATIC_LITERATURE_DB } from '../data/ClinicalLiteratureDB';
 
 interface Props {
   selectedId: string;
@@ -189,6 +190,54 @@ export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
                 </div>
               </div>
 
+              {selected.medications.length > 0 && (
+                <div style={{ marginBottom: '1.5rem', marginTop: '1.5rem' }}>
+                  <h3 style={{ margin: '0 0 1rem 0', color: '#e2e8f0', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span role="img" aria-label="evidence">📚</span> Governing Clinical Evidence
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+                    {selected.medications.map(med => {
+                       const lower = med.toLowerCase();
+                       let matchedTrial = null;
+                       if (lower.includes('semaglutide') || lower.includes('glp')) matchedTrial = STATIC_LITERATURE_DB.find(t => t.id === 'LIT-SELECT-01');
+                       else if (lower.includes('empagliflozin') || lower.includes('sglt')) matchedTrial = STATIC_LITERATURE_DB.find(t => t.id === 'LIT-DAPA-HF-02');
+                       else if (lower.includes('sacubitril') || lower.includes('arni') || lower.includes('lisinopril')) matchedTrial = STATIC_LITERATURE_DB.find(t => t.id === 'LIT-PARADIGM-03');
+                       else if (lower.includes('statin')) matchedTrial = STATIC_LITERATURE_DB.find(t => t.id === 'LIT-FOURIER-05');
+                       else if (lower.includes('finerenone') || lower.includes('aldactone') || lower.includes('spironolactone')) matchedTrial = STATIC_LITERATURE_DB.find(t => t.id === 'LIT-FIDELIO-06');
+                       
+                       if (!matchedTrial) {
+                           // Fallback Trial mapper for general ones
+                           if (['metoprolol', 'amlodipine', 'hctz'].some(x => lower.includes(x))) {
+                               matchedTrial = STATIC_LITERATURE_DB.find(t => t.id === 'LIT-SPRINT-04');
+                           } else {
+                               return null;
+                           }
+                       }
+
+                       if (!matchedTrial) return null;
+
+                       return (
+                         <div key={med} style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', padding: '1rem', animation: 'fadeIn 0.5s ease-out' }}>
+                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                             <div style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '0.2rem' }}>{med}</div>
+                             <div style={{ background: 'rgba(244, 114, 182, 0.15)', color: '#f472b6', padding: '0.2rem 0.5rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', border: '1px solid rgba(244, 114, 182, 0.3)' }}>
+                               HR: {matchedTrial.hazardRatio}
+                             </div>
+                           </div>
+                           <div style={{ color: '#e2e8f0', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>{matchedTrial.intervention}</div>
+                           <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: 1.4 }}>
+                             {matchedTrial.findings}
+                           </div>
+                           <div style={{ marginTop: '0.8rem', color: '#94a3b8', fontSize: '0.75rem' }}>
+                             <strong>Source:</strong> {matchedTrial.source} ({matchedTrial.year})
+                           </div>
+                         </div>
+                       );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {chartData.length > 0 && (
                 <div style={{ background: 'rgba(0,0,0,0.4)', padding: '2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '2rem', marginTop: '2rem', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.5)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -205,7 +254,7 @@ export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
                   </div>
                   
                   <div style={{ width: '100%', height: 400 }}>
-                    <ResponsiveContainer>
+                    <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                         <XAxis dataKey="age" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} type="number" domain={['dataMin', 'dataMax']} tickFormatter={val => Math.floor(val).toString()} />
