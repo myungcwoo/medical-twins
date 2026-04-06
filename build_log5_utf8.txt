@@ -1,0 +1,176 @@
+﻿[36mvite v8.0.1 [32mbuilding client environment for production...[36m[39m
+[2K
+transforming...Γ£ô 3241 modules transformed.
+node.exe : [31mΓ£ù[39m 
+Build failed in 773ms
+At line:1 char:1
++ & "D:\Tools\nodejs/node.
+exe" "D:\Tools\nodejs/node
+_modules/npm/bin/np ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (  
+  [31mΓ£ù[39m Build fa   
+ iled in 773ms:String)    
+ [], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+[31merror during build:
+[31mBuild failed with 1 
+error:
+
+[plugin vite:worker-import
+-meta-url] D:/Projects/Ant
+igravity/workspace/medical
+-twins/src/store/useSimula
+tionStore.ts
+Error: Build failed with 
+1 error:
+
+[31m[MISSING_EXPORT] 
+Error:[0m 
+"DataConnection" is not 
+exported by "node_modules/
+peerjs/dist/bundler.mjs".
+   [38;5;246mΓò¡[0m[38;
+5;246mΓöÇ[0m[38;5;246m[
+[0m src/simulation/Federat
+ionEngine.ts:1:16 
+[38;5;246m][0m
+   [38;5;246mΓöé[0m
+ [38;5;246m1 Γöé[0m [38
+;5;249mi[0m[38;5;249mm[
+0m[38;5;249mp[0m[38;5;2
+49mo[0m[38;5;249mr[0m[
+38;5;249mt[0m[38;5;249m 
+[0m[38;5;249m{[0m[38;5
+;249m [0m[38;5;249mP[0m
+[38;5;249me[0m[38;5;249
+me[0m[38;5;249mr[0m[38
+;5;249m,[0m[38;5;249m [
+0mDataConnection[38;5;249
+m [0m[38;5;249m}[0m[38
+;5;249m [0m[38;5;249mf[
+0m[38;5;249mr[0m[38;5;2
+49mo[0m[38;5;249mm[0m[
+38;5;249m [0m[38;5;249m"
+[0m[38;5;249mp[0m[38;5
+;249me[0m[38;5;249me[0m
+[38;5;249mr[0m[38;5;249
+mj[0m[38;5;249ms[0m[38
+;5;249m"[0m[38;5;249m;[
+0m
+ [38;5;240m  Γöé[0m     
+           ΓöÇΓöÇΓöÇΓöÇΓöÇ
+ΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓö
+Ç  
+ [38;5;240m  Γöé[0m     
+                  Γò░ΓöÇΓö
+ÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ 
+Missing export
+[38;5;246mΓöÇΓöÇΓöÇΓò»[0
+m
+    at aggregateBindingErr
+orsIntoJsError (file:///D:
+/Projects/Antigravity/work
+space/medical-twins/node_m
+odules/rolldown/dist/share
+d/error-BO4SlZV_.mjs:48:18
+)
+    at 
+unwrapBindingResult (file:
+///D:/Projects/Antigravity
+/workspace/medical-twins/n
+ode_modules/rolldown/dist/
+shared/error-BO4SlZV_.mjs:
+18:128)
+    at #build (file:///D:/
+Projects/Antigravity/works
+pace/medical-twins/node_mo
+dules/rolldown/dist/shared
+/rolldown-build-yQC7KN8K.m
+js:3311:34)
+    at async 
+bundleWorkerEntry (file://
+/D:/Projects/Antigravity/w
+orkspace/medical-twins/nod
+e_modules/vite/dist/node/c
+hunks/node.js:27053:12)
+    at async 
+workerFileToUrl (file:///D
+:/Projects/Antigravity/wor
+kspace/medical-twins/node_
+modules/vite/dist/node/chu
+nks/node.js:27087:17)
+    at async TransformPlug
+inContextImpl.handler (fil
+e:///D:/Projects/Antigravi
+ty/workspace/medical-twins
+/node_modules/vite/dist/no
+de/chunks/node.js:27994:23
+)
+    at async plugin (file:
+///D:/Projects/Antigravity
+/workspace/medical-twins/n
+ode_modules/rolldown/dist/
+shared/bindingify-input-op
+tions-DoaqRULI.mjs:1111:16
+)
+    at async 
+plugin.<computed> (file://
+/D:/Projects/Antigravity/w
+orkspace/medical-twins/nod
+e_modules/rolldown/dist/sh
+ared/bindingify-input-opti
+ons-DoaqRULI.mjs:1575:12)
+[31m
+    at aggregateBindingErr
+orsIntoJsError (file:///D:
+/Projects/Antigravity/work
+space/medical-twins/node_m
+odules/rolldown/dist/share
+d/error-BO4SlZV_.mjs:48:18
+)
+    at 
+unwrapBindingResult (file:
+///D:/Projects/Antigravity
+/workspace/medical-twins/n
+ode_modules/rolldown/dist/
+shared/error-BO4SlZV_.mjs:
+18:128)
+    at #build (file:///D:/
+Projects/Antigravity/works
+pace/medical-twins/node_mo
+dules/rolldown/dist/shared
+/rolldown-build-yQC7KN8K.m
+js:3311:34)
+    at async 
+buildEnvironment (file:///
+D:/Projects/Antigravity/wo
+rkspace/medical-twins/node
+_modules/vite/dist/node/ch
+unks/node.js:32817:64)
+    at async Object.build 
+(file:///D:/Projects/Antig
+ravity/workspace/medical-t
+wins/node_modules/vite/dis
+t/node/chunks/node.js:3323
+9:19)
+    at async 
+Object.buildApp (file:///D
+:/Projects/Antigravity/wor
+kspace/medical-twins/node_
+modules/vite/dist/node/chu
+nks/node.js:33236:153)
+    at async 
+CAC.<anonymous> (file:///D
+:/Projects/Antigravity/wor
+kspace/medical-twins/node_
+modules/vite/dist/node/cli
+.js:778:3) {
+  errors: [Getter/Setter]
+}[39m

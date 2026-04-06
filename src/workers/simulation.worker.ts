@@ -81,11 +81,16 @@ self.onmessage = async (e: MessageEvent) => {
       const { years } = payload;
       for (let i = 0; i < years * 52; i++) {
         engine.tick();
+        // Native Timeline Snapshot every 5 years (260 ticks) to prevent IDB ballooning
+        if (engine.currentTick % 260 === 0) {
+            DatabaseEngine.saveSnapshot(engine.currentTick, engine.getAgents());
+        }
       }
       self.postMessage({ type: 'FAST_FORWARD_COMPLETE', payload: {
         agents: engine.getAgents(),
         ticks: engine.currentTick
       }});
+      // Always guarantee terminal snapshot
       DatabaseEngine.saveSnapshot(engine.currentTick, engine.getAgents());
       break;
     }
@@ -114,6 +119,32 @@ self.onmessage = async (e: MessageEvent) => {
       
       self.postMessage({ type: 'RESET_COMPLETE' });
       break;
+    }
+    
+    case 'FETCH_CHECKPOINTS': {
+        const points = await DatabaseEngine.getAvailableCheckpoints();
+        self.postMessage({ type: 'CHECKPOINTS_READY', payload: points });
+        break;
+    }
+
+    case 'REWIND_TO_TICK': {
+        const { targetTick } = payload;
+        const snapshot = await DatabaseEngine.loadTemporalSnapshot(targetTick);
+        if (snapshot && snapshot.agents) {
+            engine = new SimulationEngine(snapshot.agents);
+            engine.currentTick = snapshot.ticks;
+            
+            // Trim global feed to simulate true timeline reset
+            KnowledgeBase.globalFeed = KnowledgeBase.globalFeed.filter(ev => ev.tick <= snapshot.ticks);
+            
+            self.postMessage({ type: 'REWIND_COMPLETE', payload: {
+                agents: engine.getAgents(),
+                ticks: engine.currentTick
+            }});
+        } else {
+            console.error(`[Worker] Rewind failed. Temporal Tick ${targetTick} missing.`);
+        }
+        break;
     }
     
     case 'REQUEST_SAVE_PAYLOAD': {

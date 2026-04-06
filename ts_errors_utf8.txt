@@ -1,0 +1,6 @@
+﻿src/components/3d/HolographicTorso.tsx(17,27): error TS2339: Property 'pathologies' does not exist on type 'AgentState'.
+src/components/3d/HolographicTorso.tsx(17,67): error TS2339: Property 'pathologies' does not exist on type 'AgentState'.
+src/components/3d/HolographicTorso.tsx(18,24): error TS2339: Property 'pathologies' does not exist on type 'AgentState'.
+src/components/3d/HolographicTorso.tsx(19,24): error TS2339: Property 'pathologies' does not exist on type 'AgentState'.
+src/components/3d/HolographicTorso.tsx(19,73): error TS2339: Property 'egfr' does not exist on type 'AgentState'.
+src/components/3d/HolographicTorso.tsx(23,9): error TS6133: 'healthScalar' is declared but its value is never read.

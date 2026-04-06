@@ -1,8 +1,20 @@
 import { KnowledgeBase, type IdeaTemplate, type IdeaSource } from './KnowledgeNetwork';
 import type { Agent } from './Agent';
 import toast from 'react-hot-toast';
+import { OpenAIAdapter } from './llm/OpenAIAdapter';
+import { GeminiAdapter } from './llm/GeminiAdapter';
+import { ClaudeAdapter } from './llm/ClaudeAdapter';
+import type { BaseLLMAdapter } from './llm/BaseAdapter';
 
 export type Provider = 'OpenAI' | 'Claude' | 'Gemini';
+
+export interface AnalyticsConfig {
+  chartType: 'Scatter' | 'Bar' | 'Line' | 'Pie';
+  xAxisMetric: 'age' | 'baseHealth' | 'stressLevel' | 'bpSystolic' | 'a1c' | 'egfr';
+  yAxisMetric: 'age' | 'baseHealth' | 'stressLevel' | 'bpSystolic' | 'a1c' | 'egfr';
+  filterSubject: string; // Condition mapped to chronicConditions or meds. Or "ALL".
+  narrative: string; // 2-sentence conversational output
+}
 
 export class LLMEngine {
   public static provider: Provider = (typeof localStorage !== 'undefined' ? localStorage.getItem('llm_provider') as Provider : null) || 'OpenAI';
@@ -15,6 +27,12 @@ export class LLMEngine {
   public static setEnabled(state: boolean) {
       this.isEnabled = state;
       if (typeof localStorage !== 'undefined') localStorage.setItem('llm_enabled', state.toString());
+  }
+
+  public static getAdapter(): BaseLLMAdapter {
+      if (this.provider === 'Gemini') return new GeminiAdapter();
+      if (this.provider === 'Claude') return new ClaudeAdapter();
+      return new OpenAIAdapter();
   }
 
   public static setCredentials(provider: Provider, key: string, modelStr?: string) {
@@ -77,98 +95,8 @@ export class LLMEngine {
     `;
 
     try {
-      let rawPayload = '';
-
-      if (this.provider === 'OpenAI') {
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.apiKey}`
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: 'You are a medical simulation AI that returns strictly schema-validated JSON without formatting tags.' },
-              { role: 'user', content: prompt }
-            ],
-            temperature: 0.8
-          })
-        });
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`OpenAI HTTP ${res.status}: ${errText}`);
-        }
-        const data = await res.json();
-        rawPayload = data.choices[0].message.content.trim();
-      
-      } else if (this.provider === 'Gemini') {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.activeModel}:generateContent?key=${this.apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: `You are a strict JSON medical AI simulator. Ensure no markdown formatting or text besides raw JSON: ${prompt}` }] }],
-            generationConfig: { 
-              temperature: 0.8
-            },
-            safetySettings: [
-              { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-              { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-              { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-              { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" }
-            ]
-          })
-        });
-        
-        if (!res.ok) {
-            let errText = await res.text();
-            if (res.status === 404) {
-                try {
-                    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`);
-                    const listData = await listRes.json();
-                    if (listData.models) {
-                        const modelsArray = listData.models.map((m: { name: string }) => m.name.replace('models/', '')).filter((n: string) => n.includes('gemini'));
-                        errText = `404 Not Found. Your specific API Key has access to: ${modelsArray.join(', ')}`;
-                    }
-                } catch {
-                    // silently fail the diagnostic
-                }
-            }
-            throw new Error(`Gemini HTTP ${res.status}: ${errText}`);
-        }
-        const data = await res.json();
-        
-        // Handle potential Safety blocks returning undefined contents
-        if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
-            throw new Error(`Gemini Safety Block or Empty Response: ${JSON.stringify(data)}`);
-        }
-        
-        rawPayload = data.candidates[0].content.parts[0].text.trim();
-
-      } else if (this.provider === 'Claude') {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': this.apiKey,
-            'anthropic-version': '2023-06-01',
-            'anthropic-dangerously-allow-browser': 'true'
-          },
-          body: JSON.stringify({
-            model: 'claude-3-haiku-20240307',
-            max_tokens: 500,
-            system: "You are a medical simulation AI that returns strictly schema-validated JSON without formatting tags.",
-            messages: [{ role: 'user', content: prompt }],
-            temperature: 0.8
-          })
-        });
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`Claude HTTP ${res.status}: ${errText}`);
-        }
-        const data = await res.json();
-        rawPayload = data.content[0].text.trim();
-      }
+      const adapter = this.getAdapter();
+      const rawPayload = await adapter.generateContent(prompt, this.apiKey, this.activeModel, 'You are a medical simulation AI that returns strictly schema-validated JSON without formatting tags.');
       
       let parsed;
       try {
@@ -195,6 +123,9 @@ export class LLMEngine {
           description: parsed.description || 'Executed successfully via network adoption.'
         }
       };
+
+      // Extract Semantic Embedding for Knowledge Graph visual clustering
+      template.embedding = await adapter.generateEmbeddings(`${template.title} - ${template.impact.description}`, this.apiKey);
 
       // Push into the actual Twin simulation architecture
       KnowledgeBase.broadcast(author, template, currentTick);
@@ -291,6 +222,37 @@ export class LLMEngine {
 
     } catch (e) {
       console.warn("Trial Generation failed", e);
+      throw e;
+    }
+  }
+
+  public static async parseAnalyticsQuery(query: string): Promise<AnalyticsConfig> {
+    if (!this.isEnabled || !this.apiKey) throw new Error("LLM Engine is disabled or missing valid API Key.");
+
+    const prompt = `
+      You are an embedded Data Scientist AI inside a highly advanced Medical Digital Twins simulator.
+      The user is asking: "${query}"
+
+      Parse this natural language request into a strict React chart rendering configuration.
+      Return STRICTLY a raw JSON object matching this schema exactly (NO markdown code blocks, NO extra text):
+      {
+        "chartType": "Scatter" | "Bar" | "Line" | "Pie",
+        "xAxisMetric": "age" | "baseHealth" | "stressLevel" | "bpSystolic" | "a1c" | "egfr",
+        "yAxisMetric": "age" | "baseHealth" | "stressLevel" | "bpSystolic" | "a1c" | "egfr",
+        "filterSubject": "string (The specific medication or condition to isolate. Use 'ALL' if no specific filter is requested.)",
+        "narrative": "string (A crisp, 2-sentence conversational response acting as the Data Scientist acknowledging the request and briefly explaining what the chart visually demonstrates.)"
+      }
+    `;
+
+    try {
+      const adapter = this.getAdapter();
+      const rawPayload = await adapter.generateContent(prompt, this.apiKey, this.activeModel, 'Return strict JSON only.');
+
+      const filtered = rawPayload.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(filtered) as AnalyticsConfig;
+
+    } catch (e) {
+      console.warn("Analytics Parse failed", e);
       throw e;
     }
   }

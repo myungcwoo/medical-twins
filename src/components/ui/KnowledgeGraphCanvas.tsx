@@ -1,6 +1,7 @@
-import type { FC } from 'react';
+import React, { useState, useMemo } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import type { AgentState } from '../../simulation/Agent';
+import { KnowledgeBase } from '../../simulation/KnowledgeNetwork';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface KnowledgeGraphProps {
@@ -18,7 +19,7 @@ interface KnowledgeGraphProps {
    getHealthColor: (health: number) => string;
 }
 
-export const KnowledgeGraphCanvas: FC<KnowledgeGraphProps> = ({
+export const KnowledgeGraphCanvas: React.FC<KnowledgeGraphProps> = ({
     agents,
     liveGraphData,
     isFastForwarding,
@@ -28,8 +29,66 @@ export const KnowledgeGraphCanvas: FC<KnowledgeGraphProps> = ({
     graphRef,
     getHealthColor
 }) => {
+    const [mode, setMode] = useState<'Topology' | 'Semantic'>('Topology');
+
+    const semanticGraphData = useMemo(() => {
+        if (mode !== 'Semantic') return null;
+
+        const uniqueTemplates = new Map();
+        KnowledgeBase.broadcasts.forEach(b => {
+            if (!uniqueTemplates.has(b.template.id)) {
+                uniqueTemplates.set(b.template.id, { ...b.template, adoptCount: 1 });
+            } else {
+                uniqueTemplates.get(b.template.id).adoptCount++;
+            }
+        });
+
+        const semanticNodes = Array.from(uniqueTemplates.values()).map(t => ({
+            id: t.id,
+            title: t.title,
+            type: t.type,
+            source: t.source,
+            adoptCount: t.adoptCount,
+            embedding: t.embedding,
+            isSemantic: true
+        }));
+
+        const semanticLinks = [];
+        for (let i = 0; i < semanticNodes.length; i++) {
+            for (let j = i + 1; j < semanticNodes.length; j++) {
+                const e1 = semanticNodes[i].embedding;
+                const e2 = semanticNodes[j].embedding;
+                if (e1 && e2) {
+                    let dotProduct = 0;
+                    for (let k = 0; k < Math.min(e1.length, e2.length); k++) {
+                        dotProduct += e1[k] * e2[k];
+                    }
+                    if (dotProduct > 0.8) { 
+                        semanticLinks.push({ source: semanticNodes[i].id, target: semanticNodes[j].id, value: dotProduct });
+                    }
+                }
+            }
+        }
+
+        return { nodes: semanticNodes, links: semanticLinks };
+    }, [mode, KnowledgeBase.broadcasts.length]);
+
+    const activeGraphData = mode === 'Semantic' ? semanticGraphData : liveGraphData;
+
     return (
         <div style={{ flexShrink: 0, width: '280px', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(139, 92, 246, 0.3)', boxShadow: '0 0 40px rgba(139, 92, 246, 0.15)', position: 'relative', background: '#000' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, display: 'flex', background: 'rgba(0,0,0,0.8)' }}>
+                <button 
+                    onClick={() => setMode('Topology')}
+                    style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', background: mode === 'Topology' ? 'rgba(139, 92, 246, 0.4)' : 'transparent', color: mode === 'Topology' ? 'white' : '#94a3b8', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                    Topology
+                </button>
+                <button 
+                    onClick={() => setMode('Semantic')}
+                    style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', background: mode === 'Semantic' ? 'rgba(16, 185, 129, 0.4)' : 'transparent', color: mode === 'Semantic' ? 'white' : '#94a3b8', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                    Semantic
+                </button>
+            </div>
             {isFastForwarding ? (
                 <div style={{ width: '280px', height: '280px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.9)' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid rgba(139, 92, 246, 0.2)', borderTopColor: '#8b5cf6', animation: 'spin 1s linear infinite' }}></div>
@@ -44,9 +103,12 @@ export const KnowledgeGraphCanvas: FC<KnowledgeGraphProps> = ({
                 width={280}
                 height={280}
                 backgroundColor="#000000"
-                graphData={liveGraphData}
+                graphData={activeGraphData}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                nodeVal={(node: any) => Math.max(0.5, (node.health || 50) / 40)}
+                nodeVal={(node: any) => {
+                    if (mode === 'Semantic') return Math.max(2, node.adoptCount || 2);
+                    return Math.max(0.5, (node.health || 50) / 40);
+                }}
                 nodeRelSize={3}
                 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,6 +121,11 @@ export const KnowledgeGraphCanvas: FC<KnowledgeGraphProps> = ({
                 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 nodeColor={(node: any) => {
+                    if (mode === 'Semantic') {
+                        if (hoverNode && node.id === hoverNode.id) return '#10b981';
+                        return node.type === 'Clinical' ? '#3b82f6' : '#f59e0b';
+                    }
+
                     if (hoverNode) {
                         if (node === hoverNode) return '#fbbf24'; 
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -96,6 +163,16 @@ export const KnowledgeGraphCanvas: FC<KnowledgeGraphProps> = ({
                 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 nodeLabel={(node: any) => {
+                    if (mode === 'Semantic') {
+                        return `
+                            <div style="background: rgba(15, 23, 42, 0.95); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3); font-family: Inter, sans-serif; pointer-events: none;">
+                                <div style="color: #10b981; font-weight: bold; font-size: 0.9rem; margin-bottom: 4px;">${node.title || 'Untitled Protocol'}</div>
+                                <div style="color: #94a3b8; font-size: 0.75rem;">Source: ${node.source}</div>
+                                <div style="margin-top: 4px; font-size: 0.8rem; color: #e2e8f0;">Adoption Rate: ${node.adoptCount} Agent(s)</div>
+                            </div>
+                        `;
+                    }
+
                     const live = agents.find(a => a.id === node.id);
                     if (!live) return '';
                     return `
@@ -113,7 +190,7 @@ export const KnowledgeGraphCanvas: FC<KnowledgeGraphProps> = ({
                 
                 onNodeHover={(node) => setHoverNode(node)}
                 onNodeClick={(node) => {
-                    onSelectAgent(node.id);
+                    if (mode === 'Topology') onSelectAgent(node.id);
                 }}
                 
                 onEngineStop={() => {

@@ -7,6 +7,9 @@ import { StatCard } from './ui/StatCard';
 import { ProgressBar } from './ui/ProgressBar';
 import { KnowledgeGraphCanvas } from './ui/KnowledgeGraphCanvas';
 import { useSimulationStore } from '../store/useSimulationStore';
+import { FederationPanel } from './FederationPanel';
+import { TimeScrubber } from './ui/TimeScrubber';
+import { AnalyticsChatView } from './ui/AnalyticsChatView';
 
 interface Props {
   onSelectAgent: (id: string) => void;
@@ -27,7 +30,7 @@ const getStressColor = (val: number) => {
 export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
   const { agents, isFastForwarding } = useSimulationStore();
   const [page, setPage] = useState(1);
-  const [subTab, setSubTab] = useState<'overview' | 'database'>('overview');
+  const [subTab, setSubTab] = useState<'overview' | 'database' | 'analytics'>('overview');
   const [hoverNode, setHoverNode] = useState<{ id: string; health?: number; isDead?: boolean; x?: number; y?: number; fx?: number; fy?: number; } | null>(null);
   const [apiKey, setApiKey] = useState(LLMEngine.apiKey || '');
   const [provider, setProvider] = useState<Provider>(LLMEngine.provider);
@@ -94,6 +97,10 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
       return { nodes: staticNodes, links: liveLinks };
   }, [staticNodes, liveLinks]);
 
+  useEffect(() => {
+      useSimulationStore.getState().fetchCheckpoints();
+  }, []);
+
   // Silently mutate the underlying D3 node references so we don't break gravity layout constraints.
   // We explicitly trigger a canvas redraw using d3ReheatSimulation to reflect color/size changes.
   useEffect(() => {
@@ -134,6 +141,11 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
           onClick={() => setSubTab('database')} 
           style={{ background: 'transparent', border: 'none', color: subTab === 'database' ? '#10b981' : 'var(--text-muted)', fontWeight: 'bold', fontSize: '1.1rem', cursor: 'pointer', borderBottom: subTab === 'database' ? '2px solid #10b981' : '2px solid transparent', paddingBottom: '0.4rem', transition: 'all 0.2s' }}>
           Population Database
+        </button>
+        <button 
+          onClick={() => setSubTab('analytics')} 
+          style={{ background: 'transparent', border: 'none', color: subTab === 'analytics' ? '#8b5cf6' : 'var(--text-muted)', fontWeight: 'bold', fontSize: '1.1rem', cursor: 'pointer', borderBottom: subTab === 'analytics' ? '2px solid #8b5cf6' : '2px solid transparent', paddingBottom: '0.4rem', transition: 'all 0.2s' }}>
+          A.I. Analytics Center
         </button>
       </div>
 
@@ -255,6 +267,9 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
             />
           </div>
        </div>
+
+       <FederationPanel />
+       <TimeScrubber />
        </>
       )}
 
@@ -315,6 +330,10 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
             ))}
        </div>
        </>
+      )}
+
+      {subTab === 'analytics' && (
+          <AnalyticsChatView />
       )}
     </div>
   );

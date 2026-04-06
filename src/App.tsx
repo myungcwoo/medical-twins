@@ -18,6 +18,7 @@ import { MainLayout } from './components/layout/MainLayout';
 import { useSimulationLifecycle } from './hooks/useSimulation';
 
 import { AlgorithmExplanationView } from './components/AlgorithmExplanationView';
+import { ReleaseNotesView } from './components/ReleaseNotesView';
 
 function App() {
   useSimulationLifecycle();
@@ -54,6 +55,7 @@ function App() {
         <Route path="/explanation" element={<Explanation />} />
         <Route path="/algorithms" element={<AlgorithmExplanationView />} />
         <Route path="/faq" element={<FAQView />} />
+        <Route path="/release-notes" element={<ReleaseNotesView />} />
         <Route path="/ingestion" element={
           <div className="tab-pane active" id="ingestion">
             <IngestionView />

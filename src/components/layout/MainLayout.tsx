@@ -58,36 +58,46 @@ export const MainLayout: FC<MainLayoutProps> = ({
             ⚡ Command Center
           </NavLink>
           
+          <NavLink to="/network" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+            ⚙️ LLM Knowledge Maps
+          </NavLink>
+
           <NavLink to="/consumer-wizard" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
             👨🏽‍⚕️ Simulate Me
           </NavLink>
 
-          <span className="nav-group-title">DATA & LOGS</span>
+          <span className="nav-group-title">DATA & MODELING</span>
           <NavLink to="/timeline" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
             📊 Clinical Evidence
           </NavLink>
+          
           <NavLink to="/training" className={({isActive}) => `sidebar-btn ${isActive || location.pathname === '/backend-train' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            ☄ RWD Training
+            ☄ Edge RWD Training
           </NavLink>
+          
           <NavLink to="/ingestion" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            🧬 Add Twin (JSON)
+            🧬 Data Ingestion
           </NavLink>
+
+          <span className="nav-group-title">DOCUMENTATION</span>
           <NavLink to="/explanation" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
             💻 How It Works
           </NavLink>
+          
           <NavLink to="/algorithms" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            🧮 Algorithmic Whitepaper
+            🧮 Algorithmic Engine
           </NavLink>
+
+          <NavLink to="/dev-docs" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+            📚 Architecture Specs
+          </NavLink>
+          
           <NavLink to="/faq" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
             ❓ Read FAQ
           </NavLink>
-          
-          <NavLink to="/dev-docs" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            📚 Arch Docs
-          </NavLink>
 
-          <NavLink to="/network" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            ⚙️ DL Trajectories
+          <NavLink to="/release-notes" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+            📝 Release Notes
           </NavLink>
         </div>
       </nav>

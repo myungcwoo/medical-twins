@@ -1,5 +1,7 @@
 import { STATIC_LITERATURE_DB } from '../data/ClinicalLiteratureDB';
 import type { Agent } from './Agent';
+import { FederationEngine } from './FederationEngine';
+import toast from 'react-hot-toast';
 
 export type IdeaSource = 'JAMA' | 'NEJM' | 'Nature' | 'CDC' | 'WHO' | 'AHA' | 'NKF' | 'ADA' | 'WebMD' | 'Reddit' | 'Personal' | 'PubMed' | 'Chest' | 'Am J Psychiatry' | 'AHA Journals' | 'The Lancet';
 export type IdeaType = 'Clinical' | 'Lifestyle';
@@ -22,6 +24,7 @@ export interface IdeaTemplate {
   title: string;
   impact: IdeaImpact;
   targetConditions?: string[];
+  embedding?: number[];
 }
 
 export interface BroadcastedIdea {
@@ -169,9 +172,43 @@ export class KnowledgeBase {
       success: true
     });
 
-    // Feed trim to avoid memory leaks
+    // Bounce this across the WebRTC mesh
+    try {
+        FederationEngine.emitIdea(template);
+    } catch (e) {
+        console.warn("Federation emit failed", e);
+    }
+
     if (this.globalFeed.length > 200) this.globalFeed.shift();
     if (this.broadcasts.length > 50) this.broadcasts.shift();
+  }
+
+  // Hook for inbound WebRTC connections
+  public static injectForeignIdea(template: IdeaTemplate, sourcePeerId: string) {
+      toast('Incoming Protocol from Remote Research Node!', { icon: '🌐', style: { borderRadius: '10px', background: '#333', color: '#fff' }});
+      
+      const bId = `bcast_foreign_${Math.random().toString(36).substr(2, 9)}`;
+      const b: BroadcastedIdea = {
+        id: bId,
+        templateId: template.id,
+        authorId: `remote_${sourcePeerId}`,
+        authorName: `Datacenter ${sourcePeerId.substring(0, 4)}`,
+        template,
+        timestamp: 0 
+      };
+      this.broadcasts.push(b);
+      this.totalInteractions++;
+
+      this.globalFeed.push({
+        tick: 0,
+        agentName: `Remote Peer ${sourcePeerId.substring(0, 4)}`,
+        agentRole: 'Federated Node',
+        action: 'Broadcasted',
+        ideaTitle: template.title,
+        source: template.source,
+        resultString: `Federated protocol securely synced across mesh.`,
+        success: true
+      });
   }
 
   public static logAdoption(agent: Agent, broadcast: BroadcastedIdea, success: boolean, resultText: string, tick: number) {

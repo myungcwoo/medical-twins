@@ -4,7 +4,7 @@ import type { PhysicsModel } from '../simulation/Pharmacokinetics';
 
 export const simulationWorker = new Worker(new URL('../workers/simulation.worker.ts', import.meta.url), { type: 'module' });
 
-// Add the top level listener to intercept SAVE_PAYLOAD_READY
+// Add the top level listener to intercept SAVE_PAYLOAD_READY and REWIND loops
 simulationWorker.addEventListener('message', (e) => {
    if (e.data.type === 'SAVE_PAYLOAD_READY') {
       const payload = e.data.payload;
@@ -15,6 +15,13 @@ simulationWorker.addEventListener('message', (e) => {
       a.download = `medical_twins_sim_export_week_${payload.simulationEndTick}.json`;
       a.click();
       URL.revokeObjectURL(url);
+   }
+   if (e.data.type === 'CHECKPOINTS_READY') {
+      useSimulationStore.getState().setCheckpoints(e.data.payload);
+   }
+   if (e.data.type === 'REWIND_COMPLETE') {
+      const { agents, ticks } = e.data.payload;
+      useSimulationStore.setState({ agents, ticks, isFastForwarding: false, isRunning: false });
    }
 });
 
@@ -35,8 +42,11 @@ interface SimulationState {
   isCustomFastForwarding: boolean;
   
   physicsMode: PhysicsModel;
+  
+  checkpoints: number[];
 
   // Actions
+  setCheckpoints: (pts: number[]) => void;
   setAgents: (agents: AgentState[]) => void;
   setCustomTwins: (twins: AgentState[]) => void;
   setTicks: (ticks: number) => void;
@@ -56,6 +66,8 @@ interface SimulationState {
   handleReset: () => Promise<void>;
   handleStartCustomTrial: (rawPayload: Omit<AgentState, 'history' | 'isDead' | 'biometricHistory'>, selectedProtocols: any[]) => void;
   handleSaveSimulation: () => void;
+  handleRewind: (tick: number) => void;
+  fetchCheckpoints: () => void;
 }
 
 export const useSimulationStore = create<SimulationState>((set, get) => ({
@@ -75,7 +87,9 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
   isCustomFastForwarding: false,
   
   physicsMode: 'Linear',
+  checkpoints: [],
 
+  setCheckpoints: (checkpoints) => set({ checkpoints }),
   setAgents: (agents) => set({ agents }),
   setCustomTwins: (customTwins) => set({ customTwins }),
   setTicks: (ticks) => set({ ticks }),
@@ -149,5 +163,14 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
 
   handleSaveSimulation: () => {
     simulationWorker.postMessage({ type: 'REQUEST_SAVE_PAYLOAD' });
+  },
+
+  handleRewind: (targetTick: number) => {
+    set({ isRunning: false, isFastForwarding: true }); // triggers loading spinner state
+    simulationWorker.postMessage({ type: 'REWIND_TO_TICK', payload: { targetTick } });
+  },
+
+  fetchCheckpoints: () => {
+    simulationWorker.postMessage({ type: 'FETCH_CHECKPOINTS' });
   }
 }));

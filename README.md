@@ -1,6 +1,8 @@
 # 🧬 Clinical AI Studio: Generative Medical Digital Twins
 
-An advanced, edge-compute open-source framework designed to simulate the longitudinal biological decay and interventional recovery of massive digital patient cohorts. By blending **Generative RAG AI** with deterministic **Deep Learning** pipelines, the Clinical AI Studio generates, visualizes, and treats hypothetical chronic diseases entirely within the browser securely.
+An advanced, edge-compute open-source framework designed to simulate the longitudinal biological decay and interventional recovery of massive digital patient cohorts. By blending **Generative RAG AI** with deterministic **Deep Learning** pipelines, the Clinical AI Studio generates, visualizes, and treats hypothetical chronic diseases entirely within an offline Chromium desktop interface securely.
+
+> 🌟 **Read the sweeping architectural timeline mapping v1.0.0 through v1.7.0 in [RELEASE_NOTES.md](./RELEASE_NOTES.md)**
 
 ![Overview](/hero_bg.png)
 
@@ -28,22 +30,23 @@ Biological systems cannot scale therapies linearly indefinitely. We utilize adva
 - Using standard `onnx` graph pipelines, the backend `.pt` tensor weights natively bridge across WebAssembly to the client (`InferenceEngine.ts`). 
 - When an agent physically logs a lifetime 'Tick', the Edge Engine natively leverages Multi-Layer Perceptrons targeting `[Stroke, CHF, Diabetes, COPD]` likelihoods locally.
 
-### 4. Autonomous Knowledge Generation & Evidence Mapping
-- **Generative LLM Sandbox (RAG)**: Built-in Agentic Nodes dynamically execute targeted prompts against OpenAI/Gemini/Claude directly inside the browser. We constructed massive Vector Instructions forcing the LLMs to strictly generate JSON-compliant Landmark Medical Trials (e.g., Hazard Ratios, Trial Structures) to expand network behaviors.
-- **Zero Python Dependency**: We completely ripped out obsolete Python FastAPI components for querying literature. The simulation natively generates and maps Real World Literature records inside the browser on the fly.
-- **EHR Evidence Cross-Referencing**: Digital Twin trajectory charts natively map their pharmacological constraints (SGLT2s, GLP-1s) dynamically back to the Empirical SQLite literature array (e.g. SELECT, EMPA-REG OUTCOME) to maintain structural grounding.
+### 4. Autonomous Knowledge Generation & Conversational AI
+- **Generative LLM Sandbox (RAG)**: Built-in Agentic Nodes dynamically execute targeted prompts against OpenAI/Gemini/Claude directly inside the simulation. 
+- **A.I. Analytics Center**: Embedded Data Scientist AI allowing users to map natural language queries (e.g., *"Plot age vs health for patients on Semaglutide"*) into strict JSON parsing configurations, rendering perfect D3 Recharts math locally without LLM hallucination risk.
+- **Deep Semantic Matrices**: Real-time Machine Learning Vector extractions (`text-embedding-3`) cluster generated theoretical trials dynamically onto the canvas using simple Euclidean thresholds, visually grouping similar knowledge paths away from contrasting pathways.
 
 ---
 
 ## 🚀 Development & Orchestration
 
-### 1. Booting the Frontend Simulation
-The core application runs locally via Vite and completely isolates its local IndexedDB to guarantee persistence.
+### 1. Booting the Hospital-Grade Desktop Simulation
+The core application has been mapped strictly to an offline, edge-secured Electron instance to drop computational browser constraints.
 
 ```bash
 npm install
-npm run dev
+npm run electron:serve
 ```
+*(You may optionally run the legacy web build via `npm run dev`)*
 Navigate to `http://localhost:5173`. Jump directly into the `Dashboard`, view the `Algorithmic Whitepaper`, or upload specific JSON data structures into the `Data Ingestion` tab.
 
 ### 2. Edge Training Environments

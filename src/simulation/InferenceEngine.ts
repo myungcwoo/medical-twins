@@ -1,95 +1,105 @@
 import * as ort from 'onnxruntime-web';
 import type { AgentState } from './Agent';
+import { MetaTuner } from './MetaTuner';
 
 export class InferenceEngine {
-    private static session: ort.InferenceSession | null = null;
+    private static cardioSession: ort.InferenceSession | null = null;
+    private static renalSession: ort.InferenceSession | null = null;
+    private static neuroSession: ort.InferenceSession | null = null;
     private static isInitialized = false;
 
-    // No tokens required; we map natively to Floats in WASM
     static isOnline(): boolean {
-        return this.session !== null && this.isInitialized;
+        return this.cardioSession !== null && this.isInitialized;
     }
 
     static async initialize() {
         if (this.isInitialized) return;
         try {
-            // Load the PyTorch exported ONNX weights directly from the Vite public folder
-            this.session = await ort.InferenceSession.create(`/medical_twin_model.onnx?v=${Date.now()}`, {
-                executionProviders: ['wasm'] // Use WebAssembly for fast CPU execution
-            });
+            const opts = { executionProviders: ['wasm'] };
+            const v = Date.now();
+            this.cardioSession = await ort.InferenceSession.create(`/cardio_model.onnx?v=${v}`, opts);
+            this.renalSession  = await ort.InferenceSession.create(`/renal_model.onnx?v=${v}`, opts);
+            this.neuroSession  = await ort.InferenceSession.create(`/neuro_model.onnx?v=${v}`, opts);
             this.isInitialized = true;
-            console.log("Deep Learning Inference Engine Initialized (WASM)");
+            console.log("Multi-Modal Deep Learning Inference Engines Initialized (WASM)");
         } catch (e) {
-            console.error("Failed to load ONNX model. Ensure model is exported.", e);
+            console.error("Failed to load Multi-Modal ONNX graphs. Ensure they are exported.", e);
         }
     }
 
     static async predictNextTickDelta(state: AgentState): Promise<{ healthDelta: number, log: string, newPathologies?: string[] }> {
-        if (!this.session) return { healthDelta: 0, log: "Model offline. Falling back to static routines." };
+        if (!this.cardioSession || !this.renalSession || !this.neuroSession) {
+            return { healthDelta: 0, log: "Models offline. Falling back to static routines." };
+        }
 
         try {
-            // 1. Structural Engineering: Map the Twin's longitudinal lifespan into contiguous Memory Tensors
             const historyTrack = state.biometricHistory || [];
             const combinedTrack = historyTrack.length > 0 ? historyTrack : [state];
-            
             const N = combinedTrack.length;
-            const dims = 8;
-            const inputFloatArray = new Float32Array(N * dims);
+
+            const cardioArray = new Float32Array(N * 4);
+            const renalArray  = new Float32Array(N * 3);
+            const neuroArray  = new Float32Array(N * 3);
             
             for (let i = 0; i < N; i++) {
                 const snap: any = combinedTrack[i];
-                inputFloatArray[i*dims + 0] = snap.age || 40.0;
-                inputFloatArray[i*dims + 1] = snap.vitals?.bmi || snap.bmi || 25.0;
-                inputFloatArray[i*dims + 2] = snap.vitals?.bpSystolic || snap.bpSystolic || 120.0;
-                inputFloatArray[i*dims + 3] = snap.labs?.a1c || snap.a1c || 5.5;
-                inputFloatArray[i*dims + 4] = snap.labs?.cvHealth || snap.cvHealth || 80.0;
-                inputFloatArray[i*dims + 5] = snap.labs?.ldlCholesterol || snap.ldlCholesterol || 100.0;
-                inputFloatArray[i*dims + 6] = snap.stressLevel || snap.stress || 20.0;
-                inputFloatArray[i*dims + 7] = snap.labs?.egfr || snap.egfr || 90.0;
+                // Cardio: Age, BP, CVHealth, LDL
+                cardioArray[i*4 + 0] = snap.age || 40.0;
+                cardioArray[i*4 + 1] = snap.vitals?.bpSystolic || snap.bpSystolic || 120.0;
+                cardioArray[i*4 + 2] = snap.labs?.cvHealth || snap.cvHealth || 80.0;
+                cardioArray[i*4 + 3] = snap.labs?.ldlCholesterol || snap.ldlCholesterol || 100.0;
+                
+                // Renal: A1c, eGFR, UACR (mock uacr if missing via egfr drop)
+                renalArray[i*3 + 0] = snap.labs?.a1c || snap.a1c || 5.5;
+                renalArray[i*3 + 1] = snap.labs?.egfr || snap.egfr || 90.0;
+                renalArray[i*3 + 2] = snap.labs?.uacr || snap.uacr || (100 - (snap.labs?.egfr || 90.0));
+                
+                // Neuro: Age, BMI, Stress
+                neuroArray[i*3 + 0] = snap.age || 40.0;
+                neuroArray[i*3 + 1] = snap.vitals?.bmi || snap.bmi || 25.0;
+                neuroArray[i*3 + 2] = snap.stressLevel || snap.stress || 20.0;
             }
             
-            // Physical memory mapping to WASM pointer using Dynamic Sequences! (Batch 1, Seq_Len N, dims 8)
-            const tensor = new ort.Tensor('float32', inputFloatArray, [1, N, dims]);
+            const cardioTensor = new ort.Tensor('float32', cardioArray, [1, N, 4]);
+            const renalTensor  = new ort.Tensor('float32', renalArray, [1, N, 3]);
+            const neuroTensor  = new ort.Tensor('float32', neuroArray, [1, N, 3]);
             
-            // Execute the computational graph
-            const feeds: Record<string, ort.Tensor> = { vitals_input: tensor };
-            const results = await this.session.run(feeds);
+            const [cardioRes, renalRes, neuroRes] = await Promise.all([
+                this.cardioSession.run({ vitals_input: cardioTensor }),
+                this.renalSession.run({ vitals_input: renalTensor }),
+                this.neuroSession.run({ vitals_input: neuroTensor })
+            ]);
             
-            // Output is 'hazard_preds' mapping to the four core PyTorch mortality output branches
-            const outTensor = results.hazard_preds;
+            const cardioData = cardioRes.hazard_preds.data as Float32Array; // [Stroke, CHF]
+            const renalData  = renalRes.hazard_preds.data as Float32Array;  // [Renal Failure]
+            const neuroData  = neuroRes.hazard_preds.data as Float32Array;  // [Dementia]
             
-            if (!outTensor) {
-                 return { healthDelta: 0, log: "ONNX executed but failed tensor output format." };
-            }
+            const strokeRisk = MetaTuner.calculateAdjustedProbability(state, 'Stroke', cardioData[0]);
+            const chfRisk    = MetaTuner.calculateAdjustedProbability(state, 'CHF', cardioData[1]);
+            const renalRisk  = MetaTuner.calculateAdjustedProbability(state, 'CKD Progression', renalData[0]);
+            const neuroRisk  = MetaTuner.calculateAdjustedProbability(state, 'Dementia', neuroData[0]);
             
-            const data = outTensor.data as Float32Array;
-            // Native mapping from api.py Target Vector: [stroke_risk, chf_risk, db_risk, copd_risk]
-            const strokeRisk = data[0];
-            const chfRisk = data[1];
-            const dbRisk = data[2];
-            const copdRisk = data[3];
-            
-            const maxRisk = Math.max(strokeRisk, chfRisk, dbRisk, copdRisk);
+            const maxRisk = Math.max(strokeRisk, chfRisk, renalRisk, neuroRisk);
             let healthDelta = 0;
             const newPathologies: string[] = [];
 
-            // True ML Pathological Inference governing disease acquisition!
             if (strokeRisk > 0.88) newPathologies.push('Stroke');
             if (chfRisk > 0.88) newPathologies.push('CHF');
-            if (dbRisk > 0.88) newPathologies.push('Diabetes');
-            if (copdRisk > 0.88) newPathologies.push('COPD');
+            if (renalRisk > 0.88) newPathologies.push('CKD Progression');
+            if (neuroRisk > 0.88) newPathologies.push('Dementia');
 
+            // Harder decay for Multi-Modal collision
             if (maxRisk > 0.8) {
-                healthDelta -= 0.15;
-                return { healthDelta, log: `[WASM SEQUENCE ALERT] Neural decay horizon reached. Max risk: ${(maxRisk*100).toFixed(1)}%.`, newPathologies };
+                healthDelta -= 0.2;
+                return { healthDelta, log: `[WASM MULTI-MODAL ALERT] Cross-system decay horizon reached. Max risk: ${(maxRisk*100).toFixed(1)}%.`, newPathologies };
             }
             
-            if (maxRisk < 0.2) return { healthDelta: +0.05, log: `[WASM TENSOR CLEAR] Sequence trajectory clear. Max hazard: ${(maxRisk*100).toFixed(1)}%.` };
+            if (maxRisk < 0.2) return { healthDelta: +0.05, log: `[WASM TENSOR CLEAR] Multi-Modal sequence clear. Max hazard: ${(maxRisk*100).toFixed(1)}%.` };
 
-            return { healthDelta: 0, log: `WASM sequence execution completed.` };
+            return { healthDelta: 0, log: `WASM Multi-Modal sequence mapped successfully.` };
 
         } catch (e) {
-            console.error("ONNX Inference Exception:", e);
+            console.error("Multi-Modal ONNX Inference Exception:", e);
             return { healthDelta: 0, log: "WASM Inference sequence failed." };
         }
     }
