@@ -61,7 +61,7 @@ export const SimulationReport: FC = () => {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
         {/* Global Survival */}
         <div className="glass-panel" style={{ padding: '2rem' }}>
           <h2 style={{ color: '#60a5fa', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Macro Survival Outcomes</h2>
@@ -112,7 +112,7 @@ export const SimulationReport: FC = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
         {/* What Worked */}
         <div className="glass-panel" style={{ padding: '2rem', borderTop: '4px solid #10b981' }}>
           <h2 style={{ color: '#10b981', margin: '0 0 1.5rem 0' }}>What Worked Effectively</h2>

@@ -8,7 +8,6 @@ import { STATIC_LITERATURE_DB } from '../data/ClinicalLiteratureDB';
 export const LiteratureBoard: FC = () => {
     type TrialData = typeof STATIC_LITERATURE_DB[0];
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [lastSync, setLastSync] = useState(new Date().toLocaleTimeString());
     const [literatureDB, setLiteratureDB] = useState<TrialData[]>(STATIC_LITERATURE_DB);
     const [errorMsg, setErrorMsg] = useState('');
 
@@ -28,7 +27,6 @@ export const LiteratureBoard: FC = () => {
             if (newTrial.id && newTrial.title) {
                 // Dynamically prepend the new live literature object to the render stack
                 setLiteratureDB(prev => [newTrial, ...prev]);
-                setLastSync(new Date().toLocaleTimeString());
                 
                 // INJECT INTO BIOLOGICAL SIMULATOR
                 const parsedProtocol: IdeaTemplate = {
@@ -67,8 +65,8 @@ export const LiteratureBoard: FC = () => {
                     </p>
                 </div>
                 
-                <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '1rem', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: '220px' }}>
-                    <div style={{ color: '#93c5fd', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Next PubMed Cycle Sync</div>
+                <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '1.5rem', borderRadius: '8px', display: 'flex', flexDirection: 'column', flex: '1 1 250px', alignItems: 'stretch' }}>
+                    <div style={{ color: '#93c5fd', fontSize: '0.85rem', marginBottom: '0.8rem', textAlign: 'center' }}>AI Generative Sandbox</div>
                     <button 
                         onClick={handleRefresh}
                         disabled={isRefreshing}
@@ -81,14 +79,13 @@ export const LiteratureBoard: FC = () => {
                             fontWeight: 'bold', 
                             cursor: isRefreshing ? 'not-allowed' : 'pointer',
                             display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
+                            justifyContent: 'center'
                         }}
                     >
-                        {isRefreshing ? <span style={{ animation: 'spin 1s linear infinite' }}>🔄</span> : <span>🔄</span>}
-                        {isRefreshing ? 'Crawling Repositories...' : 'Force Sync Literature'}
+                        {isRefreshing ? <span style={{ animation: 'spin 1s linear infinite' }}>🔄</span> : <span>✨</span>}
+                        {isRefreshing ? 'Synthesizing Trial Data...' : 'Generate New Trial'}
                     </button>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Last validated: {lastSync}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.8rem', textAlign: 'center' }}>Sandbox Status: Native LLM Active</div>
                 </div>
             </div>
 

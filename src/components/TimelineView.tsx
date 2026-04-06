@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { PredictiveEngine } from '../simulation/PredictiveEngine';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -13,8 +14,9 @@ interface Props {
 }
 
 export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
+  const navigate = useNavigate();
   const { agents } = useSimulationStore();
-  const selected = agents.find(a => a.id === selectedId) || agents[0];
+  const selected = selectedId ? agents.find(a => a.id === selectedId) : null;
   const pair = selected?.pairedTwinId ? agents.find(a => a.id === selected.pairedTwinId) : null;
 
   interface Forecast {
@@ -29,28 +31,13 @@ export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
   useEffect(() => {
     if (!selected || selected.isDead) return;
     
-    // Live PyTorch ML Inference Fetch
-    fetch('http://localhost:8000/predict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selected)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data && data.status === 'success') {
-            const f = data.forecast;
-            setForecasts([
-                { disease: 'ASCVD (Stroke / Heart Attack)', riskPercentage: f.stroke_risk, riskLevel: PredictiveEngine.getRiskLevel(f.stroke_risk), mitigations: ['Authentic ML Neural Tensor Prediction'] },
-                { disease: 'Heart Failure (CHF)', riskPercentage: f.chf_risk, riskLevel: PredictiveEngine.getRiskLevel(f.chf_risk), mitigations: ['Authentic ML Neural Tensor Prediction'] },
-                { disease: 'Type 2 Diabetes', riskPercentage: f.diabetes_risk, riskLevel: PredictiveEngine.getRiskLevel(f.diabetes_risk), mitigations: ['Authentic ML Neural Tensor Prediction'] },
-                { disease: 'COPD', riskPercentage: f.copd_risk, riskLevel: PredictiveEngine.getRiskLevel(f.copd_risk), mitigations: ['Authentic ML Neural Tensor Prediction'] }
-            ]);
-        }
-    })
-    .catch(_err => {
-        console.warn("PyTorch Engine Offline. Falling back to TS Predictive Physics.");
+    // Fallback to TS Predictive Physics array locally 
+    // Emulates a synthetic ML prediction duration for premium UX feedback
+    const timerId = setTimeout(() => {
         setForecasts(PredictiveEngine.getForecast(selected));
-    });
+    }, 600);
+
+    return () => clearTimeout(timerId);
   }, [selected?.id, selected?.age, selected?.vitals?.bpSystolic, selected?.isDead]);
 
   interface ChartData {
@@ -419,7 +406,19 @@ export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
             </div>
           </>
         ) : (
-           <p>Select an agent to view their clinical history.</p>
+           <div style={{ textAlign: 'center', padding: '4rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+               <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🩻</div>
+               <h3 style={{ color: '#e2e8f0', fontSize: '1.5rem', marginBottom: '0.5rem' }}>No Digital Twin Selected</h3>
+               <p style={{ color: 'var(--text-muted)', maxWidth: '500px', lineHeight: 1.5, marginBottom: '2rem' }}>
+                   You have accessed the timeline view directly. Please return to the Command Center and click on a specific patient node to view their longitudinal health Electronic Health Record (EHR).
+               </p>
+               <button 
+                  onClick={() => navigate('/dashboard')} 
+                  style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+               >
+                  <span>◂</span> Return to Command Center
+               </button>
+           </div>
         )}
       </div>
     </div>

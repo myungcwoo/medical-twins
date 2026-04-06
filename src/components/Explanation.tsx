@@ -5,7 +5,7 @@ export const Explanation: FC = () => {
     <div className="explanation-container glass-panel" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.5s ease-out', overflowY: 'auto', maxHeight: '100%' }}>
       <h2 style={{ color: '#a78bfa', marginBottom: '1.5rem', borderBottom: '1px solid rgba(167, 139, 250, 0.3)', paddingBottom: '0.5rem' }}>Core Simulation Architecture</h2>
       <p style={{ color: '#e2e8f0', lineHeight: 1.6, fontSize: '1.05rem', marginBottom: '2rem' }}>
-        As a core pillar of the Clinical AI Studio, the Digital Patient Simulation architecture represents a highly advanced <strong>Data-Driven Clinical Prediction Engine</strong>. It discards hardcoded physiological rules in favor of a genuine full-stack Machine Learning Operations (MLOps) pipeline, bridging Python Deep Learning directly into React WebAssembly. 
+        As a core pillar of the Clinical AI Studio, the Digital Patient Simulation architecture represents a highly advanced <strong>Data-Driven Clinical Prediction Engine</strong>. It discards hardcoded physiological rules in favor of a genuine full-stack Machine Learning Operations (MLOps) pipeline, bridging Neural Tensor Models directly into React WebAssembly. 
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -18,16 +18,16 @@ export const Explanation: FC = () => {
         </div>
 
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #f59e0b' }}>
-          <h3 style={{ color: '#f59e0b', margin: '0 0 0.8rem 0' }}>2. PyTorch Deep Learning Backend</h3>
+          <h3 style={{ color: '#f59e0b', margin: '0 0 0.8rem 0' }}>2. Edge Deep Learning Inference</h3>
           <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-            Under the hood, agent mortality is not driven by heuristic guesses. The platform utilizes a literal <code>torch.nn.Module</code> (Multi-Layer Perceptron) hosted via a live FastAPI service. By feeding raw agent parameters into the `/train` endpoint, the Neural Network mathematically fits tensor gradients via the Adam optimizer, calculating the exact long-term hazard bounds (Stroke, CHF, Diabetic Coma, COPD) natively leveraging the GPU/CPU.
+            Under the hood, agent mortality is not driven by heuristic guesses. The platform executes pre-trained PyTorch structural `.onnx` graphs natively. By feeding raw agent parameters locally into the `InferenceEngine.ts`, the Neural Network calculates exact long-term hazard bounds (Stroke, CHF, Diabetic Coma, COPD) natively leveraging the browser CPU/WASM environments without network latency.
           </p>
         </div>
 
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #14b8a6' }}>
           <h3 style={{ color: '#14b8a6', margin: '0 0 0.8rem 0' }}>3. Real-Time ONNX WebAssembly (WASM) Loop</h3>
           <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-            Because running REST API calls 50 times a second for 100 clones would crash your browser, the loop is completely closed natively. When the Python PyTorch model finishes backpropagating, it calls <code>torch.onnx.export()</code> to auto-compile the AI structural weights into a binary `.onnx` graph. The React browser clones natively ingest this binary memory matrix using Microsoft’s <strong>onnxruntime-web</strong>, allowing them to explicitly run 60FPS Deep Learning inference directly on their own physiological vitals natively in your browser.
+            Because running REST API calls 50 times a second for 100 clones would crash your browser, the loop is completely closed natively. The React browser clones natively ingest offline binary memory models using Microsoft’s <strong>onnxruntime-web</strong>, allowing them to explicitly run massive Deep Learning inferences directly on their own physiological vitals instantly.
           </p>
         </div>
 

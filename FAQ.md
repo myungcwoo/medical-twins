@@ -91,12 +91,4 @@ cd medical-twins
 npm install
 npm run dev
 ```
-Navigate to `http://localhost:5173`. We highly optimized this component for PWA workflows. It natively collapses perfectly whether you view it on an Ultrawide 4k Monitor or a standard mobile smartphone via native Swipeable Bottom Nav Bars.
-
-**To run the Deep Learning Backbone / PubMed Scraper (Backend):**
-```bash
-cd model_training
-pip install torch fastapi uvicorn onnx onnxruntime onnxscript
-uvicorn api:app --reload
-```
-Once booted, the React application's "ML Diagnostics" console will actively link and allow you to view the raw tensor calculations natively!
+Navigate to `http://localhost:5173`. We highly optimized this component for native PWA workflows. It collapses perfectly whether you view it on an Ultrawide 4k Monitor or a standard mobile smartphone!

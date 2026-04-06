@@ -136,7 +136,7 @@ export const BackendTrainer: FC = () => {
              </div>
            </div>
 
-           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
                 <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '6px' }}>
                     <h4 style={{ color: '#f8fafc', margin: '0 0 0.8rem 0' }}>Data Injection</h4>
                     <label style={{ display: 'inline-block', background: 'transparent', color: '#60a5fa', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid rgba(96, 165, 250, 0.4)', cursor: 'pointer', fontSize: '0.85rem', marginBottom: '1rem' }}>
@@ -180,7 +180,7 @@ export const BackendTrainer: FC = () => {
                 </div>
            </div>
 
-           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem', alignItems: 'stretch' }}>
+           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
                <div>
                   <h4 style={{ color: '#e2e8f0', margin: '0 0 0.5rem 0' }}>Data Stream</h4>
                   <div style={{ background: '#000', padding: '1rem', borderRadius: '8px', height: '250px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '0.85rem', color: '#f472b6', border: '1px solid rgba(236, 72, 153, 0.3)' }}>

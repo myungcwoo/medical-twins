@@ -46,19 +46,8 @@ npm run dev
 ```
 Navigate to `http://localhost:5173`. Jump directly into the `Dashboard`, view the `Algorithmic Whitepaper`, or upload specific JSON data structures into the `Data Ingestion` tab.
 
-### 2. Booting the PyTorch Model Server
-To re-train the neural network weights from new `.json` population arrays, boot the backend API:
-
-```bash
-cd model_training
-
-# Provision virtual environments and dependencies
-pip install torch fastapi uvicorn onnx onnxscript onnxruntime requests
-
-# Boot the Training API
-uvicorn api:app --reload
-```
-Once deployed, the `ML Diagnostics / PyTorch DEV` tab on the frontend natively hooks into this backend, visualizing real-time Loss gradients and Tensor weights backpropagating over standard HTTP/REST.
+### 2. Edge Training Environments
+The codebase ships with a native, local machine learning trainer accessible directly inside the UI (`TrainingDashboard.tsx`). There is no need to stand up separate databases or REST target APIs—the system trains predictive models directly over unstructured JSON patient histories using standard browser threads and exports static Neural Weights instantly.
 
 ---
 

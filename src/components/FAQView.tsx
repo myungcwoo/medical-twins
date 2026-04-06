@@ -37,15 +37,15 @@ export const FAQView: FC = () => {
         <section>
             <h3 style={{ color: '#f59e0b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid rgba(245, 158, 11, 0.2)', paddingBottom: '0.5rem' }}>🧠 Edge Inference (WASM)</h3>
             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #f59e0b', marginBottom: '1rem' }}>
-                <h4 style={{ margin: '0 0 0.5rem 0', color: '#e2e8f0', fontSize: '1.05rem' }}>How does the ONNX module outperform traditional REST APIs?</h4>
+                <h4 style={{ margin: '0 0 0.5rem 0', color: '#e2e8f0', fontSize: '1.05rem' }}>How does the Edge ONNX module outperform traditional REST APIs?</h4>
                 <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.6, fontSize: '0.95rem' }}>
-                    If 100 agents querying a Python REST endpoint 50 times a second occurred over standard networks, it would bottleneck the Chrome browser completely. By converting the `torch.nn.Module` to an `.onnx` graph and mapping it into WebAssembly (`wasm32`), we achieve sub-millisecond, zero-latency inference directly on your local CPU.
+                    If 100 agents querying a remote datacenter endpoint 50 times a second occurred over standard networks, it would bottleneck the Chrome browser completely. By converting neural tensor models to an `.onnx` graph and mapping it into WebAssembly (`wasm32`), we achieve sub-millisecond, zero-latency inference directly on your local CPU without touching the internet.
                 </p>
             </div>
             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #f59e0b', marginBottom: '1rem' }}>
-                <h4 style={{ margin: '0 0 0.5rem 0', color: '#e2e8f0', fontSize: '1.05rem' }}>How is the PyTorch model trained?</h4>
+                <h4 style={{ margin: '0 0 0.5rem 0', color: '#e2e8f0', fontSize: '1.05rem' }}>How are edge ML models trained?</h4>
                 <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.6, fontSize: '0.95rem' }}>
-                    The `medical-twins` repository ships with a decoupled Python FastAPI backend (`/model_training`). By firing up `uvicorn`, you can dump hundreds of thousands of custom JSON clones into a Transformer Architecture. The Adam optimizer backpropagates weight alignments to properly scale your custom diseases, then overwrites the `.onnx` file actively serving the browser.
+                    The entire model training pipeline operates through the standalone `TrainingDashboard.tsx` UI via `TrainingEngine.ts`. It acts as an Empirical Hazard normalizer by cross-referencing massive unstructured Real-World Data (RWD) chronologies like Medical Claims and Labs, directly extracting predictive model weights totally locally within your browser!
                 </p>
             </div>
             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #f59e0b' }}>
@@ -66,9 +66,9 @@ export const FAQView: FC = () => {
                 </p>
             </div>
             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #3b82f6', marginBottom: '1rem' }}>
-                <h4 style={{ margin: '0 0 0.5rem 0', color: '#e2e8f0', fontSize: '1.05rem' }}>What is the PubMed REST integration?</h4>
+                <h4 style={{ margin: '0 0 0.5rem 0', color: '#e2e8f0', fontSize: '1.05rem' }}>How does the clinical generator fetch trials?</h4>
                 <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.6, fontSize: '0.95rem' }}>
-                    Generative models only know data up to their cut-off date. To bypass this, our Python backend can trigger a real-time `fetch()` to official NIH PubMed Literature servers. It scrapes the absolute latest FDA clinical trial abstracts and routes them directly back to the React UI as Gen-AI intervention context.
+                    Generative models only know data up to their cut-off date. To bypass this, the browser leverages `LLMEngine.ts` to seamlessly generate authentic clinical JSON schemas natively within the active RAG sandbox. The AI agent acts strictly as an architectural literature synthesizer directly embedded in the React UI!
                 </p>
             </div>
             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
