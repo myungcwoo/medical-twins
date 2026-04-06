@@ -34,7 +34,7 @@ export class Pharmacokinetics {
         newProtocolIds: string[] = [] // Tracking IDs to map mechanistic matrix
     ): IdeaImpact {
         
-        let aggregate: IdeaImpact = { healthDelta: 0, stressDelta: 0, bpDelta: 0, a1cDelta: 0, cvDelta: 0, egfrDelta: 0, newMeds: [], description: '' };
+        const aggregate: IdeaImpact = { healthDelta: 0, stressDelta: 0, bpDelta: 0, a1cDelta: 0, cvDelta: 0, egfrDelta: 0, newMeds: [], description: '' };
         if (impacts.length === 0) return aggregate;
 
         // Baseline Accumulation vector

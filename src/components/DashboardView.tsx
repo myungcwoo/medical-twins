@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 
 import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
-import { LLMEngine } from '../simulation/LLMEngine';
+import { LLMEngine, type Provider } from '../simulation/LLMEngine';
 import { StatCard } from './ui/StatCard';
 import { ProgressBar } from './ui/ProgressBar';
 import ForceGraph2D from 'react-force-graph-2d';
@@ -25,12 +25,12 @@ const getStressColor = (val: number) => {
 };
 
 export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
-  const { agents, isRunning, isFastForwarding } = useSimulationStore();
+  const { agents, isFastForwarding } = useSimulationStore();
   const [page, setPage] = useState(1);
   const [subTab, setSubTab] = useState<'overview' | 'database'>('overview');
-  const [hoverNode, setHoverNode] = useState<any>(null);
+  const [hoverNode, setHoverNode] = useState<{ id: string; health?: number; isDead?: boolean; x?: number; y?: number; fx?: number; fy?: number; } | null>(null);
   const [apiKey, setApiKey] = useState(LLMEngine.apiKey || '');
-  const [provider, setProvider] = useState<any>(LLMEngine.provider);
+  const [provider, setProvider] = useState<Provider>(LLMEngine.provider);
   const [targetModel, setTargetModel] = useState<string>(LLMEngine.activeModel || 'gemini-2.5-flash');
   const [llmEnabled, setLlmEnabled] = useState<boolean>(LLMEngine.isEnabled);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
@@ -38,6 +38,7 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
 
   const handleSaveKey = () => {
     LLMEngine.setCredentials(provider, apiKey, targetModel);
+    // eslint-disable-next-line no-alert
     alert(`${provider} Engine Authenticated (${targetModel})! The digital twins will now prompt this network for protocol evaluations.`);
   };
 
@@ -51,12 +52,13 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
           const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
           const data = await res.json();
           if (data.models) {
-              const ms = data.models.map((m: any) => m.name.replace('models/', '')).filter((n: string) => n.includes('gemini'));
+              const ms = data.models.map((m: { name: string }) => m.name.replace('models/', '')).filter((n: string) => n.includes('gemini'));
               setAvailableModels(ms);
               if (ms.length > 0 && !ms.includes(targetModel)) {
                   setTargetModel(ms[0]);
               }
           } else {
+              // eslint-disable-next-line no-alert
               alert('Could not fetch models. Check your API Key.');
           }
       } catch (e) {
@@ -64,19 +66,18 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
       }
   };
 
-  useEffect(() => {
-    // If agents shrink below current page (e.g. extreme filtering later), clamp page
-    const totalPages = Math.ceil(agents.length / itemsPerPage);
-    if (page > totalPages && totalPages > 0) setPage(totalPages);
-  }, [agents.length, page, itemsPerPage]);
-
   const total = agents.length;
+  const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
+  const currentPage = Math.min(page, totalPages);
+
   // High-Performance Physics Memoization
   // We strictly isolate both nodes and links into a single immutable reference.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const graphRef = useRef<any>(null);
   const staticNodes = useMemo(() => {
      return agents.map(a => ({ id: a.id, health: a.baseHealth, isDead: a.isDead }));
-  }, [agents.length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agents]);
 
   // Draw topological paths dynamically based exclusively on exact peer-to-peer clinical adoptions!
   const liveLinks = useMemo(() => {
@@ -86,7 +87,8 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
 
       // Map dynamic communication histories
       return agents.flatMap(a => (a.networkConnections || []).map(targetId => ({ source: a.id, target: targetId })));
-  }, [agents, KnowledgeBase.totalInteractions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agents]);
 
   const liveGraphData = useMemo(() => {
       return { nodes: staticNodes, links: liveLinks };
@@ -95,6 +97,7 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
   // Silently mutate the underlying D3 node references so we don't break gravity layout constraints.
   // We explicitly trigger a canvas redraw using d3ReheatSimulation to reflect color/size changes.
   useEffect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       staticNodes.forEach((node: any) => {
           const liveAgent = agents.find(a => a.id === node.id);
           if (liveAgent) {
@@ -107,7 +110,8 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
       if (graphRef.current && Math.random() < 0.2) {
          graphRef.current.d3ReheatSimulation();
       }
-  }, [agents, liveGraphData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agents, liveGraphData, staticNodes]);
 
   const active = agents.filter(a => !a.isDead).length;
   const survivalRate = total > 0 ? ((active / total) * 100).toFixed(1) : '0.0';
@@ -115,8 +119,7 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
   const totalInteractions = KnowledgeBase.totalInteractions;
   const avgHealth = active > 0 ? (agents.filter(a => !a.isDead).reduce((acc, a) => acc + a.baseHealth, 0) / active).toFixed(1) : '0.0';
 
-  const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
-  const paginatedAgents = agents.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+  const paginatedAgents = agents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="dashboard-wrapper">
@@ -162,7 +165,7 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
               <select 
                 className="input-field"
                 value={provider} 
-                onChange={(e) => setProvider(e.target.value)}
+                onChange={(e) => setProvider(e.target.value as Provider)}
                 style={{ flex: 1, minWidth: '150px' }}
               >
                 <option value="OpenAI">OpenAI (GPT-4o)</option>
@@ -204,12 +207,12 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
        <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
           {/* Live Force Graph Block */}
           <div style={{ flexShrink: 0, width: '280px', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(139, 92, 246, 0.3)', boxShadow: '0 0 40px rgba(139, 92, 246, 0.15)', position: 'relative', background: '#000' }}>
-             {(isRunning || isFastForwarding) ? (
+             {isFastForwarding ? (
                  <div style={{ width: '280px', height: '280px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.9)' }}>
                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid rgba(139, 92, 246, 0.2)', borderTopColor: '#8b5cf6', animation: 'spin 1s linear infinite' }}></div>
                      <div style={{ color: '#8b5cf6', fontWeight: 'bold', marginTop: '1.5rem', fontSize: '1rem', letterSpacing: '0.05em' }}>COMPUTING DATA</div>
                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.5rem', textAlign: 'center', padding: '0 1rem' }}>
-                         Topology mapping suspended.<br/>Pause simulation to render.
+                         Topology mapping suspended during Fast-Forward.
                      </div>
                  </div>
              ) : (
@@ -220,10 +223,12 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
                     backgroundColor="#000000"
                     graphData={liveGraphData}
                     // Interactive visual node sizing (significantly smaller for navigation)
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     nodeVal={(node: any) => Math.max(0.5, (node.health || 50) / 40)}
                     nodeRelSize={3}
                     
                     // Artificially increase the invisible click/hover boundary for micro-nodes
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     nodePointerAreaPaint={(node: any, color: any, ctx: any) => {
                         ctx.fillStyle = color;
                         ctx.beginPath();
@@ -232,11 +237,13 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
                     }}
                     
                     // Hover dynamics: Highlight the hovered node and its physical connections
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     nodeColor={(node: any) => {
                         if (hoverNode) {
                             if (node === hoverNode) return '#fbbf24'; // Active hover (gold)
                             
                             // Check if link exists between hoverNode and this node
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             const isConnected = liveGraphData.links.some((l: any) => 
                                 (l.source.id === node.id && l.target.id === hoverNode.id) || 
                                 (l.target.id === node.id && l.source.id === hoverNode.id) ||
@@ -251,6 +258,7 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
                     }}
                     
                     // Edge highlighting
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     linkColor={(link: any) => {
                         if (hoverNode) {
                             const isLinkActive = (link.source.id === hoverNode.id || link.target.id === hoverNode.id) ||
@@ -259,6 +267,7 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
                         }
                         return 'rgba(139, 92, 246, 0.2)';
                     }}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     linkWidth={(link: any) => {
                         if (hoverNode) {
                             const isLinkActive = (link.source.id === hoverNode.id || link.target.id === hoverNode.id) ||
@@ -269,6 +278,7 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
                     }}
                     
                     // Rich interactive tooltips
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     nodeLabel={(node: any) => {
                         const live = agents.find(a => a.id === node.id);
                         if (!live) return '';
@@ -295,6 +305,7 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
                     
                     onEngineStop={() => {
                         if (liveGraphData && liveGraphData.nodes) {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             liveGraphData.nodes.forEach((node: any) => {
                                 if (node.x !== undefined && node.y !== undefined) {
                                     node.fx = node.x;
@@ -342,9 +353,9 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.2)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
          <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#e2e8f0' }}>Population Database</h2>
          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '0.5rem 1rem', background: 'var(--panel-bg)', color: 'white', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: page === 1 ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>&lt; Prev</button>
-           <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Page {page} of {totalPages}</span>
-           <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '0.5rem 1rem', background: 'var(--panel-bg)', color: 'white', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>Next &gt;</button>
+           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} style={{ padding: '0.5rem 1rem', background: 'var(--panel-bg)', color: 'white', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>&lt; Prev</button>
+           <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Page {currentPage} of {totalPages}</span>
+           <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} style={{ padding: '0.5rem 1rem', background: 'var(--panel-bg)', color: 'white', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>Next &gt;</button>
          </div>
        </div>
        

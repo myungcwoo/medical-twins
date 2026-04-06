@@ -20,15 +20,15 @@ const generateAgent = (idNum: number): Omit<AgentState, 'history' | 'isDead' | '
   const accessToCare = wealth < 40 ? randomRange(10, 50) : randomRange(50, 100);
   
   // Biological tracking
-  let sysBp = age > 50 ? randomRange(120, 160) : randomRange(110, 130);
-  let diaBp = sysBp * 0.6;
-  let hr = randomRange(60, 90);
-  let bmi = randomRange(18.5, 38);
+  const sysBp = age > 50 ? randomRange(120, 160) : randomRange(110, 130);
+  const diaBp = sysBp * 0.6;
+  const hr = randomRange(60, 90);
+  const bmi = randomRange(18.5, 38);
   
-  let a1c = randomRange(4.5, bmi > 30 ? 8.5 : 6.0);
-  let ldl = randomRange(80, 180);
-  let egfr = age > 60 ? randomRange(45, 90) : randomRange(90, 120);
-  let cvHealth = age > 60 ? randomRange(40, 80) : randomRange(80, 100);
+  const a1c = randomRange(4.5, bmi > 30 ? 8.5 : 6.0);
+  const ldl = randomRange(80, 180);
+  const egfr = age > 60 ? randomRange(45, 90) : randomRange(90, 120);
+  const cvHealth = age > 60 ? randomRange(40, 80) : randomRange(80, 100);
 
   // Conditions
   const conditions: string[] = [];

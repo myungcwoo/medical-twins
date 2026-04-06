@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import type { FC } from 'react';
 import type { AgentState } from '../simulation/Agent';
-import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
+import { KnowledgeBase, type IdeaTemplate } from '../simulation/KnowledgeNetwork';
 import { useSimulationStore } from '../store/useSimulationStore';
 import { RangeSlider } from './ui/RangeSlider';
+
+type DetailedProtocol = IdeaTemplate & {
+    adoptions?: number;
+    successCount?: number;
+};
 
 const COMMON_CONDITIONS = [
   'Diabetes', 'Hypertension', 'Hyperlipidemia', 'COPD', 'Asthma', 
@@ -40,7 +45,7 @@ export const ConsumerWizard: FC = () => {
   const [selectedConditions, setSelectedConditions] = useState<Set<string>>(new Set());
 
   // Intervention Setup
-  const [availableProtocols, setAvailableProtocols] = useState<any[]>([]);
+  const [availableProtocols, setAvailableProtocols] = useState<DetailedProtocol[]>([]);
   const [selectedProtocols, setSelectedProtocols] = useState<Set<string>>(new Set());
 
   const toggleCondition = (cond: string) => {
@@ -173,7 +178,7 @@ export const ConsumerWizard: FC = () => {
                   <h4 style={{ color: '#f8fafc', margin: '0 0 0.3rem 0', fontSize: '1.1rem' }}>{protocol.title}</h4>
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0 }}>
                     <strong style={{ color: '#f472b6' }}>Impact:</strong> +{protocol.impact.healthDelta.toFixed(1)} Health | 
-                    &nbsp;<strong style={{ color: '#a78bfa' }}>Adoption:</strong> {protocol.adoptions > 0 ? ((protocol.successCount / protocol.adoptions) * 100).toFixed(0) : '0'}%
+                    &nbsp;<strong style={{ color: '#a78bfa' }}>Adoption:</strong> {(protocol.adoptions && protocol.successCount && protocol.adoptions > 0) ? ((protocol.successCount / protocol.adoptions) * 100).toFixed(0) : '0'}%
                   </p>
                 </div>
               </div>
@@ -232,7 +237,7 @@ export const ConsumerWizard: FC = () => {
                 </div>
                 <div style={{ flex: 1 }}>
                     <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Sex:</label>
-                    <select value={sex} onChange={e => setSex(e.target.value as any)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: 'white' }}>
+                    <select value={sex} onChange={e => setSex(e.target.value as 'Female' | 'Male')} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: 'white' }}>
                         <option value="Female">Female</option>
                         <option value="Male">Male</option>
                     </select>
@@ -255,7 +260,7 @@ export const ConsumerWizard: FC = () => {
             
             <div style={{ marginBottom: '0.5rem' }}>
                 <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Exercise Routine:</label>
-                <select value={exerciseRoutine} onChange={e => setExerciseRoutine(e.target.value as any)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: 'white' }}>
+                <select value={exerciseRoutine} onChange={e => setExerciseRoutine(e.target.value as 'None' | 'Moderate' | 'High')} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', color: 'white' }}>
                     <option value="None">None (Couch Potato)</option>
                     <option value="Moderate">Moderate (Active few times a week)</option>
                     <option value="High">High (Serious Athlete)</option>
@@ -280,7 +285,7 @@ export const ConsumerWizard: FC = () => {
 
              <div style={{ marginBottom: '1.2rem' }}>
                 <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Personal Medical Compliance:</label>
-                <select value={medicalCompliance} onChange={e => setMedicalCompliance(e.target.value as any)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.3)', background: 'rgba(0,0,0,0.5)', color: 'white' }}>
+                <select value={medicalCompliance} onChange={e => setMedicalCompliance(e.target.value as 'Low' | 'Moderate' | 'High')} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.3)', background: 'rgba(0,0,0,0.5)', color: 'white' }}>
                     <option value="High">High (Follows Doctors Orders Strictly)</option>
                     <option value="Moderate">Moderate (Sometimes forgets pills)</option>
                     <option value="Low">Low (Refuses protocols / Deep skepticism)</option>

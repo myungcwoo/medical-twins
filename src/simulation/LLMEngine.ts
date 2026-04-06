@@ -95,7 +95,7 @@ export class LLMEngine {
           })
         });
         if (!res.ok) {
-            let errText = await res.text();
+            const errText = await res.text();
             throw new Error(`OpenAI HTTP ${res.status}: ${errText}`);
         }
         const data = await res.json();
@@ -126,10 +126,10 @@ export class LLMEngine {
                     const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`);
                     const listData = await listRes.json();
                     if (listData.models) {
-                        const modelsArray = listData.models.map((m: any) => m.name.replace('models/', '')).filter((n: string) => n.includes('gemini'));
+                        const modelsArray = listData.models.map((m: { name: string }) => m.name.replace('models/', '')).filter((n: string) => n.includes('gemini'));
                         errText = `404 Not Found. Your specific API Key has access to: ${modelsArray.join(', ')}`;
                     }
-                } catch (e) {
+                } catch {
                     // silently fail the diagnostic
                 }
             }
@@ -162,7 +162,7 @@ export class LLMEngine {
           })
         });
         if (!res.ok) {
-            let errText = await res.text();
+            const errText = await res.text();
             throw new Error(`Claude HTTP ${res.status}: ${errText}`);
         }
         const data = await res.json();
@@ -172,7 +172,7 @@ export class LLMEngine {
       let parsed;
       try {
         parsed = JSON.parse(rawPayload);
-      } catch (e) {
+      } catch {
         // Strip out any accidental markdown blocks the LLM might append
         const filtered = rawPayload.replace(/```json/g, '').replace(/```/g, '').trim();
         parsed = JSON.parse(filtered);

@@ -65,8 +65,8 @@ export const ClinicalPathways = {
 
       if (Math.random() < mortalityRisk) {
         agent.state.isDead = true;
-        let previousSBP = agent.state.vitals.bpSystolic;
-        let previousDBP = agent.state.vitals.bpDiastolic;
+        const previousSBP = agent.state.vitals.bpSystolic;
+        const previousDBP = agent.state.vitals.bpDiastolic;
         agent.state.baseHealth = 0; 
         agent.logEvent({
           tick: currentTick,
@@ -80,8 +80,8 @@ export const ClinicalPathways = {
         return 'HALT_SIMULATION';
       } else {
         // Survived but Inpatient/ICU Hospitalized
-        let previousSBP = agent.state.vitals.bpSystolic;
-        let previousDBP = agent.state.vitals.bpDiastolic;
+        const previousSBP = agent.state.vitals.bpSystolic;
+        const previousDBP = agent.state.vitals.bpDiastolic;
         agent.state.vitals.bpSystolic = 140; // intensive IV treatment
         agent.state.vitals.bpDiastolic = 90;
         

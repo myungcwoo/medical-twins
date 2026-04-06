@@ -4,9 +4,10 @@ import { KnowledgeBase, type IdeaTemplate } from '../simulation/KnowledgeNetwork
 import { STATIC_LITERATURE_DB } from '../data/ClinicalLiteratureDB';
 
 export const LiteratureBoard: FC = () => {
+    type TrialData = typeof STATIC_LITERATURE_DB[0];
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [lastSync, setLastSync] = useState(new Date().toLocaleTimeString());
-    const [literatureDB, setLiteratureDB] = useState<any[]>(STATIC_LITERATURE_DB);
+    const [literatureDB, setLiteratureDB] = useState<TrialData[]>(STATIC_LITERATURE_DB);
     const [errorMsg, setErrorMsg] = useState('');
 
     const handleRefresh = async () => {
@@ -122,7 +123,7 @@ export const LiteratureBoard: FC = () => {
                                     <span style={{ fontSize: '1.2rem' }}>⚠️</span> Modeled Adverse Hazards
                                 </div>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-                                    {lit.adverseEffects.map((ae: any, i: number) => (
+                                    {lit.adverseEffects.map((ae: TrialData['adverseEffects'][0], i: number) => (
                                         <div key={i} style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px dashed rgba(239, 68, 68, 0.4)', padding: '0.8rem 1.2rem', borderRadius: '6px', flex: '1 1 250px' }}>
                                             <div style={{ color: '#fca5a5', fontWeight: 'bold', marginBottom: '0.3rem' }}>{ae.type}</div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>

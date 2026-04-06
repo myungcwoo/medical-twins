@@ -87,7 +87,7 @@ body::before {
   .mobile-menu-btn {
     display: block;
   }
-  .mobile-overlay {
+  .mobile-overlay.open {
     display: block;
   }
 }

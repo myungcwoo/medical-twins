@@ -16,7 +16,13 @@ export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
   const selected = agents.find(a => a.id === selectedId) || agents[0];
   const pair = selected?.pairedTwinId ? agents.find(a => a.id === selected.pairedTwinId) : null;
 
-  const [forecasts, setForecasts] = useState<any[] | null>(null);
+  interface Forecast {
+      disease: string;
+      riskPercentage: number;
+      riskLevel: string;
+      mitigations: string[];
+  }
+  const [forecasts, setForecasts] = useState<Forecast[] | null>(null);
   const [chartMetric, setChartMetric] = useState<'Health' | 'BP' | 'A1C'>('Health');
 
   useEffect(() => {
@@ -46,7 +52,21 @@ export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
     });
   }, [selected?.id, selected?.age, selected?.vitals?.bpSystolic, selected?.isDead]);
 
-  let chartData: any[] = [];
+  interface ChartData {
+      tick: number;
+      year: number;
+      age: number;
+      health?: number | null;
+      bp?: number | null;
+      a1c?: number | null;
+      controlHealth?: number | null;
+      optHealth?: number | null;
+      controlBP?: number | null;
+      optBP?: number | null;
+      controlA1c?: number | null;
+      optA1c?: number | null;
+  }
+  let chartData: ChartData[] = [];
   if (selected && selected.biometricHistory) {
     if (pair && pair.biometricHistory) {
       const isControl = selected.comparativeGroup === 'Control';
@@ -175,7 +195,7 @@ export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
                       <h3 style={{ margin: 0, color: '#e2e8f0', fontSize: '1.3rem' }}>Deep-Dive Biological Output Trajectory</h3>
                       <select 
                           value={chartMetric} 
-                          onChange={e => setChartMetric(e.target.value as any)}
+                          onChange={e => setChartMetric(e.target.value as 'Health' | 'BP' | 'A1C')}
                           style={{ background: 'rgba(15, 23, 42, 0.9)', color: 'white', border: '1px solid #3b82f6', padding: '0.4rem 1rem', borderRadius: '6px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}
                       >
                           <option value="Health">Overall Health % Axis</option>

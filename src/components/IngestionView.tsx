@@ -1,8 +1,14 @@
 import { useState } from 'react';
 import type { FC } from 'react';
 
-import { KnowledgeBase } from '../simulation/KnowledgeNetwork';
+import { KnowledgeBase, type IdeaTemplate } from '../simulation/KnowledgeNetwork';
 import { useSimulationStore } from '../store/useSimulationStore';
+import type { AgentState } from '../simulation/Agent';
+
+type DetailedProtocol = IdeaTemplate & {
+    adoptions?: number;
+    successCount?: number;
+};
 
 const TEMPLATE_HEALTHY = JSON.stringify({
   name: "New Healthy Patient",
@@ -117,20 +123,20 @@ export const IngestionView: FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   
   const [step, setStep] = useState<1 | 2>(1);
-  const [parsedAgent, setParsedAgent] = useState<any>(null);
-  const [availableProtocols, setAvailableProtocols] = useState<any[]>([]);
+  const [parsedAgent, setParsedAgent] = useState<AgentState | null>(null);
+  const [availableProtocols, setAvailableProtocols] = useState<DetailedProtocol[]>([]);
   const [selectedProtocols, setSelectedProtocols] = useState<Set<string>>(new Set());
 
   const handleProcessJSON = () => {
     try {
       setErrorMsg('');
       const parsed = JSON.parse(jsonText);
-      let simulatedAgent: any = parsed;
+      let simulatedAgent = { ...parsed } as unknown as AgentState;
 
       // Detect FHIR R4 Bundle
       if (parsed.resourceType === "Bundle" && parsed.entry) {
          console.log("FHIR Interoperability: Parsing incoming EHR Bundle.");
-         const patientRes = parsed.entry.find((e: any) => e.resource.resourceType === "Patient")?.resource;
+         const patientRes = parsed.entry.find((e: { resource: { resourceType: string } }) => e.resource.resourceType === "Patient")?.resource;
          if (!patientRes) throw new Error("FHIR Bundle missing Core Patient Resource.");
          
          const age = patientRes.birthDate ? (new Date().getFullYear() - parseInt(patientRes.birthDate.substring(0,4))) : 50;
@@ -138,7 +144,7 @@ export const IngestionView: FC = () => {
          
          let a1c = 5.5, sysBp = 120, bmi = 24.0, ntProBNP = 50;
          
-         parsed.entry.forEach((e: any) => {
+         parsed.entry.forEach((e: { resource: any }) => {
             const res = e.resource;
             if (res.resourceType === "Observation" && res.code?.coding) {
                const loinc = res.code.coding[0].code;
@@ -158,7 +164,7 @@ export const IngestionView: FC = () => {
             vitals: { bpSystolic: sysBp, bpDiastolic: sysBp * 0.6, heartRate: 75, bmi },
             labs: { a1c, ldlCholesterol: 100, egfr: 90, cvHealth: 80, ntProBNP, hsCRP: 1.0, uacr: 15 },
             imaging: { lvef: 60, cacScore: 0 }
-         };
+         } as unknown as AgentState;
       } else {
           // Standard custom template checks
           if (!parsed.name || typeof parsed.age !== 'number') throw new Error("Missing or invalid base fields (name, age).");
@@ -174,8 +180,8 @@ export const IngestionView: FC = () => {
       setAvailableProtocols(topFound);
       setStep(2);
       
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Invalid JSON strictly missing required Schema keys.');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Invalid JSON strictly missing required Schema keys.');
     }
   };
 
@@ -231,7 +237,7 @@ export const IngestionView: FC = () => {
                   <h4 style={{ color: '#e2e8f0', margin: '0 0 0.4rem 0' }}>{protocol.title} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>via {protocol.source}</span></h4>
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
                     <strong style={{ color: '#10b981' }}>Yield:</strong> +{protocol.impact.healthDelta.toFixed(1)} Health | 
-                    &nbsp;<strong style={{ color: '#3b82f6' }}>Adoption Success:</strong> {((protocol.successCount / protocol.adoptions) * 100).toFixed(0)}%
+                    &nbsp;<strong style={{ color: '#3b82f6' }}>Adoption Success:</strong> {((protocol.successCount || 0) / (protocol.adoptions || 1) * 100).toFixed(0)}%
                   </p>
                 </div>
               </div>

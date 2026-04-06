@@ -48,7 +48,7 @@ export const PredictiveEngine = {
 
     if (state.labs.hsCRP > 3.0) base *= 1.4; // High systemic inflammation vascular risk
     
-    let risk = Math.min(99.9, base);
+    const risk = Math.min(99.9, base);
     
     const mitigations: string[] = [];
     if (state.imaging.cacScore > 100) mitigations.push(`CRITICAL: CAC Score of ${state.imaging.cacScore} discovered. Initiate immediate high-intensity Statin regardless of baseline LDL.`);
@@ -92,7 +92,7 @@ export const PredictiveEngine = {
     if (state.labs.ntProBNP > 1000) base *= 4.0; // Massive acute stretch severity
     if (state.labs.ntProBNP < 100) base *= 0.4; // Strong rule-out bounds
 
-    let risk = Math.min(99.9, base);
+    const risk = Math.min(99.9, base);
 
     const mitigations: string[] = [];
     if (state.imaging.lvef < 40) mitigations.push(`CRITICAL: LVEF of ${state.imaging.lvef}% dictates initiation of ARNI (Entresto), Beta Blockers, and Spironolactone immediately (GDMT).`);
@@ -128,7 +128,7 @@ export const PredictiveEngine = {
     if (state.chronicConditions.includes('Diabetes') && state.labs.a1c > 8.0) base *= 2.0;
     if (state.vitals.bpSystolic > 140) base *= 1.8;
 
-    let risk = Math.min(99.9, base);
+    const risk = Math.min(99.9, base);
     const mitigations: string[] = [];
     
     if (state.labs.uacr > 30) mitigations.push(`UACR of ${state.labs.uacr} mg/g confirms active protein spillage. Initiate ACE inhibitors or SGLT2 inhibitors sequentially to explicitly relieve intraglomerular pressure.`);
@@ -165,7 +165,7 @@ export const PredictiveEngine = {
     if (state.exerciseRoutine === 'None') base *= 1.8;
     if (state.vitals.bpSystolic > 130) base *= 1.3;
 
-    let risk = Math.min(99.9, base);
+    const risk = Math.min(99.9, base);
 
     const mitigations: string[] = [];
     if (state.vitals.bmi >= 25) mitigations.push("Implement comprehensive dietary and weight-loss intervention to shatter insulin resistance cycles.");
@@ -191,7 +191,7 @@ export const PredictiveEngine = {
     if (state.smoker) base *= 15.0; // The single massive COPD predictor
     if (state.foodDesert && state.wealth < 40) base *= 1.8; // Lower SES / environmental pollution exposure
 
-    let risk = Math.min(99.9, base);
+    const risk = Math.min(99.9, base);
 
     const mitigations: string[] = [];
     if (state.smoker) mitigations.push("EMERGENCY ACTION: Permanent smoking cessation required exactly immediately to halt alveolar destruction.");

@@ -4,7 +4,7 @@ import { Agent, type AgentRole, type Sex } from '../simulation/Agent';
 
 export const BackendTrainer: FC = () => {
     const [apiUrl, setApiUrl] = useState('http://localhost:8000/train');
-    const [payload, setPayload] = useState<any>(null);
+    const [payload, setPayload] = useState<Record<string, unknown> | null>(null);
     const [log, setLog] = useState<string[]>(['[DEV] Ready to feed JSON payloads to local PyTorch Model.']);
     const [isTraining, setIsTraining] = useState(false);
 
@@ -19,7 +19,7 @@ export const BackendTrainer: FC = () => {
                 const raw = JSON.parse(event.target?.result as string);
                 setPayload(raw);
                 setLog(prev => [`[${new Date().toLocaleTimeString()}] Successfully parsed ${Array.isArray(raw) ? raw.length : 1} records. Ready to transmit.`, ...prev]);
-            } catch (error: any) {
+            } catch {
                 setLog(prev => [`[${new Date().toLocaleTimeString()}] ERR: Invalid JSON file.`, ...prev]);
             }
         };
@@ -110,8 +110,8 @@ export const BackendTrainer: FC = () => {
             } else {
                 setLog(prev => [`[${new Date().toLocaleTimeString()}] ERR: PyTorch API replied with status ${response.status}`, ...prev]);
             }
-        } catch (e: any) {
-            setLog(prev => [`[${new Date().toLocaleTimeString()}] ERR: Network Error. Is the Python backend running at ${apiUrl}? (${e.message})`, ...prev]);
+        } catch (e) {
+            setLog(prev => [`[${new Date().toLocaleTimeString()}] ERR: Network Error. Is the Python backend running at ${apiUrl}? (${e instanceof Error ? e.message : String(e)})`, ...prev]);
         } finally {
             setIsTraining(false);
         }

@@ -32,7 +32,14 @@ export const CustomTwinDashboard: FC = () => {
   }
 
   const getCohortData = () => {
-    const dataMap = new Map<number, any>();
+    type DataMapEntry = {
+        tick: number; age: number;
+        cH: number[]; oH: number[];
+        cBP: number[]; oBP: number[];
+        cA1c: number[]; oA1c: number[];
+        cS: number[]; oS: number[];
+    };
+    const dataMap = new Map<number, DataMapEntry>();
     const totalControl = customTwins.filter(a => a.comparativeGroup === 'Control').length || 1;
     const totalOpt = customTwins.filter(a => a.comparativeGroup === 'Intervention').length || 1;
     
@@ -48,7 +55,7 @@ export const CustomTwinDashboard: FC = () => {
                    cS: [], oS: [] 
                });
            }
-           const entry = dataMap.get(snap.tick);
+           const entry = dataMap.get(snap.tick)!;
            if (isControl) {
                entry.cH.push(snap.health);
                entry.cBP.push(snap.bpSystolic);
@@ -63,7 +70,7 @@ export const CustomTwinDashboard: FC = () => {
        });
     });
 
-    return Array.from(dataMap.values()).sort((a: any,b: any)=>a.tick - b.tick).map(entry => {
+    return Array.from(dataMap.values()).sort((a, b) => a.tick - b.tick).map(entry => {
         const getStats = (arr: number[]) => {
             const len = arr.length;
             if (len === 0) return { mean: null, range: null };
@@ -146,10 +153,10 @@ export const CustomTwinDashboard: FC = () => {
     const minTestAge = Math.min(...testAges);
 
     // Identify top catastrophic mortality cause if applicable
-    const getTopCause = (cohort: any[]) => {
-      const causes: string[] = cohort.flatMap(c => c.history.filter((h: any) => h.type === 'Catastrophic Mortality').map((h: any) => h.description.split('.')[0]));
+    const getTopCause = (cohort: AgentState[]) => {
+      const causes: string[] = cohort.flatMap(c => c.history.filter(h => h.type === 'Catastrophic Mortality').map(h => h.description.split('.')[0]));
       if (causes.length === 0) return "Natural Age Decay (Gompertz-Makeham)";
-      const counts: any = {};
+      const counts: Record<string, number> = {};
       causes.forEach(cause => counts[cause] = (counts[cause] || 0) + 1);
       const top = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
       return `${top} (${counts[top]}/${cohort.length} Cases)`;
@@ -339,7 +346,7 @@ export const CustomTwinDashboard: FC = () => {
                   {['Health', 'BP', 'A1c', 'Stress', 'Survival'].map(mode => (
                      <button
                         key={mode}
-                        onClick={() => setChartMode(mode as any)}
+                        onClick={() => setChartMode(mode as 'Health' | 'BP' | 'A1c' | 'Stress' | 'Survival')}
                         style={{
                            background: chartMode === mode ? '#3b82f6' : 'transparent',
                            color: chartMode === mode ? 'white' : 'var(--text-muted)',
