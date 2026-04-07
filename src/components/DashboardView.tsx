@@ -114,10 +114,8 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
               node.isDead = liveAgent.isDead;
           }
       });
-      // Conditionally bump alpha slightly to encourage color repaint without triggering a zero-state structural restart
-      if (graphRef.current && Math.random() < 0.1) {
-         graphRef.current.d3AlphaTarget(0.01);
-      }
+      // Removed invalid d3AlphaTarget call to prevent fatal UI crashes during node color repaints.
+      // We will rely on new link propagations to organically wake the physics simulation instead.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agents, liveGraphData, staticNodes]);
 
