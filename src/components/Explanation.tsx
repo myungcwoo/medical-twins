@@ -5,7 +5,7 @@ export const Explanation: FC = () => {
     <div className="explanation-container glass-panel" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto', animation: 'fadeIn 0.5s ease-out', overflowY: 'auto', maxHeight: '100%' }}>
       <h2 style={{ color: '#a78bfa', marginBottom: '1.5rem', borderBottom: '1px solid rgba(167, 139, 250, 0.3)', paddingBottom: '0.5rem' }}>Core Simulation Architecture</h2>
       <p style={{ color: '#e2e8f0', lineHeight: 1.6, fontSize: '1.05rem', marginBottom: '2rem' }}>
-        As a core pillar of the Clinical AI Studio, the Digital Patient Simulation architecture represents a highly advanced <strong>Data-Driven Clinical Prediction Engine</strong>. It discards hardcoded physiological rules in favor of a genuine full-stack Machine Learning Operations (MLOps) pipeline, bridging Neural Tensor Models directly into React WebAssembly. 
+        As a core pillar of the Clinical AI Studio, the Digital Patient Simulation architecture represents a highly advanced <strong>Data-Driven Clinical Prediction Engine</strong>. It is crucial to underscore that this environment is <strong>strictly exploratory in nature</strong>, utilizing artificial intelligence natively to power algorithmic development and theoretical experimentation. <strong>It is not a medical device, nor does it provide recommendations for people to take action on.</strong> It discards hardcoded physiological rules in favor of a genuine full-stack Machine Learning Operations (MLOps) pipeline, bridging Neural Tensor Models directly into React WebAssembly. 
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

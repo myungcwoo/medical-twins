@@ -52,6 +52,12 @@ export const MainLayout: FC<MainLayoutProps> = ({
           <button className="mobile-menu-btn close" onClick={() => setIsMobileMenuOpen(false)}>×</button>
         </div>
 
+        <div style={{ padding: '0.75rem', margin: '0 1rem 1rem 1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+           <p style={{ color: '#fca5a5', fontSize: '0.7rem', lineHeight: 1.4, margin: 0, textAlign: 'center' }}>
+             <strong>EXPLORATORY ONLY:</strong> Clinical AI Studio is an AI-powered theoretical simulation. It is <strong>NOT</strong> a diagnostic tool and does not provide real recommendations for people to take action on.
+           </p>
+        </div>
+
         <div className="sidebar-nav">
           <span className="nav-group-title">PRIMARY WORKSPACES</span>
           <NavLink to="/dashboard" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>

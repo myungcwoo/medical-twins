@@ -7,9 +7,14 @@ export const AlgorithmExplanationView: React.FC = () => {
         <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400 mb-4">
           Algorithmic Architecture
         </h1>
-        <p className="text-lg text-slate-400 leading-relaxed font-light">
+        <p className="text-lg text-slate-400 leading-relaxed font-light mb-4">
           An in-depth breakdown of the deterministic math engines, pharmacological bounds, and predictive algorithms driving the multidimensional simulations within the Clinical AI Studio.
         </p>
+        <div className="bg-rose-950/40 border border-rose-900/50 rounded-lg p-4 inline-block">
+          <p className="text-sm text-rose-300 font-medium">
+             Disclaimer: These algorithms are explorative in nature, using AI to power simulation development. They are explicitly NOT recommendations for real-world patients or clinicians to take action on.
+          </p>
+        </div>
       </div>
 
       {/* 1. Orchestration & Concurrency */}

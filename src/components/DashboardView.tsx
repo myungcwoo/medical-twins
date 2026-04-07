@@ -80,7 +80,9 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
   const staticNodes = useMemo(() => {
      return agents.map(a => ({ id: a.id, health: a.baseHealth, isDead: a.isDead }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agents]);
+  }, [agents.length]);
+
+  const totalConnections = useMemo(() => agents.reduce((acc, a) => acc + (a.networkConnections?.length || 0) + (a.pairedTwinId ? 1 : 0), 0), [agents]);
 
   // Draw topological paths dynamically based exclusively on exact peer-to-peer clinical adoptions!
   const liveLinks = useMemo(() => {
@@ -91,7 +93,7 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
       // Map dynamic communication histories
       return agents.flatMap(a => (a.networkConnections || []).map(targetId => ({ source: a.id, target: targetId })));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agents]);
+  }, [agents.length, totalConnections]);
 
   const liveGraphData = useMemo(() => {
       return { nodes: staticNodes, links: liveLinks };
@@ -112,10 +114,9 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
               node.isDead = liveAgent.isDead;
           }
       });
-      // Gently wake the simulation to trigger nodeColor and nodeVal recalculations, 
-      // but conditionally limit firing rate to avoid WebGL context collapsing (Black Screen).
-      if (graphRef.current && Math.random() < 0.2) {
-         graphRef.current.d3ReheatSimulation();
+      // Conditionally bump alpha slightly to encourage color repaint without triggering a zero-state structural restart
+      if (graphRef.current && Math.random() < 0.1) {
+         graphRef.current.d3AlphaTarget(0.01);
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agents, liveGraphData, staticNodes]);
