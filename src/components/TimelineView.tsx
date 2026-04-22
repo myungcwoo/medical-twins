@@ -16,7 +16,7 @@ interface Props {
 
 export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
   const navigate = useNavigate();
-  const { agents } = useSimulationStore();
+  const { agents, handleForkAgent } = useSimulationStore();
   const selected = selectedId ? agents.find(a => a.id === selectedId) : null;
   const pair = selected?.pairedTwinId ? agents.find(a => a.id === selected.pairedTwinId) : null;
 
@@ -27,6 +27,17 @@ export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
       mitigations: string[];
   }
   const [forecasts, setForecasts] = useState<Forecast[] | null>(null);
+  
+  const [forkMedication, setForkMedication] = useState<string>('');
+
+  const executeFork = () => {
+      if (!selected) return;
+      handleForkAgent(selected.id, {
+          medications: forkMedication ? [forkMedication] : []
+      });
+      setForkMedication('');
+      alert("Multiverse branch created! Check the command center for the new Variant Twin.");
+  };
 
   useEffect(() => {
     if (!selected || selected.isDead) return;
@@ -166,6 +177,51 @@ export const TimelineView: FC<Props> = ({ selectedId, onSelectAgent }) => {
                 </div>
                 </div>
               </div>
+
+              {/* Multiverse What-If Debugger UI */}
+              {!selected.isDead && selected.comparativeGroup !== 'Intervention' && (
+                  <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3b82f6', borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)' }}>
+                      <h3 style={{ margin: '0 0 1rem 0', color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span role="img" aria-label="fork">🧬</span> Chronological Fork Engine (What-If Debugger)
+                      </h3>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                          Instantly branch this agent's medical trajectory into an alternate timeline by injecting an experimental intervention.
+                      </p>
+                      
+                      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <select 
+                              value={forkMedication} 
+                              onChange={e => setForkMedication(e.target.value)}
+                              style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', padding: '0.8rem', borderRadius: '6px', flex: '1 1 200px' }}
+                          >
+                              <option value="">Select Intervention...</option>
+                              <option value="Semaglutide 2.4mg">Semaglutide 2.4mg (GLP-1)</option>
+                              <option value="Empagliflozin 10mg">Empagliflozin 10mg (SGLT2)</option>
+                              <option value="Sacubitril/Valsartan">Sacubitril/Valsartan (ARNI)</option>
+                              <option value="Atorvastatin 40mg">Atorvastatin 40mg</option>
+                              <option value="Finerenone 20mg">Finerenone 20mg</option>
+                          </select>
+                          
+                          <button 
+                              onClick={executeFork}
+                              disabled={!forkMedication}
+                              style={{ 
+                                  background: forkMedication ? '#3b82f6' : '#1e293b', 
+                                  color: forkMedication ? 'white' : '#64748b', 
+                                  border: 'none', 
+                                  padding: '0.8rem 1.5rem', 
+                                  borderRadius: '6px', 
+                                  fontWeight: 'bold', 
+                                  cursor: forkMedication ? 'pointer' : 'not-allowed',
+                                  transition: 'all 0.2s',
+                                  boxShadow: forkMedication ? '0 0 15px rgba(59, 130, 246, 0.4)' : 'none'
+                              }}
+                          >
+                              {forkMedication ? '⚡ Compute Alternate Reality' : 'Awaiting Parameters'}
+                          </button>
+                      </div>
+                  </div>
+              )}
 
               {selected.medications.length > 0 && (
                 <div style={{ marginBottom: '1.5rem', marginTop: '1.5rem' }}>

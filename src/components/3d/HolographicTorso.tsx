@@ -71,6 +71,10 @@ const OrganMesh: React.FC<OrganProps> = ({ agent, position, type }) => {
 };
 
 export const HolographicTorso: React.FC<{ agent: AgentState }> = ({ agent }) => {
+  const hasStroke = agent.chronicConditions.includes('Stroke') || agent.chronicConditions.includes('Dementia');
+  const hasChf = agent.chronicConditions.includes('CHF');
+  const hasCkd = agent.chronicConditions.includes('CKD Progression') || agent.labs.egfr < 60;
+
   return (
     <div style={{ width: '100%', height: '350px', background: 'radial-gradient(circle at center, rgba(30,58,138,0.2) 0%, rgba(0,0,0,0.8) 100%)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.3)', position: 'relative', overflow: 'hidden' }}>
         <Canvas camera={{ position: [0, 0, 4], fov: 50 }}>
@@ -99,8 +103,16 @@ export const HolographicTorso: React.FC<{ agent: AgentState }> = ({ agent }) => 
            <h3 style={{ margin: 0, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '1rem' }}>Biological Hologram</h3>
            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.3rem' }}>ID: {agent.id.substring(0,8)}</div>
         </div>
+
+        <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', pointerEvents: 'none', background: 'rgba(0,0,0,0.6)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)', maxWidth: '250px' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                <strong>Neural:</strong> {hasStroke ? <span style={{color: '#ef4444'}}>Ischemic Event Detected</span> : <span style={{color: '#60a5fa'}}>Nominal</span>}<br/>
+                <strong>Cardiac:</strong> {hasChf ? <span style={{color: '#ef4444'}}>Ventricle Dilation (CHF)</span> : <span style={{color: '#f43f5e'}}>Nominal</span>}<br/>
+                <strong>Renal:</strong> {hasCkd ? <span style={{color: '#f59e0b'}}>CKD Progression</span> : <span style={{color: '#34d399'}}>Nominal</span>}
+            </div>
+        </div>
         
-        <div style={{ position: 'absolute', bottom: '1rem', right: '1rem', pointerEvents: 'none', background: 'rgba(0,0,0,0.6)', padding: '0.5rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'right' }}>
+        <div style={{ position: 'absolute', bottom: '1rem', right: '1rem', pointerEvents: 'none', background: 'rgba(0,0,0,0.8)', padding: '0.5rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'right' }}>
            <div style={{ color: agent.isDead ? '#ef4444' : '#34d399', fontWeight: 'bold' }}>{agent.isDead ? 'CRITICAL FAILURE' : 'SYSTEMS ACTIVE'}</div>
            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Vital Integrity: {agent.baseHealth.toFixed(1)}%</div>
         </div>

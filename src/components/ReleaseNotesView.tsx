@@ -11,6 +11,23 @@ export const ReleaseNotesView: React.FC = () => {
       <div className="view-content" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
         <div className="card" style={{ padding: '2rem' }}>
+          <h2 style={{ color: '#c084fc', marginBottom: '0.5rem' }}>v1.8.0 (Phase 9: Multi-Agent Hub Orchestration)</h2>
+          <span className="tag" style={{ background: 'rgba(192, 132, 252, 0.2)', color: '#c084fc', marginBottom: '1.5rem', display: 'inline-block' }}>New</span>
+          
+          <h3 style={{ marginTop: '1rem', color: '#94a3b8' }}>Major Features:</h3>
+          <ul style={{ marginLeft: '1.5rem', marginTop: '0.5rem', color: '#e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <li><strong>Standalone Agent Registry Dashboard:</strong> Deployed a completely separate Vite+React web application (<code style={{color: '#f472b6'}}>agent-hub-dashboard</code>) to globally monitor, manage, and train multi-agent orchestration workers.</li>
+            <li><strong>Centralized Capabilties Microservice:</strong> Rearchitected <code style={{color: '#f472b6'}}>clinical-agents-hub</code> into a pure registry, exposing <code style={{color: '#f472b6'}}>/api/agents</code> and <code style={{color: '#f472b6'}}>/api/skills</code> to dynamic clients.</li>
+            <li><strong>Cross-Project Pipeline Polling:</strong> Upgraded <code style={{color: '#f472b6'}}>AgentApi.ts</code> locally to tag telemetry with `agent_id`, seamlessly feeding legacy workloads into the new global dashboard registry.</li>
+          </ul>
+
+          <h3 style={{ marginTop: '1rem', color: '#94a3b8' }}>Minor Improvements:</h3>
+          <ul style={{ marginLeft: '1.5rem', marginTop: '0.5rem', color: '#e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+             <li>Added native visualization of system capabilities internally so users can understand explicitly which agent models (like PubMed Analyst vs EHR Miner) and LLM abstractions are loaded dynamically.</li>
+          </ul>
+        </div>
+
+        <div className="card" style={{ padding: '2rem' }}>
           <h2 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>v1.7.1 (Phase 8.1: Architectural Hardening & Abstractions)</h2>
           <span className="tag" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', marginBottom: '1.5rem', display: 'inline-block' }}>Current Stable</span>
           

@@ -176,5 +176,18 @@ self.onmessage = async (e: MessageEvent) => {
       self.postMessage({ type: 'SAVE_PAYLOAD_READY', payload: payloadObj });
       break;
     }
+    
+    case 'FORK_AGENT': {
+      if (!engine) return;
+      const { sourceId, modifications } = payload;
+      const newlyBranchedTwin = engine.branchAgent(sourceId, modifications);
+      if (newlyBranchedTwin) {
+          self.postMessage({ type: 'FORK_AGENT_COMPLETE', payload: {
+            branchedTwin: newlyBranchedTwin,
+            agents: engine.getAgents()
+          }});
+      }
+      break;
+    }
   }
 };

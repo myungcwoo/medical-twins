@@ -217,31 +217,16 @@ export const DashboardView: FC<Props> = ({ onSelectAgent }) => {
        {/* Analytics Banner */}
        <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
           {/* Live Force Graph Block */}
-          <div style={{ flexShrink: 0, width: '280px', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(139, 92, 246, 0.3)', boxShadow: '0 0 40px rgba(139, 92, 246, 0.15)', position: 'relative', background: '#000' }}>
-             {isFastForwarding ? (
-                 <div style={{ width: '280px', height: '280px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.9)' }}>
-                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid rgba(139, 92, 246, 0.2)', borderTopColor: '#8b5cf6', animation: 'spin 1s linear infinite' }}></div>
-                     <div style={{ color: '#8b5cf6', fontWeight: 'bold', marginTop: '1.5rem', fontSize: '1rem', letterSpacing: '0.05em' }}>COMPUTING DATA</div>
-                     <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.5rem', textAlign: 'center', padding: '0 1rem' }}>
-                         Topology mapping suspended during Fast-Forward.
-                     </div>
-                 </div>
-             ) : (
-                 <KnowledgeGraphCanvas
-                    agents={agents}
-                    liveGraphData={liveGraphData}
-                    isFastForwarding={isFastForwarding}
-                    hoverNode={hoverNode}
-                    setHoverNode={setHoverNode}
-                    onSelectAgent={onSelectAgent}
-                    graphRef={graphRef}
-                    getHealthColor={getHealthColor}
-                 />
-             )}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1.5rem 1rem', background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)', pointerEvents: 'none' }}>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>Knowledge Dispersion Graph</div>
-            </div>
-          </div>
+          <KnowledgeGraphCanvas
+             agents={agents}
+             liveGraphData={liveGraphData}
+             isFastForwarding={isFastForwarding}
+             hoverNode={hoverNode}
+             setHoverNode={setHoverNode}
+             onSelectAgent={onSelectAgent}
+             graphRef={graphRef}
+             getHealthColor={getHealthColor}
+          />
           
           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', alignContent: 'start' }}>
             <StatCard 

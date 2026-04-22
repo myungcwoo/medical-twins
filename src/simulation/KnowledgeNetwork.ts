@@ -15,6 +15,8 @@ export interface IdeaImpact {
   egfrDelta: number;
   newMeds: string[];
   description: string;
+  contraindications?: string[];
+  synergies?: string[];
 }
 
 export interface IdeaTemplate {

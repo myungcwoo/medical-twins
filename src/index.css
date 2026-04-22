@@ -1,16 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-color: #0f172a;
-  --panel-bg: rgba(30, 41, 59, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
+  --bg-color: #050a11;
+  --panel-bg: rgba(15, 23, 42, 0.55);
+  --border-color: rgba(255, 255, 255, 0.08);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --accent-color: #3b82f6;
   --accent-dark: #2563eb;
-  --accent-glow: rgba(59, 130, 246, 0.4);
+  --accent-glow: rgba(59, 130, 246, 0.5);
   --health-good: #10b981;
-  --health-warn: #f59e0b;
+  --health-warn: #facc15;
   --health-crit: #ef4444;
 }
 
@@ -20,14 +20,15 @@ html, body, #root {
 
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-main);
-  background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)), url('/hero_bg.png');
+  background-image: linear-gradient(rgba(5, 10, 17, 0.88), rgba(5, 10, 17, 0.96)), url('/hero_bg.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
   overflow: hidden; /* Stop full page overflow; rely on inner scroll containers */
+  -webkit-font-smoothing: antialiased;
 }
 
 body::before {
@@ -45,19 +46,22 @@ body::before {
 
 /* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2); 
-  border-radius: 4px;
+  background: transparent; 
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3); 
-  border-radius: 4px;
+  background: rgba(148, 163, 184, 0); 
+  border-radius: 6px;
+  transition: background 0.3s ease;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2); 
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.6); 
+  background: rgba(148, 163, 184, 0.5); 
 }
 
 /* Mobile Nav Base UI */
@@ -251,35 +255,40 @@ body::before {
 /* Base Button System */
 .btn {
   padding: 0.6rem 1.2rem;
-  border-radius: 6px;
+  min-height: 44px; /* Mobile accessibility standard touch target */
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  letter-spacing: 0.02em;
 }
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
-.btn-primary { background: var(--accent-color); color: white; box-shadow: 0 0 10px var(--accent-glow); }
-.btn-primary:hover:not(:disabled) { background: var(--accent-dark); box-shadow: 0 0 15px var(--accent-glow); }
+.btn-primary { background: linear-gradient(135deg, var(--accent-color), #4f46e5); color: white; box-shadow: 0 4px 14px var(--accent-glow); }
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px) scale(1.02); box-shadow: 0 6px 20px var(--accent-glow); }
+.btn-primary:active:not(:disabled) { transform: translateY(1px); }
 
-.btn-warning { background: #f59e0b; color: white; }
-.btn-warning:hover:not(:disabled) { background: #d97706; }
+.btn-warning { background: linear-gradient(135deg, #facc15, #f59e0b); color: #000; box-shadow: 0 4px 14px rgba(250, 204, 21, 0.3); }
+.btn-warning:hover:not(:disabled) { transform: translateY(-2px) scale(1.02); box-shadow: 0 6px 20px rgba(250, 204, 21, 0.4); }
 
-.btn-danger { background: #ef4444; color: white; border: 1px solid rgba(239, 68, 68, 0.3); }
-.btn-danger:hover:not(:disabled) { background: #dc2626; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+.btn-danger { background: rgba(239, 68, 68, 0.9); color: white; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2); }
+.btn-danger:hover:not(:disabled) { background: #dc2626; transform: translateY(-2px) scale(1.02); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4); }
 
-.btn-success { background: #10b981; color: white; border: 1px solid rgba(16, 185, 129, 0.3); }
-.btn-success:hover:not(:disabled) { background: #059669; }
+.btn-success { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2); }
+.btn-success:hover:not(:disabled) { transform: translateY(-2px) scale(1.02); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
 
 .btn-outline { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
-.btn-outline:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); color: var(--text-main); }
+.btn-outline:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); color: var(--text-main); transform: translateY(-1px); }
 
 /* Input utilities */
 .input-field {
@@ -310,20 +319,23 @@ body::before {
 
 .card {
   background: var(--panel-bg);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
-  transition: transform 0.2s, border-color 0.2s;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
   overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
   border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 .card-header {
@@ -618,10 +630,12 @@ body::before {
 /* Explanation View */
 .glass-panel {
   background: var(--panel-bg);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 2rem;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 .text-content {
@@ -715,18 +729,23 @@ body::before {
 
   .island-controls {
     flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 0.4rem;
-    transform: scale(0.9);
-    transform-origin: left top;
+    justify-content: space-between;
+    gap: 0.8rem;
+    width: 100%;
     margin-top: 0.5rem;
   }
   
   .tick-counter {
     width: 100%;
-    text-align: left;
-    font-size: 0.9rem;
-    margin-bottom: 0.2rem;
+    text-align: center;
+    font-size: 0.95rem;
+    margin-bottom: 0.4rem;
+    order: -1; /* Push to the top of the island on mobile */
+  }
+
+  .island-controls .btn {
+    flex: 1; /* Stretch buttons on mobile to make them easy to hit */
+    min-width: 48%; /* 2x2 grid approach for button controls on mobile */
   }
 
   /* 5. Fluid Grid Scaling */

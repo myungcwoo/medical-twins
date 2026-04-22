@@ -65,4 +65,50 @@ export class SimulationEngine {
     const newAgent = new Agent(rawPatient);
     this.agents.push(newAgent);
   }
+
+  branchAgent(agentId: string, modifications: Partial<AgentState>) {
+    const target = this.agents.find(a => a.state.id === agentId);
+    if (!target || target.state.isDead) return null;
+
+    // Deep copy the state up to the current tick
+    const clonedState = JSON.parse(JSON.stringify(target.state)) as AgentState;
+    
+    // Assign new Multiverse Identity
+    const newId = `VAR-${crypto.randomUUID().substring(0,6)}`;
+    clonedState.id = newId;
+    clonedState.name = `${clonedState.name} (Variant)`;
+    clonedState.comparativeGroup = 'Intervention';
+    clonedState.pairedTwinId = target.state.id;
+
+    // Ensure the original agent tracks this variant as its pair for charting
+    target.state.comparativeGroup = 'Control';
+    target.state.pairedTwinId = newId;
+
+    // Inject "What-If" modifications
+    if (modifications.medications) {
+        // Add new meds distinctively without wiping old history
+        modifications.medications.forEach(m => {
+             if (!clonedState.medications.includes(m)) clonedState.medications.push(m);
+        });
+    }
+
+    if (modifications.exerciseRoutine) clonedState.exerciseRoutine = modifications.exerciseRoutine;
+    if (modifications.smoker !== undefined) clonedState.smoker = modifications.smoker;
+
+    // Log the divergence point in the timeline
+    clonedState.history.push({
+         tick: this.currentTick,
+         type: 'MULTIVERSE BRANCH',
+         description: `Chronological fork executed. New interventions mapped.`,
+         impactHealth: 0,
+         impactStress: 0
+    });
+
+    const branchedAgent = new Agent(clonedState as any);
+    // Explicitly maintain history by overwriting constructor reset
+    branchedAgent.state = clonedState;
+    this.agents.push(branchedAgent);
+
+    return branchedAgent.state;
+  }
 }

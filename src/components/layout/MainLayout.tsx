@@ -63,6 +63,10 @@ export const MainLayout: FC<MainLayoutProps> = ({
           <NavLink to="/dashboard" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
             ⚡ Command Center
           </NavLink>
+
+          <NavLink to="/agent-hub" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+            🧠 Clinical Agents Hub
+          </NavLink>
           
           <NavLink to="/network" className={({isActive}) => `sidebar-btn ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
             ⚙️ LLM Knowledge Maps

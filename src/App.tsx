@@ -13,6 +13,7 @@ import { ConsumerWizard } from './components/ConsumerWizard';
 import { FAQView } from './components/FAQView';
 import { DevDocumentation } from './components/DevDocumentation';
 import { LiteratureBoard } from './components/LiteratureBoard';
+import { AgentTrackingPanel } from './components/AgentTrackingPanel';
 import heroBg from './assets/hero_bg.png';
 import { MainLayout } from './components/layout/MainLayout';
 import { useSimulationLifecycle } from './hooks/useSimulation';
@@ -65,6 +66,7 @@ function App() {
           </div>
         } />
         <Route path="/literature" element={<LiteratureBoard />} />
+        <Route path="/agent-hub" element={<AgentTrackingPanel />} />
         <Route path="/network" element={<NetworkFeed />} />
         <Route path="/report" element={<SimulationReport />} />
         <Route path="/training" element={<TrainingDashboard />} />

@@ -23,6 +23,10 @@ simulationWorker.addEventListener('message', (e) => {
       const { agents, ticks } = e.data.payload;
       useSimulationStore.setState({ agents, ticks, isFastForwarding: false, isRunning: false });
    }
+   if (e.data.type === 'FORK_AGENT_COMPLETE') {
+      const { agents } = e.data.payload;
+      useSimulationStore.setState({ agents });
+   }
 });
 
 interface SimulationState {
@@ -68,6 +72,7 @@ interface SimulationState {
   handleSaveSimulation: () => void;
   handleRewind: (tick: number) => void;
   fetchCheckpoints: () => void;
+  handleForkAgent: (sourceId: string, modifications: Partial<AgentState>) => void;
 }
 
 export const useSimulationStore = create<SimulationState>((set, get) => ({
@@ -172,5 +177,9 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
 
   fetchCheckpoints: () => {
     simulationWorker.postMessage({ type: 'FETCH_CHECKPOINTS' });
+  },
+
+  handleForkAgent: (sourceId, modifications) => {
+    simulationWorker.postMessage({ type: 'FORK_AGENT', payload: { sourceId, modifications } });
   }
 }));

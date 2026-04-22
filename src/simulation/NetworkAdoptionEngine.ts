@@ -31,8 +31,32 @@ export class NetworkAdoptionEngine {
           }
         }
 
+        // Contraindications checking
+        let contraindicationHit = false;
+        if (success && impact.contraindications && impact.contraindications.length > 0) {
+           const hasContra = impact.contraindications.some(c => 
+              agent.state.medications.includes(c) || agent.state.chronicConditions.includes(c)
+           );
+           if (hasContra) {
+               contraindicationHit = true;
+               resTxt = `[CRITICAL WARNING] Severe Adverse Cascade Triggered: Protocol violated documented contraindications.`;
+           }
+        }
+
+        // Synergies checking
+        let synergyMultiplier = 1.0;
+        if (success && impact.synergies && impact.synergies.length > 0) {
+           const hasSynergy = impact.synergies.some(s => 
+              agent.state.medications.includes(s) || agent.state.memory.includes(s)
+           );
+           if (hasSynergy) {
+               synergyMultiplier = 1.5; // 50% boost to positive deltas
+               resTxt += ` [SYNERGY BONUS] Protocol resonated powerfully with existing regimen.`;
+           }
+        }
+
         // Extremely low medical compliance agents occasionally fail to successfully adopt lifestyle habits correctly
-        if (success && bcast.template.type === 'Lifestyle' && agent.state.medicalCompliance === 'Low' && Math.random() < 0.3) {
+        if (success && !contraindicationHit && bcast.template.type === 'Lifestyle' && agent.state.medicalCompliance === 'Low' && Math.random() < 0.3) {
           success = false;
           resTxt = `Protocol failed during execution: Patient's compliance was too low to sustain structural habit shift.`;
         }
@@ -54,9 +78,17 @@ export class NetworkAdoptionEngine {
         }
 
         if (success) {
-          const m = sdohMultiplier;
-          agent.state.baseHealth += (impact.healthDelta * m);
-          agent.state.stressLevel += (impact.stressDelta * ((m + 1)/2)); // Less physical stress shielding if non-adherent
+          let m = sdohMultiplier * synergyMultiplier;
+          let actualHealthDelta = impact.healthDelta * m;
+          let actualStressDelta = impact.stressDelta * ((m + 1)/2);
+          
+          if (contraindicationHit) {
+              actualHealthDelta = -20; // Severe penalty
+              actualStressDelta = 25;
+          }
+
+          agent.state.baseHealth += actualHealthDelta;
+          agent.state.stressLevel += actualStressDelta; // Less physical stress shielding if non-adherent
           agent.state.vitals.bpSystolic += (impact.bpDelta * m);
           agent.state.labs.a1c += (impact.a1cDelta * m);
           agent.state.labs.cvHealth += (impact.cvDelta * m);
@@ -65,10 +97,10 @@ export class NetworkAdoptionEngine {
           
           agent.logEvent({
             tick: currentTick,
-            type: 'Network Adoption',
+            type: contraindicationHit ? 'Adverse Drug Event' : 'Network Adoption',
             description: `Transferred protocol: ${bcast.template.title} from ${bcast.authorName} (${bcast.template.source}). ${sdohReason}${resTxt}`,
-            impactHealth: impact.healthDelta * m,
-            impactStress: impact.stressDelta * m,
+            impactHealth: actualHealthDelta,
+            impactStress: actualStressDelta,
           });
         }
         

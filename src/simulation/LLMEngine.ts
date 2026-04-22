@@ -153,12 +153,16 @@ export class LLMEngine {
     }
   }
 
-  public static async generateTrialAsync(): Promise<any> {
+  public static async generateTrialAsync(query?: string): Promise<any> {
     if (!this.isEnabled || !this.apiKey) throw new Error("LLM Engine is disabled or missing valid API Key.");
 
+    const promptContext = query 
+        ? `The user is specifically searching for real-world literature related to: "${query}". You must extract and synthesize a highly plausible clinical trial or intervention strictly based on recent real-world medical literature for this query. Use actual literature (e.g. PubMed studies) from your knowledge cutoff.` 
+        : `You are generating a novel but highly scientifically plausible landmark medical trial.`;
+
     const prompt = `
-      You are a Clinical Guidelines AI generating a novel but highly scientifically plausible landmark medical trial.
-      Return ONLY a JSON object that matches the following structure exactly (NO markdown code blocks, just raw JSON):
+      You are a Clinical Guidelines AI. ${promptContext}
+      Return ONLY a JSON object that matches the following structure exactly (NO markdown code blocks, just raw JSON). Do not invent false hazard ratios if real ones exist for the exact query.
       {
         "id": "LIT-GEN-XYZ",
         "title": "String (e.g. ALPHA Trial: Novel intervention for advanced CAD)",
@@ -172,7 +176,16 @@ export class LLMEngine {
         "adverseEffects": [
             { "risk": "Moderate", "type": "String", "probability": "String (e.g. 1.2% Annual)" }
         ],
-        "impact": { "healthDelta": "Number", "stressDelta": "Number", "bpDelta": "Number", "a1cDelta": "Number", "cvDelta": "Number", "egfrDelta": "Number" },
+        "impact": { 
+          "healthDelta": "Number", 
+          "stressDelta": "Number", 
+          "bpDelta": "Number", 
+          "a1cDelta": "Number", 
+          "cvDelta": "Number", 
+          "egfrDelta": "Number",
+          "contraindications": ["Array of strings (Optional, e.g. NSAIDs, Severe CKD)"],
+          "synergies": ["Array of strings (Optional)"]
+        },
         "targetConditions": ["String array of conditions"]
       }
     `;
